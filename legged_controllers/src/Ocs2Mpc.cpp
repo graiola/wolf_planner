@@ -1,7 +1,3 @@
-//
-// Created by qiayuan on 2022/6/24.
-//
-
 #include <pinocchio/fwd.hpp>  // forward declarations must be included first.
 
 #include <pinocchio/algorithm/frames.hpp>

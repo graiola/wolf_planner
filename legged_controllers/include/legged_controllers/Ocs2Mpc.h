@@ -1,9 +1,3 @@
-//
-// Created by qiayuan on 2022/6/24.
-//
-
-#pragma once
-
 // OCS2
 #include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
 #include <ocs2_core/misc/Benchmark.h>
