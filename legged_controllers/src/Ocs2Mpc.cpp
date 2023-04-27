@@ -45,17 +45,17 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
 
-  // MPC publishers (FIXME)
-  //mpcWrenchPublisher1_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lf", 1);
-  //mpcFootPublisher1_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lf", 1);
-  //mpcWrenchPublisher2_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lh", 1);
-  //mpcFootPublisher2_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lh", 1);
-  //mpcWrenchPublisher3_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rf", 1);
-  //mpcFootPublisher3_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rf", 1);
-  //mpcWrenchPublisher4_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rh", 1);
-  //mpcFootPublisher4_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rh", 1);
-  //mpcBasePublisher_ = nh.advertise<wolf_msgs::Cartesian>("mpc_base", 1);
-  //mpcPosturalPublisher_ = nh.advertise<wolf_msgs::Postural>("mpc_postural", 1);
+  // MPC publishers
+  mpcWrenchPublisher1_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lf", 1);
+  mpcFootPublisher1_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lf", 1);
+  mpcWrenchPublisher2_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lh", 1);
+  mpcFootPublisher2_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lh", 1);
+  mpcWrenchPublisher3_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rf", 1);
+  mpcFootPublisher3_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rf", 1);
+  mpcWrenchPublisher4_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rh", 1);
+  mpcFootPublisher4_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rh", 1);
+  mpcBasePublisher_ = nh.advertise<wolf_msgs::Cartesian>("mpc_base", 1);
+  mpcPosturalPublisher_ = nh.advertise<wolf_msgs::Postural>("mpc_postural", 1);
 
   return true;
 }
@@ -138,9 +138,14 @@ void MpcClass::setupMrt() {
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
 
   currentObservation_.time = msg->time;
-  // FIXME (for loop)
-  //currentObservation_.state = msg->state;
-  //currentObservation_.input = msg->input;
+  currentObservation_.state.setZero();
+  currentObservation_.input.setZero();
+
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
+    currentObservation_.state(i) = msg->state.value[i];
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
+    currentObservation_.input(i) = msg->input.value[i];
+
   currentObservation_.mode = msg->mode;
 
   // Update the current state of the system
@@ -194,80 +199,80 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
   const vector_t vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
 
-  // Pack messages (FIXME)
-  //wolf_msgs::Force force_msg_1, force_msg_2, force_msg_3, force_msg_4;
-  //force_msg_1.force.force.x = mpc_contactDes1(0);
-  //force_msg_1.force.force.y = mpc_contactDes1(1);
-  //force_msg_1.force.force.z = mpc_contactDes1(2);
-  //force_msg_2.force.force.x = mpc_contactDes2(0);
-  //force_msg_2.force.force.y = mpc_contactDes2(1);
-  //force_msg_2.force.force.z = mpc_contactDes2(2);
-  //force_msg_3.force.force.x = mpc_contactDes3(0);
-  //force_msg_3.force.force.y = mpc_contactDes3(1);
-  //force_msg_3.force.force.z = mpc_contactDes3(2);
-  //force_msg_4.force.force.x = mpc_contactDes4(0);
-  //force_msg_4.force.force.y = mpc_contactDes4(1);
-  //force_msg_4.force.force.z = mpc_contactDes4(2);
-  //
-  //wolf_msgs::Cartesian foot_msg_1, foot_msg_2, foot_msg_3, foot_msg_4;
-  //foot_msg_1.pose.position.x = mpc_foot_pos[0](0);
-  //foot_msg_1.pose.position.y = mpc_foot_pos[0](1);
-  //foot_msg_1.pose.position.z = mpc_foot_pos[0](2);
-  //foot_msg_1.twist.linear.x = mpc_foot_vel[0](1);
-  //foot_msg_1.twist.linear.y = mpc_foot_vel[0](2);
-  //foot_msg_1.twist.linear.z = mpc_foot_vel[0](3);
-  //foot_msg_2.pose.position.x = mpc_foot_pos[1](0);
-  //foot_msg_2.pose.position.y = mpc_foot_pos[1](1);
-  //foot_msg_2.pose.position.z = mpc_foot_pos[1](2);
-  //foot_msg_2.twist.linear.x = mpc_foot_vel[1](1);
-  //foot_msg_2.twist.linear.y = mpc_foot_vel[1](2);
-  //foot_msg_2.twist.linear.z = mpc_foot_vel[1](3);
-  //foot_msg_3.pose.position.x = mpc_foot_pos[2](0);
-  //foot_msg_3.pose.position.y = mpc_foot_pos[2](1);
-  //foot_msg_3.pose.position.z = mpc_foot_pos[2](2);
-  //foot_msg_3.twist.linear.x = mpc_foot_vel[2](1);
-  //foot_msg_3.twist.linear.y = mpc_foot_vel[2](2);
-  //foot_msg_3.twist.linear.z = mpc_foot_vel[2](3);
-  //foot_msg_4.pose.position.x = mpc_foot_pos[3](0);
-  //foot_msg_4.pose.position.y = mpc_foot_pos[3](1);
-  //foot_msg_4.pose.position.z = mpc_foot_pos[3](2);
-  //foot_msg_4.twist.linear.x = mpc_foot_vel[3](1);
-  //foot_msg_4.twist.linear.y = mpc_foot_vel[3](2);
-  //foot_msg_4.twist.linear.z = mpc_foot_vel[3](3);
-  //
-  //wolf_msgs::Cartesian base_msg;
-  //base_msg.pose.position.x = mpc_basePosDes_eul(0);
-  //base_msg.pose.position.y = mpc_basePosDes_eul(1);
-  //base_msg.pose.position.z = mpc_basePosDes_eul(2);
-  //base_msg.pose.orientation.w = mpc_base_quat.w();
-  //base_msg.pose.orientation.x = mpc_base_quat.x();
-  //base_msg.pose.orientation.y = mpc_base_quat.y();
-  //base_msg.pose.orientation.z = mpc_base_quat.z();
-  //
-  //base_msg.twist.linear.x = vDesired(0);
-  //base_msg.twist.linear.y = vDesired(1);
-  //base_msg.twist.linear.z = vDesired(2);
-  //base_msg.twist.angular.z = vDesired(3);
-  //base_msg.twist.angular.y = vDesired(4);
-  //base_msg.twist.angular.x = vDesired(5);
-  //
-  //wolf_msgs::Postural postural_msg;
-  //for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i) {
-  //  postural_msg.positions.push_back(mpc_posDes(i));
-  //  postural_msg.velocities.push_back(mpc_velDes(i));
-  //}
+  // Pack messages
+  wolf_msgs::Wrench force_msg_1, force_msg_2, force_msg_3, force_msg_4;
+  force_msg_1.force.force.x = mpc_contactDes1(0);
+  force_msg_1.force.force.y = mpc_contactDes1(1);
+  force_msg_1.force.force.z = mpc_contactDes1(2);
+  force_msg_2.force.force.x = mpc_contactDes2(0);
+  force_msg_2.force.force.y = mpc_contactDes2(1);
+  force_msg_2.force.force.z = mpc_contactDes2(2);
+  force_msg_3.force.force.x = mpc_contactDes3(0);
+  force_msg_3.force.force.y = mpc_contactDes3(1);
+  force_msg_3.force.force.z = mpc_contactDes3(2);
+  force_msg_4.force.force.x = mpc_contactDes4(0);
+  force_msg_4.force.force.y = mpc_contactDes4(1);
+  force_msg_4.force.force.z = mpc_contactDes4(2);
 
-  // Publish the MPC output (FIXME)
-  //mpcWrenchPublisher1_.publish(force_msg_1);
-  //mpcFootPublisher1_.publish(foot_msg_1);
-  //mpcWrenchPublisher2_.publish(force_msg_2);
-  //mpcFootPublisher2_.publish(foot_msg_2);
-  //mpcWrenchPublisher3_.publish(force_msg_3);
-  //mpcFootPublisher3_.publish(foot_msg_3);
-  //mpcWrenchPublisher4_.publish(force_msg_4);
-  //mpcFootPublisher4_.publish(foot_msg_4);
-  //mpcBasePublisher_.publish(base_msg);
-  //mpcPosturalPublisher_.publish(postural_msg);
+  wolf_msgs::Cartesian foot_msg_1, foot_msg_2, foot_msg_3, foot_msg_4;
+  foot_msg_1.pose.position.x = mpc_foot_pos[0](0);
+  foot_msg_1.pose.position.y = mpc_foot_pos[0](1);
+  foot_msg_1.pose.position.z = mpc_foot_pos[0](2);
+  foot_msg_1.twist.linear.x = mpc_foot_vel[0](1);
+  foot_msg_1.twist.linear.y = mpc_foot_vel[0](2);
+  foot_msg_1.twist.linear.z = mpc_foot_vel[0](3);
+  foot_msg_2.pose.position.x = mpc_foot_pos[1](0);
+  foot_msg_2.pose.position.y = mpc_foot_pos[1](1);
+  foot_msg_2.pose.position.z = mpc_foot_pos[1](2);
+  foot_msg_2.twist.linear.x = mpc_foot_vel[1](1);
+  foot_msg_2.twist.linear.y = mpc_foot_vel[1](2);
+  foot_msg_2.twist.linear.z = mpc_foot_vel[1](3);
+  foot_msg_3.pose.position.x = mpc_foot_pos[2](0);
+  foot_msg_3.pose.position.y = mpc_foot_pos[2](1);
+  foot_msg_3.pose.position.z = mpc_foot_pos[2](2);
+  foot_msg_3.twist.linear.x = mpc_foot_vel[2](1);
+  foot_msg_3.twist.linear.y = mpc_foot_vel[2](2);
+  foot_msg_3.twist.linear.z = mpc_foot_vel[2](3);
+  foot_msg_4.pose.position.x = mpc_foot_pos[3](0);
+  foot_msg_4.pose.position.y = mpc_foot_pos[3](1);
+  foot_msg_4.pose.position.z = mpc_foot_pos[3](2);
+  foot_msg_4.twist.linear.x = mpc_foot_vel[3](1);
+  foot_msg_4.twist.linear.y = mpc_foot_vel[3](2);
+  foot_msg_4.twist.linear.z = mpc_foot_vel[3](3);
+
+  wolf_msgs::Cartesian base_msg;
+  base_msg.pose.position.x = mpc_basePosDes_eul(0);
+  base_msg.pose.position.y = mpc_basePosDes_eul(1);
+  base_msg.pose.position.z = mpc_basePosDes_eul(2);
+  base_msg.pose.orientation.w = mpc_base_quat.w();
+  base_msg.pose.orientation.x = mpc_base_quat.x();
+  base_msg.pose.orientation.y = mpc_base_quat.y();
+  base_msg.pose.orientation.z = mpc_base_quat.z();
+
+  base_msg.twist.linear.x = vDesired(0);
+  base_msg.twist.linear.y = vDesired(1);
+  base_msg.twist.linear.z = vDesired(2);
+  base_msg.twist.angular.z = vDesired(3);
+  base_msg.twist.angular.y = vDesired(4);
+  base_msg.twist.angular.x = vDesired(5);
+
+  wolf_msgs::Postural postural_msg;
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i) {
+    postural_msg.positions.push_back(mpc_posDes(i));
+    postural_msg.velocities.push_back(mpc_velDes(i));
+  }
+
+  // Publish the MPC output
+  mpcWrenchPublisher1_.publish(force_msg_1);
+  mpcFootPublisher1_.publish(foot_msg_1);
+  mpcWrenchPublisher2_.publish(force_msg_2);
+  mpcFootPublisher2_.publish(foot_msg_2);
+  mpcWrenchPublisher3_.publish(force_msg_3);
+  mpcFootPublisher3_.publish(foot_msg_3);
+  mpcWrenchPublisher4_.publish(force_msg_4);
+  mpcFootPublisher4_.publish(foot_msg_4);
+  mpcBasePublisher_.publish(base_msg);
+  mpcPosturalPublisher_.publish(postural_msg);
 }
 
 } // namespace legged
