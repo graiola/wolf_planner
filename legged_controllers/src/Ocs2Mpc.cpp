@@ -193,18 +193,18 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 
   // Pack messages
   wolf_msgs::Wrench force_msg_1, force_msg_2, force_msg_3, force_msg_4;
-  force_msg_1.force.force.x = mpc_contactDes1(0);
-  force_msg_1.force.force.y = mpc_contactDes1(1);
-  force_msg_1.force.force.z = mpc_contactDes1(2);
-  force_msg_2.force.force.x = mpc_contactDes2(0);
-  force_msg_2.force.force.y = mpc_contactDes2(1);
-  force_msg_2.force.force.z = mpc_contactDes2(2);
-  force_msg_3.force.force.x = mpc_contactDes3(0);
-  force_msg_3.force.force.y = mpc_contactDes3(1);
-  force_msg_3.force.force.z = mpc_contactDes3(2);
-  force_msg_4.force.force.x = mpc_contactDes4(0);
-  force_msg_4.force.force.y = mpc_contactDes4(1);
-  force_msg_4.force.force.z = mpc_contactDes4(2);
+  force_msg_1.wrench.force.x = mpc_contactDes1(0);
+  force_msg_1.wrench.force.y = mpc_contactDes1(1);
+  force_msg_1.wrench.force.z = mpc_contactDes1(2);
+  force_msg_2.wrench.force.x = mpc_contactDes2(0);
+  force_msg_2.wrench.force.y = mpc_contactDes2(1);
+  force_msg_2.wrench.force.z = mpc_contactDes2(2);
+  force_msg_3.wrench.force.x = mpc_contactDes3(0);
+  force_msg_3.wrench.force.y = mpc_contactDes3(1);
+  force_msg_3.wrench.force.z = mpc_contactDes3(2);
+  force_msg_4.wrench.force.x = mpc_contactDes4(0);
+  force_msg_4.wrench.force.y = mpc_contactDes4(1);
+  force_msg_4.wrench.force.z = mpc_contactDes4(2);
 
   wolf_msgs::Cartesian foot_msg_1, foot_msg_2, foot_msg_3, foot_msg_4;
   foot_msg_1.pose.position.x = mpc_foot_pos[0](0);
