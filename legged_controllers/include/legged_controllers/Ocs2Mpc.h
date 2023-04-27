@@ -59,14 +59,14 @@ class MpcClass {
   std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
 
   // MPC Output
-  ros::Publisher mpcWrenchPublisher1_;
-  ros::Publisher mpcFootPublisher1_;
-  ros::Publisher mpcWrenchPublisher2_;
-  ros::Publisher mpcFootPublisher2_;
-  ros::Publisher mpcWrenchPublisher3_;
-  ros::Publisher mpcFootPublisher3_;
-  ros::Publisher mpcWrenchPublisher4_;
-  ros::Publisher mpcFootPublisher4_;
+  ros::Publisher mpcWrenchPublisher_lf_;
+  ros::Publisher mpcFootPublisher_lf_;
+  ros::Publisher mpcWrenchPublisher_lh_;
+  ros::Publisher mpcFootPublisher_lh_;
+  ros::Publisher mpcWrenchPublisher_rf_;
+  ros::Publisher mpcFootPublisher_rf_;
+  ros::Publisher mpcWrenchPublisher_rh_;
+  ros::Publisher mpcFootPublisher_rh_;
   ros::Publisher mpcBasePublisher_;
   ros::Publisher mpcPosturalPublisher_;
 

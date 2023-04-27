@@ -45,17 +45,22 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
 
-  // MPC publishers
-  mpcWrenchPublisher1_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lf", 1);
-  mpcFootPublisher1_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lf", 1);
-  mpcWrenchPublisher2_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_lh", 1);
-  mpcFootPublisher2_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_lh", 1);
-  mpcWrenchPublisher3_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rf", 1);
-  mpcFootPublisher3_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rf", 1);
-  mpcWrenchPublisher4_ = nh.advertise<wolf_msgs::Wrench>("mpc_wrench_rh", 1);
-  mpcFootPublisher4_ = nh.advertise<wolf_msgs::Cartesian>("mpc_foot_rh", 1);
-  mpcBasePublisher_ = nh.advertise<wolf_msgs::Cartesian>("mpc_base", 1);
-  mpcPosturalPublisher_ = nh.advertise<wolf_msgs::Postural>("mpc_postural", 1);
+  // MPC publishers (FIXME hardcoded)
+  mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/lf_wrench", 1);
+  mpcFootPublisher_lf_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/lf_foot",   1);
+
+  mpcWrenchPublisher_lh_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/lh_wrench", 1);
+  mpcFootPublisher_lh_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/lh_foot",   1);
+
+  mpcWrenchPublisher_rf_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/rf_wrench", 1);
+  mpcFootPublisher_rf_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/rf_foot",   1);
+
+  mpcWrenchPublisher_rh_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/rh_wrench", 1);
+  mpcFootPublisher_rh_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/rh_foot",   1);
+
+  mpcBasePublisher_       = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/waist",     1);
+
+  mpcPosturalPublisher_   = nh.advertise<wolf_msgs::Postural> ("/spot/wolf_controller/reference/postural",  1);
 
   return true;
 }
@@ -193,18 +198,18 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 
   // Pack messages
   wolf_msgs::Wrench force_msg_1, force_msg_2, force_msg_3, force_msg_4;
-  force_msg_1.wrench.force.x = mpc_contactDes1(0);
-  force_msg_1.wrench.force.y = mpc_contactDes1(1);
-  force_msg_1.wrench.force.z = mpc_contactDes1(2);
-  force_msg_2.wrench.force.x = mpc_contactDes2(0);
-  force_msg_2.wrench.force.y = mpc_contactDes2(1);
-  force_msg_2.wrench.force.z = mpc_contactDes2(2);
-  force_msg_3.wrench.force.x = mpc_contactDes3(0);
-  force_msg_3.wrench.force.y = mpc_contactDes3(1);
-  force_msg_3.wrench.force.z = mpc_contactDes3(2);
-  force_msg_4.wrench.force.x = mpc_contactDes4(0);
-  force_msg_4.wrench.force.y = mpc_contactDes4(1);
-  force_msg_4.wrench.force.z = mpc_contactDes4(2);
+  force_msg_1.wrench.force.x = mpc_contactDes1(0); // LF
+  force_msg_1.wrench.force.y = mpc_contactDes1(1); // LF
+  force_msg_1.wrench.force.z = mpc_contactDes1(2); // LF
+  force_msg_2.wrench.force.x = mpc_contactDes2(0); // LH
+  force_msg_2.wrench.force.y = mpc_contactDes2(1); // LH
+  force_msg_2.wrench.force.z = mpc_contactDes2(2); // LH
+  force_msg_3.wrench.force.x = mpc_contactDes3(0); // RF
+  force_msg_3.wrench.force.y = mpc_contactDes3(1); // RF
+  force_msg_3.wrench.force.z = mpc_contactDes3(2); // RF
+  force_msg_4.wrench.force.x = mpc_contactDes4(0); // RH
+  force_msg_4.wrench.force.y = mpc_contactDes4(1); // RH
+  force_msg_4.wrench.force.z = mpc_contactDes4(2); // RH
 
   wolf_msgs::Cartesian foot_msg_1, foot_msg_2, foot_msg_3, foot_msg_4;
   foot_msg_1.pose.position.x = mpc_foot_pos[0](0);
@@ -255,14 +260,14 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   }
 
   // Publish the MPC output
-  mpcWrenchPublisher1_.publish(force_msg_1);
-  mpcFootPublisher1_.publish(foot_msg_1);
-  mpcWrenchPublisher2_.publish(force_msg_2);
-  mpcFootPublisher2_.publish(foot_msg_2);
-  mpcWrenchPublisher3_.publish(force_msg_3);
-  mpcFootPublisher3_.publish(foot_msg_3);
-  mpcWrenchPublisher4_.publish(force_msg_4);
-  mpcFootPublisher4_.publish(foot_msg_4);
+  mpcWrenchPublisher_lf_.publish(force_msg_1);
+  mpcFootPublisher_lf_.publish(foot_msg_1);
+  mpcWrenchPublisher_lh_.publish(force_msg_2);
+  mpcFootPublisher_lh_.publish(foot_msg_2);
+  mpcWrenchPublisher_rf_.publish(force_msg_3);
+  mpcFootPublisher_rf_.publish(foot_msg_3);
+  mpcWrenchPublisher_rh_.publish(force_msg_4);
+  mpcFootPublisher_rh_.publish(foot_msg_4);
   mpcBasePublisher_.publish(base_msg);
   mpcPosturalPublisher_.publish(postural_msg);
 }
