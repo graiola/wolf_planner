@@ -46,34 +46,26 @@ link_directories(
 )
 
 # Target trajectories publish node
-add_executable(legged_target_trajectories_publisher
-        src/TargetTrajectoriesPublisher.cpp
-        )
-add_dependencies(legged_target_trajectories_publisher
-        ${catkin_EXPORTED_TARGETS}
-        )
-target_link_libraries(legged_target_trajectories_publisher
-        ${catkin_LIBRARIES}
-        )
-target_compile_options(legged_target_trajectories_publisher PRIVATE ${OCS2_CXX_FLAGS})
+add_executable(wolf_target_trajectories_publisher src/TargetTrajectoriesPublisher.cpp)
+add_dependencies(wolf_target_trajectories_publisher ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_target_trajectories_publisher ${catkin_LIBRARIES})
+target_compile_options(wolf_target_trajectories_publisher PRIVATE ${OCS2_CXX_FLAGS})
+
+# MPC library
+add_library(wolf_mpc src/Ocs2Mpc.cpp)
+add_dependencies(wolf_mpc ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES})
 
 # MPC node
-add_executable(ocs2_mpc
-        src/Ocs2Mpc.cpp
-        )
-add_dependencies(ocs2_mpc
-        ${catkin_EXPORTED_TARGETS}
-        )
-target_link_libraries(ocs2_mpc
-        ${catkin_LIBRARIES}
-        )
+add_executable(wolf_mpc_node src/Ocs2MpcNode.cpp)
+target_link_libraries(wolf_mpc_node wolf_mpc)
 
 #############
 ## Install ##
 #############
 
 # Mark executables and/or libraries for installation
-install(TARGETS ocs2_mpc legged_target_trajectories_publisher
+install(TARGETS wolf_mpc wolf_mpc_node wolf_target_trajectories_publisher
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

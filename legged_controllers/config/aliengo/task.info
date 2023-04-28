@@ -263,14 +263,14 @@ selfCollision
   ; Self Collision pairs
   collisionLinkPairs
   {
-    [0] "LF_calf, RF_calf"
-    [1] "LH_calf, RH_calf"
-    [2] "LF_calf, LH_calf"
-    [3] "RF_calf, RH_calf"
-    [4] "LF_FOOT, RF_FOOT"
-    [5] "LH_FOOT, RH_FOOT"
-    [6] "LF_FOOT, LH_FOOT"
-    [7] "RF_FOOT, RH_FOOT"
+    [0] "lf_lowerleg, rf_lowerleg"
+    [1] "lh_lowerleg, rh_lowerleg"
+    [2] "lf_lowerleg, lh_lowerleg"
+    [3] "rf_lowerleg, rh_lowerleg"
+    [4] "lf_foot, rf_foot"
+    [5] "lh_foot, rh_foot"
+    [6] "lf_foot, lh_foot"
+    [7] "rf_foot, rh_foot"
   }
 
   minimumDistance  0.05

@@ -1,7 +1,3 @@
-//
-// Created by qiayuan on 2022/7/24.
-//
-
 #include "legged_controllers/TargetTrajectoriesPublisher.h"
 
 #include <ocs2_core/Types.h>

@@ -17,7 +17,6 @@
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 
 #include <angles/angles.h>
-#include <pluginlib/class_list_macros.hpp>
 
 namespace legged {
 
@@ -274,24 +273,3 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 }
 
 } // namespace legged
-
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "ocs2_mpc");
-  ros::NodeHandle nh;
-  ros::Rate loop_rate(100);
-
-  legged::MpcClass ocs2_mpc;
-
-  ocs2_mpc.init(nh);
-  ocs2_mpc.starting();
-
-  while (ros::ok())
-  {
-    ocs2_mpc.update();
-    ros::spinOnce();
-    loop_rate.sleep();
-  }
-
-  return 0;
-}
