@@ -3,8 +3,8 @@
 <launch>
     <arg name="robot_name" default="aliengo" doc="Robot name: [a1, aliengo, go1, laikago]"/>
 
-    <!--<node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
-    args="-r $(arg robot_name) -d /tmp/wolf_planner"/>-->
+    <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
+    args="-r $(arg robot_name) -d /tmp/wolf_planner"/> -->
 
     <!-- make the files into global parameters -->
     <param name="urdfFile" value="/tmp/wolf_planner/$(arg robot_name).urdf"/>

@@ -26,6 +26,8 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   std::string urdfFile;
   std::string taskFile;
   std::string referenceFile;
+  std::string robot_name;
+  mpc_nh.getParam("/robot_name", robot_name);
   mpc_nh.getParam("/urdfFile", urdfFile);
   mpc_nh.getParam("/taskFile", taskFile);
   mpc_nh.getParam("/referenceFile", referenceFile);
@@ -42,21 +44,24 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
 
   // MPC publishers (FIXME hardcoded)
-  mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/lf_wrench", 1);
-  mpcFootPublisher_lf_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/lf_foot",   1);
+  mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
+  mpcFootPublisher_lf_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/lh_wrench", 1);
-  mpcFootPublisher_lh_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/lh_foot",   1);
+  mpcWrenchPublisher_lh_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_wrench", 1);
+  mpcFootPublisher_lh_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/rf_wrench", 1);
-  mpcFootPublisher_rf_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/rf_foot",   1);
+  mpcWrenchPublisher_rf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_wrench", 1);
+  mpcFootPublisher_rf_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = nh.advertise<wolf_msgs::Wrench>   ("/spot/wolf_controller/reference/rh_wrench", 1);
-  mpcFootPublisher_rh_    = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/rh_foot",   1);
+  mpcWrenchPublisher_rh_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_wrench", 1);
+  mpcFootPublisher_rh_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rh_foot",   1);
 
-  mpcBasePublisher_       = nh.advertise<wolf_msgs::Cartesian>("/spot/wolf_controller/reference/waist",     1);
+  mpcBasePublisher_       = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/waist",     1);
 
-  mpcPosturalPublisher_   = nh.advertise<wolf_msgs::Postural> ("/spot/wolf_controller/reference/postural",  1);
+  mpcPosturalPublisher_   = nh.advertise<wolf_msgs::Postural> (robot_name+"/wolf_controller/reference/postural",  1);
+
+  // MPC subscriber (FIXME hardcoded)
+  mpcObservation_         = nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1, &MpcClass::observationCallback, this);
 
   return true;
 }
