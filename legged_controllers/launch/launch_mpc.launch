@@ -9,6 +9,9 @@
 
     <!-- make the files into global parameters -->
     <param name="urdfFile" value="$(find legged_controllers)/config/$(arg robot_name)/$(arg robot_name).urdf"/>
+
+    <param name="legged_robot_description" command="$(find xacro)/xacro --inorder '$(find legged_controllers)/config/$(arg robot_name)/$(arg robot_name).urdf'"/>
+
     <param name="taskFile" value="$(find legged_controllers)/config/$(arg robot_name)/task.info"/>
     <param name="referenceFile" value="$(find legged_controllers)/config/$(arg robot_name)/reference.info"/>
     <param name="gaitCommandFile" value="$(find legged_controllers)/config/$(arg robot_name)/gait.info"/>
