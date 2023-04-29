@@ -87,6 +87,7 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
 
 int main(int argc, char** argv) {
   const std::string robotName = "legged_robot";
+  // FIXME (hardcoded names)
 
   // Initialize ros node
   ::ros::init(argc, argv, robotName + "_target");

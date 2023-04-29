@@ -42,7 +42,8 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                               leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, nh);
+                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, nh);
+  robotVisualizer_->frameId_ = "world";
 
   // MPC publishers (FIXME hardcoded)
   mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
@@ -117,6 +118,7 @@ void MpcClass::setupMpc() {
                                   leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
 
   const std::string robotName = "legged_robot";
+  // FIXME (hardcoded names)
   ros::NodeHandle nh;
   // Gait receiver
   auto gaitReceiverPtr =
