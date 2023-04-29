@@ -5,6 +5,7 @@
 #include <ocs2_msgs/mpc_observation.h>
 #include <ocs2_pinocchio_interface/PinocchioInterface.h>
 #include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
+#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
 
 // WoLF
 #include "wolf_msgs/Wrench.h"
@@ -34,6 +35,7 @@ class MpcClass {
   bool init(ros::NodeHandle& controller_nh);
   void update();
   void starting();
+  void retrieveAndPublish();
 
  protected:
 
@@ -51,6 +53,10 @@ class MpcClass {
   // Nonlinear MPC
   std::shared_ptr<MPC_BASE> mpc_;
   std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
+
+  // Visualization
+  std::shared_ptr<LeggedRobotVisualizer> robotVisualizer_;
+  ros::Publisher observationPublisher_;
 
   // MPC Output
   ros::Publisher mpcWrenchPublisher_lf_;
