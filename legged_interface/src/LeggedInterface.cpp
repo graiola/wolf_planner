@@ -69,6 +69,7 @@ LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string&
   modelSettings_ = loadModelSettings(taskFile, "model_settings", verbose);
 
   // FIXME use srdf?
+  modelSettings_.modelFolderCppAd = "/tmp/wolf_planner";
   modelSettings_.jointNames = {"lf_haa_joint", "lf_hfe_joint", "lf_kfe_joint",
                                "lh_haa_joint", "lh_hfe_joint", "lh_kfe_joint",
                                "rf_haa_joint", "rf_hfe_joint", "rf_kfe_joint",
