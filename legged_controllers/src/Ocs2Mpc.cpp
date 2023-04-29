@@ -132,21 +132,7 @@ void MpcClass::setupMrt() {
   mpcTimer_.reset();
 }
 
-void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
-
-  currentObservation_.time = msg->time;
-  currentObservation_.state.setZero();
-  currentObservation_.input.setZero();
-
-  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
-    currentObservation_.state(i) = msg->state.value[i];
-  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
-    currentObservation_.input(i) = msg->input.value[i];
-
-  currentObservation_.mode = msg->mode;
-
-  // Update the current state of the system
-  mpcMrtInterface_->setCurrentObservation(currentObservation_);
+void MpcClass::retrieveAndPublish(){
 
   // Load the latest MPC policy
   mpcMrtInterface_->updatePolicy();
@@ -178,10 +164,10 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 
 //  std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
   // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
-  vector_t mpc_contactDes1 = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes2 = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes3 = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes4 = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_contactDes_lf = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
   eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
   const auto& mpc_model = leggedInterface_->getPinocchioInterface().getModel();
   auto& mpc_data = leggedInterface_->getPinocchioInterface().getData();
@@ -197,45 +183,45 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   const vector_t vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
 
   // Pack messages
-  wolf_msgs::Wrench force_msg_1, force_msg_2, force_msg_3, force_msg_4;
-  force_msg_1.wrench.force.x = mpc_contactDes1(0); // LF
-  force_msg_1.wrench.force.y = mpc_contactDes1(1); // LF
-  force_msg_1.wrench.force.z = mpc_contactDes1(2); // LF
-  force_msg_2.wrench.force.x = mpc_contactDes2(0); // LH
-  force_msg_2.wrench.force.y = mpc_contactDes2(1); // LH
-  force_msg_2.wrench.force.z = mpc_contactDes2(2); // LH
-  force_msg_3.wrench.force.x = mpc_contactDes3(0); // RF
-  force_msg_3.wrench.force.y = mpc_contactDes3(1); // RF
-  force_msg_3.wrench.force.z = mpc_contactDes3(2); // RF
-  force_msg_4.wrench.force.x = mpc_contactDes4(0); // RH
-  force_msg_4.wrench.force.y = mpc_contactDes4(1); // RH
-  force_msg_4.wrench.force.z = mpc_contactDes4(2); // RH
+  wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
+  force_msg_lf.wrench.force.x = mpc_contactDes_lf(0); // LF
+  force_msg_lf.wrench.force.y = mpc_contactDes_lf(1); // LF
+  force_msg_lf.wrench.force.z = mpc_contactDes_lf(2); // LF
+  force_msg_lh.wrench.force.x = mpc_contactDes_lh(0); // LH
+  force_msg_lh.wrench.force.y = mpc_contactDes_lh(1); // LH
+  force_msg_lh.wrench.force.z = mpc_contactDes_lh(2); // LH
+  force_msg_rf.wrench.force.x = mpc_contactDes_rf(0); // RF
+  force_msg_rf.wrench.force.y = mpc_contactDes_rf(1); // RF
+  force_msg_rf.wrench.force.z = mpc_contactDes_rf(2); // RF
+  force_msg_rh.wrench.force.x = mpc_contactDes_rh(0); // RH
+  force_msg_rh.wrench.force.y = mpc_contactDes_rh(1); // RH
+  force_msg_rh.wrench.force.z = mpc_contactDes_rh(2); // RH
 
-  wolf_msgs::Cartesian foot_msg_1, foot_msg_2, foot_msg_3, foot_msg_4;
-  foot_msg_1.pose.position.x = mpc_foot_pos[0](0);
-  foot_msg_1.pose.position.y = mpc_foot_pos[0](1);
-  foot_msg_1.pose.position.z = mpc_foot_pos[0](2);
-  foot_msg_1.twist.linear.x = mpc_foot_vel[0](1);
-  foot_msg_1.twist.linear.y = mpc_foot_vel[0](2);
-  foot_msg_1.twist.linear.z = mpc_foot_vel[0](3);
-  foot_msg_2.pose.position.x = mpc_foot_pos[1](0);
-  foot_msg_2.pose.position.y = mpc_foot_pos[1](1);
-  foot_msg_2.pose.position.z = mpc_foot_pos[1](2);
-  foot_msg_2.twist.linear.x = mpc_foot_vel[1](1);
-  foot_msg_2.twist.linear.y = mpc_foot_vel[1](2);
-  foot_msg_2.twist.linear.z = mpc_foot_vel[1](3);
-  foot_msg_3.pose.position.x = mpc_foot_pos[2](0);
-  foot_msg_3.pose.position.y = mpc_foot_pos[2](1);
-  foot_msg_3.pose.position.z = mpc_foot_pos[2](2);
-  foot_msg_3.twist.linear.x = mpc_foot_vel[2](1);
-  foot_msg_3.twist.linear.y = mpc_foot_vel[2](2);
-  foot_msg_3.twist.linear.z = mpc_foot_vel[2](3);
-  foot_msg_4.pose.position.x = mpc_foot_pos[3](0);
-  foot_msg_4.pose.position.y = mpc_foot_pos[3](1);
-  foot_msg_4.pose.position.z = mpc_foot_pos[3](2);
-  foot_msg_4.twist.linear.x = mpc_foot_vel[3](1);
-  foot_msg_4.twist.linear.y = mpc_foot_vel[3](2);
-  foot_msg_4.twist.linear.z = mpc_foot_vel[3](3);
+  wolf_msgs::Cartesian foot_msg_lf, foot_msg_lh, foot_msg_rf, foot_msg_rh;
+  foot_msg_lf.pose.position.x = mpc_foot_pos[0](0);
+  foot_msg_lf.pose.position.y = mpc_foot_pos[0](1);
+  foot_msg_lf.pose.position.z = mpc_foot_pos[0](2);
+  foot_msg_lf.twist.linear.x = mpc_foot_vel[0](1);
+  foot_msg_lf.twist.linear.y = mpc_foot_vel[0](2);
+  foot_msg_lf.twist.linear.z = mpc_foot_vel[0](3);
+  foot_msg_lh.pose.position.x = mpc_foot_pos[1](0);
+  foot_msg_lh.pose.position.y = mpc_foot_pos[1](1);
+  foot_msg_lh.pose.position.z = mpc_foot_pos[1](2);
+  foot_msg_lh.twist.linear.x = mpc_foot_vel[1](1);
+  foot_msg_lh.twist.linear.y = mpc_foot_vel[1](2);
+  foot_msg_lh.twist.linear.z = mpc_foot_vel[1](3);
+  foot_msg_rf.pose.position.x = mpc_foot_pos[2](0);
+  foot_msg_rf.pose.position.y = mpc_foot_pos[2](1);
+  foot_msg_rf.pose.position.z = mpc_foot_pos[2](2);
+  foot_msg_rf.twist.linear.x = mpc_foot_vel[2](1);
+  foot_msg_rf.twist.linear.y = mpc_foot_vel[2](2);
+  foot_msg_rf.twist.linear.z = mpc_foot_vel[2](3);
+  foot_msg_rh.pose.position.x = mpc_foot_pos[3](0);
+  foot_msg_rh.pose.position.y = mpc_foot_pos[3](1);
+  foot_msg_rh.pose.position.z = mpc_foot_pos[3](2);
+  foot_msg_rh.twist.linear.x = mpc_foot_vel[3](1);
+  foot_msg_rh.twist.linear.y = mpc_foot_vel[3](2);
+  foot_msg_rh.twist.linear.z = mpc_foot_vel[3](3);
 
   wolf_msgs::Cartesian base_msg;
   base_msg.pose.position.x = mpc_basePosDes_eul(0);
@@ -260,16 +246,33 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   }
 
   // Publish the MPC output
-  mpcWrenchPublisher_lf_.publish(force_msg_1);
-  mpcFootPublisher_lf_.publish(foot_msg_1);
-  mpcWrenchPublisher_lh_.publish(force_msg_2);
-  mpcFootPublisher_lh_.publish(foot_msg_2);
-  mpcWrenchPublisher_rf_.publish(force_msg_3);
-  mpcFootPublisher_rf_.publish(foot_msg_3);
-  mpcWrenchPublisher_rh_.publish(force_msg_4);
-  mpcFootPublisher_rh_.publish(foot_msg_4);
+  mpcWrenchPublisher_lf_.publish(force_msg_lf);
+  mpcFootPublisher_lf_.publish(foot_msg_lf);
+  mpcWrenchPublisher_lh_.publish(force_msg_lh);
+  mpcFootPublisher_lh_.publish(foot_msg_lh);
+  mpcWrenchPublisher_rf_.publish(force_msg_rf);
+  mpcFootPublisher_rf_.publish(foot_msg_rf);
+  mpcWrenchPublisher_rh_.publish(force_msg_rh);
+  mpcFootPublisher_rh_.publish(foot_msg_rh);
   mpcBasePublisher_.publish(base_msg);
   mpcPosturalPublisher_.publish(postural_msg);
+}
+
+void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
+
+  currentObservation_.time = msg->time;
+  currentObservation_.state.setZero();
+  currentObservation_.input.setZero();
+
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
+    currentObservation_.state(i) = msg->state.value[i];
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
+    currentObservation_.input(i) = msg->input.value[i];
+
+  currentObservation_.mode = msg->mode;
+
+  // Update the current state of the system
+  mpcMrtInterface_->setCurrentObservation(currentObservation_);
 }
 
 } // namespace legged

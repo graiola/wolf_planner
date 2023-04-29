@@ -34,6 +34,7 @@ class MpcClass {
   bool init(ros::NodeHandle& controller_nh);
   void update();
   void starting();
+  void retrieveAndPublish();
 
  protected:
 

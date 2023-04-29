@@ -14,6 +14,7 @@ int main(int argc, char **argv)
   while (ros::ok())
   {
     ocs2_mpc.update();
+    ocs2_mpc.retrieveAndPublish();
     ros::spinOnce();
     loop_rate.sleep();
   }
