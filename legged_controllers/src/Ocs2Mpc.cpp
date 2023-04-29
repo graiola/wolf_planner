@@ -41,6 +41,8 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
+  robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
+                                                               leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, nh);
 
   // MPC publishers (FIXME hardcoded)
   mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
@@ -124,6 +126,7 @@ void MpcClass::setupMpc() {
   rosReferenceManagerPtr->subscribe(nh);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
+  observationPublisher_ = nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
 }
 
 void MpcClass::setupMrt() {
@@ -256,6 +259,11 @@ void MpcClass::retrieveAndPublish(){
   mpcFootPublisher_rh_.publish(foot_msg_rh);
   mpcBasePublisher_.publish(base_msg);
   mpcPosturalPublisher_.publish(postural_msg);
+
+  // Visualization
+  robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
+  // Publish the observation. Only needed for the command interface
+  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
 }
 
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
