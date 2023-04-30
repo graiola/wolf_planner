@@ -270,7 +270,7 @@ void MpcClass::retrieveAndPublish(){
 
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
 
-  currentObservation_.time = msg->time;
+  currentObservation_.time += ros::Duration(0.002).toSec();
   currentObservation_.state.setZero();
   currentObservation_.input.setZero();
 
@@ -279,7 +279,25 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
     currentObservation_.input(i) = msg->input.value[i];
 
-  currentObservation_.mode = msg->mode;
+  int cf_lf, cf_lh, cf_rf, cf_rh;
+  if (currentObservation_.input(2) > 1)
+    cf_lf = 1;
+  else
+    cf_lf = 0;
+  if (currentObservation_.input(5) > 1)
+    cf_lh = 1;
+  else
+    cf_lh = 0;
+  if (currentObservation_.input(8) > 1)
+    cf_rf = 1;
+  else
+    cf_rf = 0;
+  if (currentObservation_.input(11) > 1)
+    cf_rh = 1;
+  else
+    cf_rh = 0;
+
+  currentObservation_.mode = 8*cf_lf + 4*cf_lh + 2*cf_rf + cf_rh;
 
   // Update the current state of the system
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
