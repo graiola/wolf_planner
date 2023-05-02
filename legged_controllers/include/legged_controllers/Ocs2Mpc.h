@@ -11,6 +11,7 @@
 #include "wolf_msgs/Wrench.h"
 #include "wolf_msgs/Cartesian.h"
 #include "wolf_msgs/Postural.h"
+#include "wolf_msgs/ControllerState.h"
 
 // TbR
 #include <legged_interface/LeggedInterface.h>
@@ -35,6 +36,7 @@ class MpcClass {
   bool init(ros::NodeHandle& controller_nh);
   void update();
   void starting();
+  void stopping();
   void retrieveAndPublish();
 
  protected:
@@ -74,8 +76,12 @@ class MpcClass {
   ros::Subscriber mpcObservation_;
   void observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg);
 
+  // Controller state
+  ros::Subscriber controllerState_;
+  void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
+
  private:
-  std::atomic_bool mpcRunning_{};
+  std::atomic_bool mpcRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
 };
 

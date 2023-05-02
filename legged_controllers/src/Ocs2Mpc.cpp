@@ -34,6 +34,14 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
 
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
+
+  // Initialize the observation data structure
+  // Initial state
+  currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
+  currentObservation_.time = 0.0; // FIXME is it correct?
+  currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
+  currentObservation_.mode = ModeNumber::STANCE;
+
   setupMpc();
   setupMrt();
 
@@ -62,18 +70,14 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
 
   mpcPosturalPublisher_   = nh.advertise<wolf_msgs::Postural> (robot_name+"/wolf_controller/reference/postural",  1);
 
-  // MPC subscriber (FIXME hardcoded)
-  mpcObservation_         = nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1, &MpcClass::observationCallback, this);
+  // MPC subscribers (FIXME hardcoded)
+  mpcObservation_         = nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1,  &MpcClass::observationCallback, this);
+  controllerState_        = nh.subscribe(robot_name+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
 
   return true;
 }
 
 void MpcClass::starting() {
-  // Initial state
-  currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  currentObservation_.time += ros::Duration(0.002).toSec();
-  currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  currentObservation_.mode = ModeNumber::STANCE;
 
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
@@ -87,7 +91,16 @@ void MpcClass::starting() {
   }
   ROS_INFO_STREAM("Initial policy has been received.");
 
+  ROS_INFO_STREAM("Starting the planner");
+
   mpcRunning_ = true;
+}
+
+void MpcClass::stopping()
+{
+  ROS_INFO_STREAM("Stopping the planner");
+
+  mpcRunning_ = false;
 }
 
 void MpcClass::update() {
@@ -99,11 +112,12 @@ void MpcClass::update() {
             mpcTimer_.startTimer();
             mpcMrtInterface_->advanceMpc();
             mpcTimer_.endTimer();
+            retrieveAndPublish();
           }
         },
         leggedInterface_->mpcSettings().mpcDesiredFrequency_);
   } catch (const std::exception& e) {
-    ROS_ERROR_STREAM("[Ocs2 MPC thread] Error : " << e.what());
+    ROS_ERROR_STREAM("[Ocs2 MPC] Error : " << e.what());
   }
 }
 
@@ -117,8 +131,7 @@ void MpcClass::setupMpc() {
   mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
                                   leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
 
-  const std::string robotName = "legged_robot";
-  // FIXME (hardcoded names)
+  const std::string robotName = "legged_robot"; // FIXME hardcoded name
   ros::NodeHandle nh;
   // Gait receiver
   auto gaitReceiverPtr =
@@ -270,7 +283,7 @@ void MpcClass::retrieveAndPublish(){
 
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
 
-  currentObservation_.time += ros::Duration(0.002).toSec();
+  currentObservation_.time = msg->time;
   currentObservation_.state.setZero();
   currentObservation_.input.setZero();
 
@@ -279,28 +292,23 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
     currentObservation_.input(i) = msg->input.value[i];
 
-  int cf_lf, cf_lh, cf_rf, cf_rh;
-  if (currentObservation_.input(2) > 1)
-    cf_lf = 1;
-  else
-    cf_lf = 0;
-  if (currentObservation_.input(5) > 1)
-    cf_lh = 1;
-  else
-    cf_lh = 0;
-  if (currentObservation_.input(8) > 1)
-    cf_rf = 1;
-  else
-    cf_rf = 0;
-  if (currentObservation_.input(11) > 1)
-    cf_rh = 1;
-  else
-    cf_rh = 0;
-
-  currentObservation_.mode = 8*cf_lf + 4*cf_lh + 2*cf_rf + cf_rh;
+  currentObservation_.mode = msg->mode;
 
   // Update the current state of the system
-  mpcMrtInterface_->setCurrentObservation(currentObservation_);
+  if(mpcRunning_)
+    mpcMrtInterface_->setCurrentObservation(currentObservation_);
+}
+
+void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
+{
+  if(msg->current_state == "ACTIVE" && msg->current_mode == "EXT")
+  {
+    if(!mpcRunning_) starting();
+  }
+  else
+  {
+    if(mpcRunning_) stopping();
+  }
 }
 
 } // namespace legged

@@ -9,12 +9,12 @@ int main(int argc, char **argv)
   legged::MpcClass ocs2_mpc;
 
   ocs2_mpc.init(nh);
-  ocs2_mpc.starting();
+  //ocs2_mpc.starting();
 
   while (ros::ok())
   {
     ocs2_mpc.update();
-    ocs2_mpc.retrieveAndPublish();
+    //ocs2_mpc.retrieveAndPublish();
     ros::spinOnce();
     loop_rate.sleep();
   }
