@@ -2,6 +2,7 @@
 
 <launch>
     <arg name="robot_name" default="spot" doc="Robot name: [a1, aliengo, go1, laikago]"/>
+    <arg name="rviz_gui"   default="false" />
 
     <!-- Use this node to generate the URDFs -->
     <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
@@ -21,5 +22,8 @@
     <node pkg="legged_controllers" type="wolf_target_trajectories_publisher" name="wolf_robot_target" output="screen"/>
 
     <node pkg="legged_controllers" type="wolf_mpc_node" name="wolf_mpc_node" output="screen"/>
+
+    <!-- rviz -->
+    <node name="wolf_mpc_rviz" pkg="rviz" type="rviz" args="-d $(find legged_controllers)/rviz/mpc.rviz" if="$(arg rviz_gui)"/>
 
 </launch>
