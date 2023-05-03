@@ -45,34 +45,38 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   setupMpc();
   setupMrt();
 
-  ros::NodeHandle nh;
+  ros::NodeHandle root_nh;
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, nh);
-  robotVisualizer_->frameId_ = "world";
+                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, "wolf_mpc");
+  robotVisualizer_->frameId_ = "wolf_mpc/world";
+
+  auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
+  for(unsigned int i=0;i<joint_names.size();i++)
+    ROS_INFO_STREAM("Loading joint["<<i<<"]: "<<joint_names[i]);
 
   // MPC publishers (FIXME hardcoded)
-  mpcWrenchPublisher_lf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
-  mpcFootPublisher_lf_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lf_foot",   1);
+  mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
+  mpcFootPublisher_lf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_wrench", 1);
-  mpcFootPublisher_lh_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lh_foot",   1);
+  mpcWrenchPublisher_lh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_wrench", 1);
+  mpcFootPublisher_lh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_wrench", 1);
-  mpcFootPublisher_rf_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rf_foot",   1);
+  mpcWrenchPublisher_rf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_wrench", 1);
+  mpcFootPublisher_rf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_wrench", 1);
-  mpcFootPublisher_rh_    = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rh_foot",   1);
+  mpcWrenchPublisher_rh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_wrench", 1);
+  mpcFootPublisher_rh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rh_foot",   1);
 
-  mpcBasePublisher_       = nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/waist",     1);
+  mpcBasePublisher_       = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/waist",     1);
 
-  mpcPosturalPublisher_   = nh.advertise<wolf_msgs::Postural> (robot_name+"/wolf_controller/reference/postural",  1);
+  mpcPosturalPublisher_   = root_nh.advertise<wolf_msgs::Postural> (robot_name+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded)
-  mpcObservation_         = nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1,  &MpcClass::observationCallback, this);
-  controllerState_        = nh.subscribe(robot_name+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
+  mpcObservation_         = root_nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1,  &MpcClass::observationCallback, this);
+  controllerState_        = root_nh.subscribe(robot_name+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
 
   return true;
 }
@@ -134,8 +138,7 @@ void MpcClass::setupMpc() {
   const std::string robotName = "legged_robot"; // FIXME hardcoded name
   ros::NodeHandle nh;
   // Gait receiver
-  auto gaitReceiverPtr =
-      std::make_shared<GaitReceiver>(nh, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), robotName);
+  auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nh, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), robotName);
   // ROS ReferenceManager
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(robotName, leggedInterface_->getReferenceManagerPtr());
   rosReferenceManagerPtr->subscribe(nh);
@@ -180,7 +183,7 @@ void MpcClass::retrieveAndPublish(){
   mpc_base_quat.y() = cr * sp * cy + sr * cp * sy;
   mpc_base_quat.z() = cr * cp * sy - sr * sp * cy;
 
-//  std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
+  // std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
   // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
   vector_t mpc_contactDes_lf = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
@@ -276,7 +279,8 @@ void MpcClass::retrieveAndPublish(){
   mpcPosturalPublisher_.publish(postural_msg);
 
   // Visualization
-  robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
+  if(robotVisualizer_ != nullptr)
+    robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
   // Publish the observation. Only needed for the command interface
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
 }

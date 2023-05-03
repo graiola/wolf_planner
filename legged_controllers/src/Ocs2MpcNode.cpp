@@ -3,7 +3,7 @@
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "wolf_mpc_node");
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("wolf_mpc");
   ros::Rate loop_rate(100);
 
   legged::MpcClass ocs2_mpc;
