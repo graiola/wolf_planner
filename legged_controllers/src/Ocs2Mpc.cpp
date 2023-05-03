@@ -58,16 +58,16 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
     ROS_INFO_STREAM("Loading joint["<<i<<"]: "<<joint_names[i]);
 
   // MPC publishers (FIXME hardcoded)
-  mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_wrench", 1);
+  mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_foot_wrench", 1);
   mpcFootPublisher_lf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_wrench", 1);
+  mpcWrenchPublisher_lh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_foot_wrench", 1);
   mpcFootPublisher_lh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_wrench", 1);
+  mpcWrenchPublisher_rf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_foot_wrench", 1);
   mpcFootPublisher_rf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_wrench", 1);
+  mpcWrenchPublisher_rh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_foot_wrench", 1);
   mpcFootPublisher_rh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rh_foot",   1);
 
   mpcBasePublisher_       = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/waist",     1);
