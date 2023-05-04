@@ -33,7 +33,8 @@ MpcClass::~MpcClass()
   std::cerr << "########################################################################";
 }
 
-bool MpcClass::init(ros::NodeHandle& mpc_nh) {
+bool MpcClass::init(ros::NodeHandle& mpc_nh)
+{
   // Initialize OCS2
   std::string urdfFile;
   std::string taskFile;
@@ -132,26 +133,8 @@ void MpcClass::stopping()
   mpcRunning_ = false;
 }
 
-//void MpcClass::update() {
-//
-//  try {
-//    executeAndSleep(
-//        [&]() {
-//          if (mpcRunning_) {
-//            mpcTimer_.startTimer();
-//            mpcMrtInterface_->advanceMpc();
-//            mpcTimer_.endTimer();
-//            retrieveAndPublish();
-//          }
-//        },
-//        leggedInterface_->mpcSettings().mpcDesiredFrequency_);
-//  } catch (const std::exception& e) {
-//    mpcRunning_ = false;
-//    ROS_ERROR_STREAM("[Ocs2 MPC] Error : " << e.what());
-//  }
-//}
-
-void MpcClass::setupMrt() {
+void MpcClass::setupMrt()
+{
   mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
   mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
   mpcTimer_.reset();
@@ -201,13 +184,8 @@ void MpcClass::setupMpc()
   observationPublisher_ = nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
 }
 
-//void MpcClass::setupMrt() {
-//  mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
-//  mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
-//  mpcTimer_.reset();
-//}
-
-void MpcClass::retrieveAndPublish(){
+void MpcClass::retrieveAndPublish()
+{
 
   // Update the current state of the system
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
@@ -346,7 +324,8 @@ void MpcClass::retrieveAndPublish(){
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
 }
 
-void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
+void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
+{
 
   //currentObservation_.state.setZero();
   //currentObservation_.input.setZero();
