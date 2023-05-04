@@ -283,9 +283,9 @@ selfCollision
 ; Whole body control
 torqueLimitsTask
 {
-   (0,0)  35.278   ; haa
-   (1,0)  35.278   ; hfe
-   (2,0)  44.4     ; kfe
+   (0,0)  35.278   ; HAA
+   (1,0)  35.278   ; HFE
+   (2,0)  44.4     ; KFE
 }
 
 frictionConeTask

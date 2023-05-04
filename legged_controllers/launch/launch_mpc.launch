@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 
 <launch>
-    <arg name="robot_name" default="spot" doc="Robot name: [a1, aliengo, go1, laikago]"/>
+    <arg name="robot_name" default="spot" doc="Robot name: [a1, aliengo, spot]"/>
     <arg name="rviz_gui"   default="false" />
 
     <!-- Use this node to generate the URDFs -->

@@ -118,7 +118,7 @@
     <visual>
       <origin rpy="3.141592653589793 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/hip.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -148,19 +148,19 @@
                 </geometry>
             </collision>
         </link> -->
-  <joint name="rf_hfe_joint" type="continuous">
+  <joint name="rf_hfe_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 -0.083 0"/>
     <parent link="rf_hip"/>
     <child link="rf_upperleg"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="44" velocity="20"/>
+    <limit effort="44" lower="3.141592653589793" upper="-3.141592653589793" velocity="20"/>
   </joint>
   <link name="rf_upperleg">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/thigh_mirror.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -188,7 +188,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/calf.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -240,7 +240,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/hip.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -270,19 +270,19 @@
                 </geometry>
             </collision>
         </link> -->
-  <joint name="lf_hfe_joint" type="continuous">
+  <joint name="lf_hfe_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0.083 0"/>
     <parent link="lf_hip"/>
     <child link="lf_upperleg"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="44" velocity="20"/>
+    <limit effort="44" lower="3.141592653589793" upper="-3.141592653589793" velocity="20"/>
   </joint>
   <link name="lf_upperleg">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/thigh.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/thigh.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -310,7 +310,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/calf.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -362,7 +362,7 @@
     <visual>
       <origin rpy="3.141592653589793 3.141592653589793 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/hip.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -392,19 +392,19 @@
                 </geometry>
             </collision>
         </link> -->
-  <joint name="rh_hfe_joint" type="continuous">
+  <joint name="rh_hfe_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 -0.083 0"/>
     <parent link="rh_hip"/>
     <child link="rh_upperleg"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="44" velocity="20"/>
+    <limit effort="44" lower="3.141592653589793" upper="-3.141592653589793" velocity="20"/>
   </joint>
   <link name="rh_upperleg">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/thigh_mirror.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/thigh_mirror.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -432,7 +432,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/calf.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -484,7 +484,7 @@
     <visual>
       <origin rpy="0 3.141592653589793 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/hip.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/hip.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -514,19 +514,19 @@
                 </geometry>
             </collision>
         </link> -->
-  <joint name="lh_hfe_joint" type="continuous">
+  <joint name="lh_hfe_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0 0.083 0"/>
     <parent link="lh_hip"/>
     <child link="lh_upperleg"/>
     <axis xyz="0 1 0"/>
     <dynamics damping="0" friction="0"/>
-    <limit effort="44" velocity="20"/>
+    <limit effort="44" lower="3.141592653589793" upper="-3.141592653589793" velocity="20"/>
   </joint>
   <link name="lh_upperleg">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/thigh.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/thigh.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
@@ -554,7 +554,7 @@
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="/home/gennaro/ros_ws/src/wolf/wolf_descriptions/aliengo_description/meshes/calf.dae" scale="1 1 1"/>
+        <mesh filename="package://aliengo_description/meshes/calf.dae" scale="1 1 1"/>
       </geometry>
       <material name="orange"/>
     </visual>
