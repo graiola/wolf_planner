@@ -53,6 +53,9 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, "wolf_mpc");
   robotVisualizer_->frameId_ = "wolf_mpc/world";
 
+  selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
+                                                                         leggedInterface_->getGeometryInterface(), pinocchioMapping, mpc_nh);
+
   auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<joint_names.size();i++)
     ROS_INFO_STREAM("Loading joint["<<i<<"]: "<<joint_names[i]);
@@ -281,6 +284,9 @@ void MpcClass::retrieveAndPublish(){
   // Visualization
   if(robotVisualizer_ != nullptr)
     robotVisualizer_->update(currentObservation_, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
+  if(selfCollisionVisualization_ != nullptr)
+    selfCollisionVisualization_->update(currentObservation_);
+
   // Publish the observation. Only needed for the command interface
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation_));
 }

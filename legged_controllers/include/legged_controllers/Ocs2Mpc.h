@@ -15,6 +15,7 @@
 
 // TbR
 #include <legged_interface/LeggedInterface.h>
+#include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
 
 // ROS
 #include <ros/ros.h>
@@ -58,6 +59,7 @@ class MpcClass {
 
   // Visualization
   std::shared_ptr<LeggedRobotVisualizer> robotVisualizer_;
+  std::shared_ptr<LeggedSelfCollisionVisualization> selfCollisionVisualization_;
   ros::Publisher observationPublisher_;
 
   // MPC Output
