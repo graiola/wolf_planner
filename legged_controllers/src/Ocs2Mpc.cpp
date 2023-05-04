@@ -59,16 +59,22 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   setupMrt();
 
   ros::NodeHandle root_nh;
+
+
+  // Pinocchio EE Kinematics
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
   eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
+  eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
+
+  // Robot visualizer
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, "wolf_mpc");
   robotVisualizer_->frameId_ = "wolf_mpc/world";
 
+  // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
                                                                          leggedInterface_->getGeometryInterface(), pinocchioMapping, mpc_nh);
-
 
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
@@ -103,11 +109,6 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
 
 void MpcClass::starting()
 {
-  // Initial state
-  //currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  //currentObservation_.time = 0.001;
-  //currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  //currentObservation_.mode = ModeNumber::STANCE;
 
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
@@ -201,17 +202,25 @@ void MpcClass::retrieveAndPublish()
   // This is the input for the WBC (NOTE: we don't use it right now, instead we publish with specific topics for WoLF)
   currentObservation_.input = optimizedInput;
 
-  // Retrieve MPC optimized output
-  vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
-
   // Safety check, if failed, stop the planner
   if (!safetyChecker_->check(currentObservation_, optimizedState, optimizedInput))
   {
     ROS_ERROR_STREAM("[WoLF planner] Safety check failed, stopping the planner.");
     controllerRunning_ = false;
+    return;
   }
+
+  // Update pinocchio
+  const auto& mpc_model = leggedInterface_->getPinocchioInterface().getModel();
+  auto& mpc_data = leggedInterface_->getPinocchioInterface().getData();
+  pinocchio::forwardKinematics(mpc_model, mpc_data, centroidal_model::getGeneralizedCoordinates(optimizedState, leggedInterface_->getCentroidalModelInfo()));
+  pinocchio::computeJointJacobians(mpc_model, mpc_data);
+  pinocchio::updateFramePlacements(mpc_model, mpc_data);
+
+  // Retrieve MPC optimized output
+  vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
+  vector_t mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
 
   Eigen::Quaterniond mpc_base_quat;
   mpc_base_quat = Eigen::AngleAxisd(mpc_basePosDes_eul(3), Eigen::Vector3d::UnitZ())
@@ -224,11 +233,7 @@ void MpcClass::retrieveAndPublish()
   vector_t mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
-  eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto& mpc_model = leggedInterface_->getPinocchioInterface().getModel();
-  auto& mpc_data = leggedInterface_->getPinocchioInterface().getData();
-  pinocchio::forwardKinematics(mpc_model, mpc_data, centroidal_model::getGeneralizedCoordinates(optimizedState, leggedInterface_->getCentroidalModelInfo()));
-  pinocchio::updateFramePlacements(mpc_model, mpc_data);
+
   std::vector<vector3_t> mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
   std::vector<vector3_t> mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
 
