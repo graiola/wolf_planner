@@ -20,6 +20,19 @@
 
 namespace legged {
 
+MpcClass::~MpcClass()
+{
+  controllerRunning_ = false;
+  if (mpcThread_.joinable()) {
+    mpcThread_.join();
+  }
+  std::cerr << "########################################################################";
+  std::cerr << "\n### MPC Benchmarking";
+  std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
+  std::cerr << "\n###   Average : " << mpcTimer_.getAverageInMilliseconds() << "[ms]." << std::endl;
+  std::cerr << "########################################################################";
+}
+
 bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   // Initialize OCS2
   std::string urdfFile;
@@ -30,16 +43,15 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   mpc_nh.getParam("/urdfFile", urdfFile);
   mpc_nh.getParam("/taskFile", taskFile);
   mpc_nh.getParam("/referenceFile", referenceFile);
-  bool verbose = false;
+  bool verbose = true;
   loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
 
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 
   // Initialize the observation data structure
-  // Initial state
   currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  currentObservation_.time = 0.0; // FIXME is it correct?
   currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
+  currentObservation_.time = 0.0;
   currentObservation_.mode = ModeNumber::STANCE;
 
   setupMpc();
@@ -56,9 +68,13 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
                                                                          leggedInterface_->getGeometryInterface(), pinocchioMapping, mpc_nh);
 
+
+  // Safety Checker
+  safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
+
   auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<joint_names.size();i++)
-    ROS_INFO_STREAM("Loading joint["<<i<<"]: "<<joint_names[i]);
+    ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<joint_names[i]);
 
   // MPC publishers (FIXME hardcoded)
   mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_foot_wrench", 1);
@@ -84,57 +100,92 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh) {
   return true;
 }
 
-void MpcClass::starting() {
+void MpcClass::starting()
+{
+  // Initial state
+  //currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
+  //currentObservation_.time = 0.001;
+  //currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
+  //currentObservation_.mode = ModeNumber::STANCE;
 
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
-  ROS_INFO_STREAM("Waiting for the initial policy ...");
+  ROS_INFO_STREAM("[WoLF planner] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
     mpcMrtInterface_->advanceMpc();
     ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
   }
-  ROS_INFO_STREAM("Initial policy has been received.");
+  ROS_INFO_STREAM("[WoLF planner] Initial policy has been received.");
 
-  ROS_INFO_STREAM("Starting the planner");
+  ROS_INFO_STREAM("[WoLF planner] Starting the planner");
 
   mpcRunning_ = true;
 }
 
 void MpcClass::stopping()
 {
-  ROS_INFO_STREAM("Stopping the planner");
+  ROS_INFO_STREAM("[WoLF planner] Stopping the planner");
 
   mpcRunning_ = false;
 }
 
-void MpcClass::update() {
+//void MpcClass::update() {
+//
+//  try {
+//    executeAndSleep(
+//        [&]() {
+//          if (mpcRunning_) {
+//            mpcTimer_.startTimer();
+//            mpcMrtInterface_->advanceMpc();
+//            mpcTimer_.endTimer();
+//            retrieveAndPublish();
+//          }
+//        },
+//        leggedInterface_->mpcSettings().mpcDesiredFrequency_);
+//  } catch (const std::exception& e) {
+//    mpcRunning_ = false;
+//    ROS_ERROR_STREAM("[Ocs2 MPC] Error : " << e.what());
+//  }
+//}
 
-  try {
-    executeAndSleep(
-        [&]() {
-          if (mpcRunning_) {
-            mpcTimer_.startTimer();
-            mpcMrtInterface_->advanceMpc();
-            mpcTimer_.endTimer();
-            retrieveAndPublish();
-          }
-        },
-        leggedInterface_->mpcSettings().mpcDesiredFrequency_);
-  } catch (const std::exception& e) {
-    ROS_ERROR_STREAM("[Ocs2 MPC] Error : " << e.what());
-  }
+void MpcClass::setupMrt() {
+  mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
+  mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
+  mpcTimer_.reset();
+
+  controllerRunning_ = true;
+  mpcThread_ = std::thread([&]() {
+    while (controllerRunning_) {
+      try {
+        executeAndSleep(
+            [&]() {
+              if (mpcRunning_) {
+                mpcTimer_.startTimer();
+                mpcMrtInterface_->advanceMpc();
+                mpcTimer_.endTimer();
+              }
+            },
+            leggedInterface_->mpcSettings().mpcDesiredFrequency_);
+      } catch (const std::exception& e) {
+        controllerRunning_ = false;
+        ROS_ERROR_STREAM("[WoLF planner] Error : " << e.what());
+      }
+    }
+  });
+  setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
 }
 
-void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                                    bool verbose) {
+void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
+{
   leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile);
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void MpcClass::setupMpc() {
+void MpcClass::setupMpc()
+{
   mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
                                   leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
 
@@ -150,41 +201,44 @@ void MpcClass::setupMpc() {
   observationPublisher_ = nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
 }
 
-void MpcClass::setupMrt() {
-  mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
-  mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
-  mpcTimer_.reset();
-}
+//void MpcClass::setupMrt() {
+//  mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
+//  mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
+//  mpcTimer_.reset();
+//}
 
 void MpcClass::retrieveAndPublish(){
+
+  // Update the current state of the system
+  mpcMrtInterface_->setCurrentObservation(currentObservation_);
 
   // Load the latest MPC policy
   mpcMrtInterface_->updatePolicy();
 
   // Evaluate the current policy
   vector_t optimizedState, optimizedInput;
-  size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at.
+  size_t plannedMode = currentObservation_.mode;  // The mode that is active at the time the policy is evaluated at.
   mpcMrtInterface_->evaluatePolicy(currentObservation_.time, currentObservation_.state, optimizedState, optimizedInput, plannedMode);
+
+  // This is the input for the WBC (NOTE: we don't use it right now, instead we publish with specific topics for WoLF)
+  currentObservation_.input = optimizedInput;
 
   // Retrieve MPC optimized output
   vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
 
-  // Conversion from ZYX euler to quaternion
-  // Abbreviations for the various angular functions
-  double cr = cos(mpc_basePosDes_eul(5) * 0.5);
-  double sr = sin(mpc_basePosDes_eul(5) * 0.5);
-  double cp = cos(mpc_basePosDes_eul(4) * 0.5);
-  double sp = sin(mpc_basePosDes_eul(4) * 0.5);
-  double cy = cos(mpc_basePosDes_eul(3) * 0.5);
-  double sy = sin(mpc_basePosDes_eul(3) * 0.5);
+  // Safety check, if failed, stop the planner
+  if (!safetyChecker_->check(currentObservation_, optimizedState, optimizedInput))
+  {
+    ROS_ERROR_STREAM("[WoLF planner] Safety check failed, stopping the planner.");
+    controllerRunning_ = false;
+  }
 
   Eigen::Quaterniond mpc_base_quat;
-  mpc_base_quat.w() = cr * cp * cy + sr * sp * sy;
-  mpc_base_quat.x() = sr * cp * cy - cr * sp * sy;
-  mpc_base_quat.y() = cr * sp * cy + sr * cp * sy;
-  mpc_base_quat.z() = cr * cp * sy - sr * sp * cy;
+  mpc_base_quat = Eigen::AngleAxisd(mpc_basePosDes_eul(3), Eigen::Vector3d::UnitZ())
+                * Eigen::AngleAxisd(mpc_basePosDes_eul(4), Eigen::Vector3d::UnitY())
+                * Eigen::AngleAxisd(mpc_basePosDes_eul(5), Eigen::Vector3d::UnitX());
 
   // std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
   // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
@@ -256,15 +310,16 @@ void MpcClass::retrieveAndPublish(){
   base_msg.pose.orientation.y = mpc_base_quat.y();
   base_msg.pose.orientation.z = mpc_base_quat.z();
 
-  base_msg.twist.linear.x = vDesired(0);
-  base_msg.twist.linear.y = vDesired(1);
-  base_msg.twist.linear.z = vDesired(2);
+  base_msg.twist.linear.x =  vDesired(0);
+  base_msg.twist.linear.y =  vDesired(1);
+  base_msg.twist.linear.z =  vDesired(2);
   base_msg.twist.angular.z = vDesired(3);
   base_msg.twist.angular.y = vDesired(4);
   base_msg.twist.angular.x = vDesired(5);
 
   wolf_msgs::Postural postural_msg;
-  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i) {
+  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i)
+  {
     postural_msg.positions.push_back(mpc_posDes(i));
     postural_msg.velocities.push_back(mpc_velDes(i));
   }
@@ -293,25 +348,24 @@ void MpcClass::retrieveAndPublish(){
 
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg){
 
+  //currentObservation_.state.setZero();
+  //currentObservation_.input.setZero();
   currentObservation_.time = msg->time;
-  currentObservation_.state.setZero();
-  currentObservation_.input.setZero();
+  currentObservation_.mode = msg->mode;
 
   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
     currentObservation_.state(i) = msg->state.value[i];
-  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
-    currentObservation_.input(i) = msg->input.value[i];
-
-  currentObservation_.mode = msg->mode;
+  //for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
+  //  currentObservation_.input(i) = msg->input.value[i];
 
   // Update the current state of the system
   if(mpcRunning_)
-    mpcMrtInterface_->setCurrentObservation(currentObservation_);
+    retrieveAndPublish();
 }
 
 void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
-  if(msg->current_state == "ACTIVE" && msg->current_mode == "EXT")
+  if(msg->current_state == "ACTIVE")// && msg->current_mode == "EXT")
   {
     if(!mpcRunning_) starting();
   }

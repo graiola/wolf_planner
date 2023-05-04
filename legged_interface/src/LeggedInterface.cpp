@@ -75,7 +75,7 @@ LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string&
                                "rf_haa_joint", "rf_hfe_joint", "rf_kfe_joint",
                                "rh_haa_joint", "rh_hfe_joint", "rh_kfe_joint"};
 
-  modelSettings_.contactNames3DoF = {"lf_foot", "rf_foot", "lh_foot", "rh_foot"};
+  modelSettings_.contactNames3DoF = {"lf_foot", "lh_foot", "rf_foot", "rh_foot"};
 
   mpcSettings_ = mpc::loadSettings(taskFile, "mpc", verbose);
   ddpSettings_ = ddp::loadSettings(taskFile, "ddp", verbose);

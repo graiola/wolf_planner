@@ -43,7 +43,7 @@ class TargetTrajectoriesPublisher final {
       }
       geometry_msgs::PoseStamped pose = *msg;
       try {
-        buffer_.transform(pose, pose, "odom", ros::Duration(0.2));
+        buffer_.transform(pose, pose, "wolf_mpc/world", ros::Duration(0.2)); // FIXME hardcoded frame name
       } catch (tf2::TransformException& ex) {
         ROS_WARN("Failure %s\n", ex.what());
         return;

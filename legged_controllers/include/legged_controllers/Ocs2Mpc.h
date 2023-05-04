@@ -15,6 +15,7 @@
 
 // TbR
 #include <legged_interface/LeggedInterface.h>
+#include "legged_controllers/SafetyChecker.h"
 #include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
 
 // ROS
@@ -26,14 +27,9 @@ using namespace ocs2;
 
 class MpcClass {
  public:
+
   MpcClass() = default;
-  ~MpcClass(){
-    std::cerr << "########################################################################";
-    std::cerr << "\n### MPC Benchmarking";
-    std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
-    std::cerr << "\n###   Average : " << mpcTimer_.getAverageInMilliseconds() << "[ms]." << std::endl;
-    std::cerr << "########################################################################";
-  }
+  ~MpcClass();
   bool init(ros::NodeHandle& controller_nh);
   void update();
   void starting();
@@ -83,8 +79,10 @@ class MpcClass {
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
 
  private:
-  std::atomic_bool mpcRunning_{false};
+  std::thread mpcThread_;
+  std::atomic_bool mpcRunning_{false}, controllerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
+  std::shared_ptr<SafetyChecker> safetyChecker_;
 };
 
 } // namespace legged
