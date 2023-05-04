@@ -203,7 +203,10 @@ Visualization Manager:
       Marker Topic: /wolf_mpc/currentState
       Name: CurrentState
       Namespaces:
-        {}
+        Center of Pressure: true
+        EE Forces: true
+        EE Positions: true
+        Support Polygon: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -219,7 +222,24 @@ Visualization Manager:
       Marker Topic: /wolf_mpc/optimizedStateTrajectory
       Name: OptimizedTrajectory
       Namespaces:
-        {}
+        CoM Trajectory: true
+        EE Trajectories: true
+        Future footholds: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /wolf_mpc/distance_markers
+      Name: Collisions
+      Namespaces:
+        2 - 5: true
+        2 - 8: true
+        3 - 6: true
+        3 - 9: true
+        5 - 11: true
+        6 - 12: true
+        8 - 11: true
+        9 - 12: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -250,7 +270,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.079585552215576
+      Distance: 1.8247720003128052
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -258,17 +278,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.032175831496715546
+        Y: 0.06185362488031387
+        Z: 0.11464004963636398
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3503984808921814
+      Pitch: 0.42539843916893005
       Target Frame: <Fixed Frame>
-      Yaw: 5.513576030731201
+      Yaw: 5.58857536315918
     Saved: ~
 Window Geometry:
   Displays:
