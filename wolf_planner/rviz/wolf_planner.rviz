@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /Status1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz/Selection
@@ -59,15 +60,6 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        front_rail:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         lf_foot:
           Alpha: 1
           Show Axes: false
@@ -108,10 +100,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        rear_rail:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
         rf_foot:
           Alpha: 1
           Show Axes: false
@@ -152,55 +140,61 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        trunk:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         trunk_imu:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
           Show Trail: false
       Name: RobotModel
       Robot Description: robot_description
-      TF Prefix: wolf_mpc
+      TF Prefix: wolf_planner
       Update Interval: 0
       Value: true
       Visual Enabled: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /wolf_mpc/desiredFeetTrajectory/LF
+      Marker Topic: /wolf_planner/desiredFeetTrajectory/LF
       Name: LF
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /wolf_mpc/desiredFeetTrajectory/LH
+      Marker Topic: /wolf_planner/desiredFeetTrajectory/LH
       Name: LH
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /wolf_mpc/desiredFeetTrajectory/RF
+      Marker Topic: /wolf_planner/desiredFeetTrajectory/RF
       Name: RF
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /wolf_mpc/desiredFeetTrajectory/RH
+      Marker Topic: /wolf_planner/desiredFeetTrajectory/RH
       Name: RH
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /wolf_mpc/currentState
+      Marker Topic: /wolf_planner/currentState
       Name: CurrentState
       Namespaces:
         Center of Pressure: true
@@ -211,42 +205,57 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /wolf_mpc/desiredBaseTrajectory
+      Marker Topic: /wolf_planner/desiredBaseTrajectory
       Name: Base
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /wolf_mpc/optimizedStateTrajectory
+      Marker Topic: /wolf_planner/optimizedStateTrajectory
       Name: OptimizedTrajectory
       Namespaces:
         CoM Trajectory: true
         EE Trajectories: true
-        Future footholds: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /wolf_mpc/distance_markers
+      Marker Topic: /wolf_planner/distance_markers
       Name: Collisions
       Namespaces:
-        2 - 5: true
-        2 - 8: true
-        3 - 6: true
-        3 - 9: true
-        5 - 11: true
-        6 - 12: true
-        8 - 11: true
-        9 - 12: true
+        12 - 16: true
+        13 - 17: true
+        4 - 12: true
+        4 - 8: true
+        5 - 13: true
+        5 - 9: true
+        8 - 16: true
+        9 - 17: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /aliengo/wolf_plot_node/contact_forces_visual_marker
+      Name: ContactForces
+      Namespaces:
+        Arrow: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /aliengo/wolf_plot_node/friction_cones_visual_marker
+      Name: FricitonCones
+      Namespaces:
+        Arrow: true
       Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: wolf_mpc/world
+    Fixed Frame: wolf_planner/world
     Frame Rate: 30
   Name: root
   Tools:
@@ -286,9 +295,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.42539843916893005
+      Pitch: 0.2703986167907715
       Target Frame: <Fixed Frame>
-      Yaw: 5.58857536315918
+      Yaw: 5.53857421875
     Saved: ~
 Window Geometry:
   Displays:
@@ -296,7 +305,7 @@ Window Geometry:
   Height: 1016
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000001ca0000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f0000035afc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d0000035a000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d0065010000000000000738000003bc00fffffffb0000000800540069006d00650100000000000004500000000000000000000004530000035a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000001d30000035afc0200000008fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000005c00fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000003d0000035a000000c900fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261000000010000010f0000035afc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a00560069006500770073010000003d0000035a000000a400fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000007380000003efc0100000002fb0000000800540069006d0065010000000000000738000003bc00fffffffb0000000800540069006d006501000000000000045000000000000000000000044a0000035a00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

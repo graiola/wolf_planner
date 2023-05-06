@@ -1,16 +1,14 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>legged_interface</name>
+    <name>wolf_planner_interface</name>
     <version>0.0.0</version>
     <description>Legged interface base on OCS2</description>
-    <maintainer email="liaoqiayuan@gmail.com">Qiayuan Liao</maintainer>
+    <maintainer email="todo@gmail.com">ToDo</maintainer>
 
     <license>BSD</license>
-    <author email="liaoqiayuan@gmail.com">Qiayuan Liao</author>
+    <author email="todo@gmail.com">ToDo</author>
 
     <buildtool_depend>catkin</buildtool_depend>
-
-    <build_depend>cmake_clang_tools</build_depend>
     <depend>roscpp</depend>
     <depend>ocs2_legged_robot</depend>
     <depend>ocs2_self_collision</depend>

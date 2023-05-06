@@ -1,7 +1,3 @@
-//
-// Created by qiayuan on 2022/7/16.
-//
-
 #include <pinocchio/fwd.hpp>  // forward declarations must be included first.
 
 #include <pinocchio/algorithm/frames.hpp>
@@ -63,7 +59,7 @@ LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string&
   }
 
   bool verbose = false;
-  loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
+  loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
 
   // load setting from loading file
   modelSettings_ = loadModelSettings(taskFile, "model_settings", verbose);

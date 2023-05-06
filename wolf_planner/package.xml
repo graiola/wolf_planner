@@ -1,23 +1,18 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>legged_controllers</name>
+    <name>wolf_planner</name>
     <version>0.0.0</version>
-    <description>The legged_controllers packages.</description>
-    <maintainer email="liaoqiayuan@gmail.com">Qiayuan Liao</maintainer>
+    <description>The wolf_planner packages.</description>
+    <maintainer email="todo@gmail.com">ToDo</maintainer>
     <license>BSD</license>
-    <author email="liaoqiayuan@gmail.com">Qiayuan Liao</author>
+    <author email="todo@gmail.com">ToDo</author>
 
     <buildtool_depend>catkin</buildtool_depend>
-
-    <build_depend>cmake_clang_tools</build_depend>
     <depend>roscpp</depend>
-
-    <depend>legged_interface</depend>
+    <depend>wolf_planner_interface</depend>
     <depend>ocs2_legged_robot_ros</depend>
     <depend>ocs2_self_collision_visualization</depend>
-
     <depend>angles</depend>
-
     <depend>wolf_msgs</depend>
 
     <export>

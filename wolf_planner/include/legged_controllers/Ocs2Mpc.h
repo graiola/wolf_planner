@@ -40,7 +40,6 @@ class MpcClass {
 
   void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                             bool verbose);
-  void setupMpc();
   void setupMrt();
   // Interface
   std::shared_ptr<LeggedInterface> leggedInterface_;

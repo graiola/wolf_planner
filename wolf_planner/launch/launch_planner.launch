@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+
+<launch>
+    <arg name="robot_name" default="spot" doc="Robot name: [a1, aliengo, spot]"/>
+    <arg name="rviz_gui"   default="false" />
+
+    <!-- Use this node to generate the URDFs -->
+    <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
+    args="-r $(arg robot_name) -d /tmp/wolf_planner"/> -->
+
+    <node pkg="tf" type="static_transform_publisher" name="world_to_world" args="0 0 0 0 0 0 world wolf_planner/world 100"/>
+
+    <!-- make the files into global parameters -->
+    <param name="urdfFile" value="$(find wolf_planner)/config/$(arg robot_name)/$(arg robot_name).urdf"/>
+    <param name="taskFile" value="$(find wolf_planner)/config/$(arg robot_name)/task.info"/>
+    <param name="referenceFile" value="$(find wolf_planner)/config/$(arg robot_name)/reference.info"/>
+    <param name="gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_name)/gait.info"/>
+
+    <node pkg="wolf_planner" type="wolf_gait_node" name="wolf_gait_node" output="screen"/>
+
+    <node pkg="wolf_planner" type="wolf_target_node" name="wolf_target_node" output="screen"/>
+
+    <node pkg="wolf_planner" type="wolf_mpc_node" name="wolf_mpc_node" output="screen"/>
+
+    <!-- rviz -->
+    <node name="wolf_planner_rviz" pkg="rviz" type="rviz" args="-d $(find wolf_planner)/rviz/wolf_planner.rviz" if="$(arg rviz_gui)"/>
+
+</launch>

@@ -1,9 +1,3 @@
-//
-// Created by qiayuan on 2022/7/24.
-//
-
-#pragma once
-
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <ros/subscriber.h>
@@ -25,16 +19,17 @@ class TargetTrajectoriesPublisher final {
                               CmdToTargetTrajectories cmdVelToTargetTrajectories)
       : goalToTargetTrajectories_(std::move(goalToTargetTrajectories)),
         cmdVelToTargetTrajectories_(std::move(cmdVelToTargetTrajectories)),
+        topicPrefix_(topicPrefix),
         tf2_(buffer_) {
     // Trajectories publisher
-    targetTrajectoriesPublisher_.reset(new TargetTrajectoriesRosPublisher(nh, topicPrefix));
+    targetTrajectoriesPublisher_.reset(new TargetTrajectoriesRosPublisher(nh, topicPrefix_));
 
     // observation subscriber
     auto observationCallback = [this](const ocs2_msgs::mpc_observation::ConstPtr& msg) {
       std::lock_guard<std::mutex> lock(latestObservationMutex_);
       latestObservation_ = ros_msg_conversions::readObservationMsg(*msg);
     };
-    observationSub_ = nh.subscribe<ocs2_msgs::mpc_observation>(topicPrefix + "_mpc_observation", 1, observationCallback);
+    observationSub_ = nh.subscribe<ocs2_msgs::mpc_observation>(topicPrefix_ + "/mpc_observation", 1, observationCallback);
 
     // goal subscriber
     auto goalCallback = [this](const geometry_msgs::PoseStamped::ConstPtr& msg) {
@@ -43,7 +38,7 @@ class TargetTrajectoriesPublisher final {
       }
       geometry_msgs::PoseStamped pose = *msg;
       try {
-        buffer_.transform(pose, pose, "wolf_mpc/world", ros::Duration(0.2)); // FIXME hardcoded frame name
+        buffer_.transform(pose, pose, topicPrefix_+"/world", ros::Duration(0.2)); // FIXME hardcoded frame name
       } catch (tf2::TransformException& ex) {
         ROS_WARN("Failure %s\n", ex.what());
         return;
@@ -79,7 +74,7 @@ class TargetTrajectoriesPublisher final {
     };
 
     goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
-    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/cmd_vel", 1, cmdVelCallback);
+    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/aliengo/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
   }
 
  private:
@@ -93,6 +88,8 @@ class TargetTrajectoriesPublisher final {
 
   mutable std::mutex latestObservationMutex_;
   SystemObservation latestObservation_;
+
+  std::string topicPrefix_;
 };
 
 }  // namespace legged

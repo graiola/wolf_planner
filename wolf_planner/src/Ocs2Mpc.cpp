@@ -40,12 +40,15 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   std::string taskFile;
   std::string referenceFile;
   std::string robot_name;
+  std::string topicPrefix = "wolf_planner";
   mpc_nh.getParam("/robot_name", robot_name);
   mpc_nh.getParam("/urdfFile", urdfFile);
   mpc_nh.getParam("/taskFile", taskFile);
   mpc_nh.getParam("/referenceFile", referenceFile);
   bool verbose = true;
-  loadData::loadCppDataType(taskFile, "legged_robot_interface.verbose", verbose);
+  loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
+
+  ros::NodeHandle root_nh;
 
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 
@@ -55,11 +58,19 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   currentObservation_.time = 0.0;
   currentObservation_.mode = ModeNumber::STANCE;
 
-  setupMpc();
+  // MPC
+  mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
+                                  leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
+  // Gait receiver
+  auto gaitReceiverPtr = std::make_shared<GaitReceiver>(root_nh, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
+  // ROS ReferenceManager
+  auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
+  rosReferenceManagerPtr->subscribe(root_nh);
+  mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
+  mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
+
+  // Setup the MPC thread loop
   setupMrt();
-
-  ros::NodeHandle root_nh;
-
 
   // Pinocchio EE Kinematics
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
@@ -69,12 +80,13 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
 
   // Robot visualizer
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, "wolf_mpc");
-  robotVisualizer_->frameId_ = "wolf_mpc/world";
+                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, topicPrefix);
+  robotVisualizer_->frameId_ =  topicPrefix+"/world";
+  robotVisualizer_->baseName_ = "trunk"; // FIXME
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                         leggedInterface_->getGeometryInterface(), pinocchioMapping, mpc_nh);
+                                                                         leggedInterface_->getGeometryInterface(), pinocchioMapping, mpc_nh, topicPrefix);
 
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
@@ -82,6 +94,9 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<joint_names.size();i++)
     ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<joint_names[i]);
+
+  // Observation used by the target node
+  observationPublisher_ = root_nh.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
   // MPC publishers (FIXME hardcoded)
   mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_foot_wrench", 1);
@@ -109,7 +124,6 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
 
 void MpcClass::starting()
 {
-
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
@@ -168,23 +182,6 @@ void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::stri
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void MpcClass::setupMpc()
-{
-  mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
-                                  leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
-
-  const std::string robotName = "legged_robot"; // FIXME hardcoded name
-  ros::NodeHandle nh;
-  // Gait receiver
-  auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nh, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), robotName);
-  // ROS ReferenceManager
-  auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(robotName, leggedInterface_->getReferenceManagerPtr());
-  rosReferenceManagerPtr->subscribe(nh);
-  mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
-  mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
-  observationPublisher_ = nh.advertise<ocs2_msgs::mpc_observation>(robotName + "_mpc_observation", 1);
-}
-
 void MpcClass::retrieveAndPublish()
 {
 
@@ -234,14 +231,15 @@ void MpcClass::retrieveAndPublish()
   vector_t mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
   vector_t mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
 
+  eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
   std::vector<vector3_t> mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
   std::vector<vector3_t> mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
 
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
   pinocchioMapping.setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+  const auto& qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
   ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
-  const vector_t vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
+  const auto& vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
@@ -318,6 +316,26 @@ void MpcClass::retrieveAndPublish()
   mpcFootPublisher_rh_.publish(foot_msg_rh);
   mpcBasePublisher_.publish(base_msg);
   mpcPosturalPublisher_.publish(postural_msg);
+
+
+  //const auto& stateTrajectory = mpcMrtInterface_->getCommand().mpcTargetTrajectories_.stateTrajectory;
+  //
+  //// Fill feet msgs
+  //for (size_t j = 0; j < stateTrajectory.size(); j++) {
+  //  const auto state = stateTrajectory.at(j);
+  //  const auto& model = leggedInterface_->getPinocchioInterface().getModel();
+  //  auto& data = leggedInterface_->getPinocchioInterface().getData();
+  //  pinocchio::forwardKinematics(model, data, centroidal_model::getGeneralizedCoordinates(state, leggedInterface_->getCentroidalModelInfo()));
+  //  pinocchio::updateFramePlacements(model, data);
+  //
+  //  const auto feetPositions = eeKinematicsPtr_->getPosition(state);
+  //  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().numThreeDofContacts; i++) {
+  //    //geometry_msgs::Pose footPose;
+  //    //footPose.position = getPointMsg(feetPositions[i]);
+  //    //desiredFeetPositionMsgs[i].push_back(footPose.position);
+  //    std::cout << i <<" " << feetPositions[i].x() << " " << feetPositions[i].y() << " " << feetPositions[i].z() << std::endl;
+  //  }
+  //}
 
   // Visualization
   if(robotVisualizer_ != nullptr)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(legged_controllers)
+project(wolf_planner)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -7,7 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED
         COMPONENTS
         roscpp
-        legged_interface
+        wolf_planner_interface
         ocs2_legged_robot_ros
         ocs2_self_collision_visualization
         angles
@@ -24,7 +24,7 @@ catkin_package(
         ${PROJECT_NAME}
         CATKIN_DEPENDS
         roscpp
-        legged_interface
+        wolf_planner_interface
         ocs2_legged_robot_ros
         ocs2_self_collision_visualization
         angles
@@ -46,10 +46,16 @@ link_directories(
 )
 
 # Target trajectories publish node
-add_executable(wolf_target_trajectories_publisher src/TargetTrajectoriesPublisher.cpp)
-add_dependencies(wolf_target_trajectories_publisher ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_target_trajectories_publisher ${catkin_LIBRARIES})
-target_compile_options(wolf_target_trajectories_publisher PRIVATE ${OCS2_CXX_FLAGS})
+add_executable(wolf_target_node src/TargetTrajectoriesPublisher.cpp)
+add_dependencies(wolf_target_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_target_node ${catkin_LIBRARIES})
+target_compile_options(wolf_target_node PRIVATE ${OCS2_CXX_FLAGS})
+
+# Gait command node
+add_executable(wolf_gait_node src/GaitCommandNode.cpp)
+add_dependencies(wolf_gait_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_gait_node ${catkin_LIBRARIES})
+target_compile_options(wolf_gait_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # MPC library
 add_library(wolf_mpc src/Ocs2Mpc.cpp)
@@ -65,7 +71,7 @@ target_link_libraries(wolf_mpc_node wolf_mpc)
 #############
 
 # Mark executables and/or libraries for installation
-install(TARGETS wolf_mpc wolf_mpc_node wolf_target_trajectories_publisher
+install(TARGETS wolf_mpc wolf_mpc_node wolf_target_node wolf_gait_node
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

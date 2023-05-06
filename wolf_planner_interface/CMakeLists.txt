@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(legged_interface)
+project(wolf_planner_interface)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

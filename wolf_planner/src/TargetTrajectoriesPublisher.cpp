@@ -65,12 +65,14 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
   const Eigen::Matrix<scalar_t, 3, 1> zyx = currentPose.tail(3);
   vector_t cmdVelRot = getRotationMatrixFromZyxEulerAngles(zyx) * cmdVel.head(3);
 
+
+
   const scalar_t timeToTarget = TIME_TO_TARGET;
   const vector_t targetPose = [&]() {
     vector_t target(6);
     target(0) = currentPose(0) + cmdVelRot(0) * timeToTarget;
     target(1) = currentPose(1) + cmdVelRot(1) * timeToTarget;
-    target(2) = COM_HEIGHT;
+    target(2) = currentPose(2) + cmdVel(2) * timeToTarget;
     target(3) = currentPose(3) + cmdVel(3) * timeToTarget;
     target(4) = 0;
     target(5) = 0;
@@ -86,11 +88,8 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
 }
 
 int main(int argc, char** argv) {
-  const std::string robotName = "legged_robot";
-  // FIXME (hardcoded names)
-
   // Initialize ros node
-  ::ros::init(argc, argv, robotName + "_target");
+  ::ros::init(argc, argv, "wolf_target_node");
   ::ros::NodeHandle nodeHandle;
   // Get node parameters
   std::string referenceFile;
@@ -104,7 +103,9 @@ int main(int argc, char** argv) {
   loadData::loadCppDataType(referenceFile, "targetDisplacementVelocity", TARGET_DISPLACEMENT_VELOCITY);
   loadData::loadCppDataType(taskFile, "mpc.timeHorizon", TIME_TO_TARGET);
 
-  TargetTrajectoriesPublisher target_pose_command(nodeHandle, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
+  std::string topicPrefix = "wolf_planner";
+
+  TargetTrajectoriesPublisher target_pose_command(nodeHandle, topicPrefix, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
 
   ros::spin();
   // Successful exit
