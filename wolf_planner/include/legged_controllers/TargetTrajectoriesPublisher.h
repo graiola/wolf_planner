@@ -15,12 +15,15 @@ class TargetTrajectoriesPublisher final {
  public:
   using CmdToTargetTrajectories = std::function<TargetTrajectories(const vector_t& cmd, const SystemObservation& observation)>;
 
-  TargetTrajectoriesPublisher(::ros::NodeHandle& nh, const std::string& topicPrefix, CmdToTargetTrajectories goalToTargetTrajectories,
+  TargetTrajectoriesPublisher(::ros::NodeHandle& nh, const std::string& topicPrefix, const std::string& robotName,
+                              CmdToTargetTrajectories goalToTargetTrajectories,
                               CmdToTargetTrajectories cmdVelToTargetTrajectories)
       : goalToTargetTrajectories_(std::move(goalToTargetTrajectories)),
         cmdVelToTargetTrajectories_(std::move(cmdVelToTargetTrajectories)),
         topicPrefix_(topicPrefix),
-        tf2_(buffer_) {
+        robotName_(robotName),
+        tf2_(buffer_)
+  {
     // Trajectories publisher
     targetTrajectoriesPublisher_.reset(new TargetTrajectoriesRosPublisher(nh, topicPrefix_));
 
@@ -74,7 +77,7 @@ class TargetTrajectoriesPublisher final {
     };
 
     goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
-    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/aliengo/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
+    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>(robotName_+"/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
   }
 
  private:
@@ -90,6 +93,7 @@ class TargetTrajectoriesPublisher final {
   SystemObservation latestObservation_;
 
   std::string topicPrefix_;
+  std::string robotName_;
 };
 
 }  // namespace legged

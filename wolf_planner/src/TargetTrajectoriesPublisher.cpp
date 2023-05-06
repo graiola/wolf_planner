@@ -94,6 +94,8 @@ int main(int argc, char** argv) {
   // Get node parameters
   std::string referenceFile;
   std::string taskFile;
+  std::string robotName;
+  nodeHandle.getParam("/robot_name", robotName);
   nodeHandle.getParam("/referenceFile", referenceFile);
   nodeHandle.getParam("/taskFile", taskFile);
 
@@ -105,7 +107,7 @@ int main(int argc, char** argv) {
 
   std::string topicPrefix = "wolf_planner";
 
-  TargetTrajectoriesPublisher target_pose_command(nodeHandle, topicPrefix, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
+  TargetTrajectoriesPublisher target_pose_command(nodeHandle, topicPrefix, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
 
   ros::spin();
   // Successful exit
