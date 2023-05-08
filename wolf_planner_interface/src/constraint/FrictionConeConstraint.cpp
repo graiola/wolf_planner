@@ -27,7 +27,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include "legged_interface/constraint/FrictionConeConstraint.h"
+#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 

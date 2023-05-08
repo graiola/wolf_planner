@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2021, Farbod Farshidian. All rights reserved.
+Copyright (c) 2020, Farbod Farshidian. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -29,39 +29,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <ocs2_centroidal_model/CentroidalModelInfo.h>
-#include <ocs2_core/constraint/StateInputConstraint.h>
+#include <memory>
+#include <string>
 
-#include "legged_interface/SwitchedModelReferenceManager.h"
+#include <ocs2_core/PreComputation.h>
+#include <ocs2_pinocchio_interface/PinocchioInterface.h>
+
+#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
+
+#include <ocs2_legged_robot/common/ModelSettings.h>
+
+#include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
+#include "wolf_planner_interface/constraint/SwingTrajectoryPlanner.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-class ZeroForceConstraint final : public StateInputConstraint {
+/** Callback for caching and reference update */
+class LeggedRobotPreComputation : public PreComputation {
  public:
-  /*
-   * Constructor
-   * @param [in] referenceManager : Switched model ReferenceManager.
-   * @param [in] contactPointIndex : The 3 DoF contact index.
-   * @param [in] info : The centroidal model information.
-   */
-  ZeroForceConstraint(const SwitchedModelReferenceManager& referenceManager, size_t contactPointIndex, CentroidalModelInfo info);
+  LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
+                            const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings);
+  ~LeggedRobotPreComputation() override = default;
 
-  ~ZeroForceConstraint() override = default;
-  ZeroForceConstraint* clone() const override { return new ZeroForceConstraint(*this); }
+  LeggedRobotPreComputation* clone() const override { return new LeggedRobotPreComputation(*this); }
 
-  bool isActive(scalar_t time) const override;
-  size_t getNumConstraints(scalar_t time) const override { return 3; }
-  vector_t getValue(scalar_t time, const vector_t& state, const vector_t& input, const PreComputation& preComp) const override;
-  VectorFunctionLinearApproximation getLinearApproximation(scalar_t time, const vector_t& state, const vector_t& input,
-                                                           const PreComputation& preComp) const override;
+  void request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) override;
+
+  const std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() const { return eeNormalVelConConfigs_; }
+
+  PinocchioInterface& getPinocchioInterface() { return pinocchioInterface_; }
+  const PinocchioInterface& getPinocchioInterface() const { return pinocchioInterface_; }
+
+ protected:
+  LeggedRobotPreComputation(const LeggedRobotPreComputation& other);
 
  private:
-  ZeroForceConstraint(const ZeroForceConstraint& other) = default;
+  PinocchioInterface pinocchioInterface_;
+  CentroidalModelInfo info_;
+  const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;
+  std::unique_ptr<CentroidalModelPinocchioMapping> mappingPtr_;
+  const ModelSettings settings_;
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
-  const size_t contactPointIndex_;
-  const CentroidalModelInfo info_;
+  std::vector<EndEffectorLinearConstraint::Config> eeNormalVelConConfigs_;
 };
 
 }  // namespace legged_robot

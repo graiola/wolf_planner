@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_legged_robot/common/Types.h>
 
-#include "legged_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {

@@ -14,9 +14,9 @@
 #include "wolf_msgs/ControllerState.h"
 
 // TbR
-#include <legged_interface/LeggedInterface.h>
-#include "legged_controllers/SafetyChecker.h"
-#include "legged_controllers/visualization/LeggedSelfCollisionVisualization.h"
+#include <wolf_planner_interface/LeggedInterface.h>
+#include "wolf_planner/SafetyChecker.h"
+#include "wolf_planner/visualization/LeggedSelfCollisionVisualization.h"
 
 // ROS
 #include <ros/ros.h>
@@ -34,13 +34,14 @@ class MpcClass {
   void update();
   void starting();
   void stopping();
-  void retrieveAndPublish();
 
  protected:
 
   void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                             bool verbose);
   void setupMrt();
+  void updatePolicyAndPublish();
+
   // Interface
   std::shared_ptr<LeggedInterface> leggedInterface_;
   std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
@@ -82,6 +83,8 @@ class MpcClass {
   std::atomic_bool mpcRunning_{false}, controllerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
   std::shared_ptr<SafetyChecker> safetyChecker_;
+  double timeOffset_;
+  double taskPeriod_;
 };
 
 } // namespace legged

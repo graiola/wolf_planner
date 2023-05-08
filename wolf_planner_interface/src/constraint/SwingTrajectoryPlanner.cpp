@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include "legged_interface/constraint/SwingTrajectoryPlanner.h"
+#include "wolf_planner_interface/constraint/SwingTrajectoryPlanner.h"
 
 #include <ocs2_core/misc/Lookup.h>
 

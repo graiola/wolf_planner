@@ -29,40 +29,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include <ocs2_core/thread_support/Synchronized.h>
-#include <ocs2_oc/synchronized_module/ReferenceManager.h>
+#include <ocs2_centroidal_model/CentroidalModelInfo.h>
+#include <ocs2_core/constraint/StateInputConstraint.h>
 
-#include <ocs2_legged_robot/gait/GaitSchedule.h>
-#include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
-
-#include "legged_interface/constraint/SwingTrajectoryPlanner.h"
+#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-/**
- * Manages the ModeSchedule and the TargetTrajectories for switched model.
- */
-class SwitchedModelReferenceManager : public ReferenceManager {
+class ZeroForceConstraint final : public StateInputConstraint {
  public:
-  SwitchedModelReferenceManager(std::shared_ptr<GaitSchedule> gaitSchedulePtr, std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr);
+  /*
+   * Constructor
+   * @param [in] referenceManager : Switched model ReferenceManager.
+   * @param [in] contactPointIndex : The 3 DoF contact index.
+   * @param [in] info : The centroidal model information.
+   */
+  ZeroForceConstraint(const SwitchedModelReferenceManager& referenceManager, size_t contactPointIndex, CentroidalModelInfo info);
 
-  ~SwitchedModelReferenceManager() override = default;
+  ~ZeroForceConstraint() override = default;
+  ZeroForceConstraint* clone() const override { return new ZeroForceConstraint(*this); }
 
-  void setModeSchedule(const ModeSchedule& modeSchedule) override;
+  bool isActive(scalar_t time) const override;
+  size_t getNumConstraints(scalar_t time) const override { return 3; }
+  vector_t getValue(scalar_t time, const vector_t& state, const vector_t& input, const PreComputation& preComp) const override;
+  VectorFunctionLinearApproximation getLinearApproximation(scalar_t time, const vector_t& state, const vector_t& input,
+                                                           const PreComputation& preComp) const override;
 
-  contact_flag_t getContactFlags(scalar_t time) const;
+ private:
+  ZeroForceConstraint(const ZeroForceConstraint& other) = default;
 
-  const std::shared_ptr<GaitSchedule>& getGaitSchedule() { return gaitSchedulePtr_; }
-
-  const std::shared_ptr<SwingTrajectoryPlanner>& getSwingTrajectoryPlanner() { return swingTrajectoryPtr_; }
-
- protected:
-  void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
-                        ModeSchedule& modeSchedule) override;
-
-  std::shared_ptr<GaitSchedule> gaitSchedulePtr_;
-  std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr_;
+  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const size_t contactPointIndex_;
+  const CentroidalModelInfo info_;
 };
 
 }  // namespace legged_robot

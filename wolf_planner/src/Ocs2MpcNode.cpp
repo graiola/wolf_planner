@@ -1,4 +1,4 @@
-#include "legged_controllers/Ocs2Mpc.h"
+#include "wolf_planner/Ocs2Mpc.h"
 
 int main(int argc, char **argv)
 {

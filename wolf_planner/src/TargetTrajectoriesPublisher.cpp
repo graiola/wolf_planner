@@ -1,4 +1,4 @@
-#include "legged_controllers/TargetTrajectoriesPublisher.h"
+#include "wolf_planner/TargetTrajectoriesPublisher.h"
 
 #include <ocs2_core/Types.h>
 #include <ocs2_core/misc/LoadData.h>

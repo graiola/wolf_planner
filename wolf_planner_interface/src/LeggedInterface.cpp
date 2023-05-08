@@ -3,15 +3,15 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/jacobian.hpp>
 
-#include "legged_interface/LeggedInterface.h"
-#include "legged_interface/LeggedRobotPreComputation.h"
-#include "legged_interface/constraint/FrictionConeConstraint.h"
-#include "legged_interface/constraint/LeggedSelfCollisionConstraint.h"
-#include "legged_interface/constraint/NormalVelocityConstraintCppAd.h"
-#include "legged_interface/constraint/ZeroForceConstraint.h"
-#include "legged_interface/constraint/ZeroVelocityConstraintCppAd.h"
-#include "legged_interface/cost/LeggedRobotQuadraticTrackingCost.h"
-#include "legged_interface/initialization/LeggedRobotInitializer.h"
+#include "wolf_planner_interface/LeggedInterface.h"
+#include "wolf_planner_interface/LeggedRobotPreComputation.h"
+#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
+#include "wolf_planner_interface/constraint/LeggedSelfCollisionConstraint.h"
+#include "wolf_planner_interface/constraint/NormalVelocityConstraintCppAd.h"
+#include "wolf_planner_interface/constraint/ZeroForceConstraint.h"
+#include "wolf_planner_interface/constraint/ZeroVelocityConstraintCppAd.h"
+#include "wolf_planner_interface/cost/LeggedRobotQuadraticTrackingCost.h"
+#include "wolf_planner_interface/initialization/LeggedRobotInitializer.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>

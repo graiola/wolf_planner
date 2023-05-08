@@ -3,7 +3,7 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 
-#include "legged_controllers/Ocs2Mpc.h"
+#include "wolf_planner/Ocs2Mpc.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
@@ -39,9 +39,10 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   std::string urdfFile;
   std::string taskFile;
   std::string referenceFile;
-  std::string robot_name;
+  std::string robotName;
   std::string topicPrefix = "wolf_planner";
-  mpc_nh.getParam("/robot_name", robot_name);
+  mpc_nh.getParam("/robot_name", robotName);
+  mpc_nh.getParam("/task_period", taskPeriod_);
   mpc_nh.getParam("/urdfFile", urdfFile);
   mpc_nh.getParam("/taskFile", taskFile);
   mpc_nh.getParam("/referenceFile", referenceFile);
@@ -57,6 +58,7 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
   currentObservation_.time = 0.0;
   currentObservation_.mode = ModeNumber::STANCE;
+  timeOffset_ = 0.0;
 
   // MPC
   mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
@@ -82,7 +84,7 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, topicPrefix);
   robotVisualizer_->frameId_ =  topicPrefix+"/world";
-  robotVisualizer_->baseName_ = "trunk"; // FIXME
+  robotVisualizer_->baseName_ = "base_link"; // FIXME
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
@@ -91,39 +93,48 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
 
+  ROS_INFO_STREAM("[WoLF planner] Robot name is: "<< robotName);
   auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<joint_names.size();i++)
     ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<joint_names[i]);
+  ROS_INFO_STREAM("[WoLF planner] Controller period is: "<< taskPeriod_);
 
   // Observation used by the target node
   observationPublisher_ = root_nh.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
   // MPC publishers (FIXME hardcoded)
-  mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lf_foot_wrench", 1);
-  mpcFootPublisher_lf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lf_foot",   1);
+  mpcWrenchPublisher_lf_  = root_nh.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/lf_foot_wrench", 1);
+  mpcFootPublisher_lf_    = root_nh.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/lh_foot_wrench", 1);
-  mpcFootPublisher_lh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/lh_foot",   1);
+  mpcWrenchPublisher_lh_  = root_nh.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/lh_foot_wrench", 1);
+  mpcFootPublisher_lh_    = root_nh.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rf_foot_wrench", 1);
-  mpcFootPublisher_rf_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rf_foot",   1);
+  mpcWrenchPublisher_rf_  = root_nh.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/rf_foot_wrench", 1);
+  mpcFootPublisher_rf_    = root_nh.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = root_nh.advertise<wolf_msgs::Wrench>   (robot_name+"/wolf_controller/reference/rh_foot_wrench", 1);
-  mpcFootPublisher_rh_    = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/rh_foot",   1);
+  mpcWrenchPublisher_rh_  = root_nh.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/rh_foot_wrench", 1);
+  mpcFootPublisher_rh_    = root_nh.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/rh_foot",   1);
 
-  mpcBasePublisher_       = root_nh.advertise<wolf_msgs::Cartesian>(robot_name+"/wolf_controller/reference/waist",     1);
+  mpcBasePublisher_       = root_nh.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/waist",     1);
 
-  mpcPosturalPublisher_   = root_nh.advertise<wolf_msgs::Postural> (robot_name+"/wolf_controller/reference/postural",  1);
+  mpcPosturalPublisher_   = root_nh.advertise<wolf_msgs::Postural> (robotName+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded)
-  mpcObservation_         = root_nh.subscribe(robot_name+"/wolf_controller/mpc_observation", 1,  &MpcClass::observationCallback, this);
-  controllerState_        = root_nh.subscribe(robot_name+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
+  mpcObservation_         = root_nh.subscribe(robotName+"/wolf_controller/mpc_observation",  1, &MpcClass::observationCallback, this);
+  controllerState_        = root_nh.subscribe(robotName+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
 
   return true;
 }
 
 void MpcClass::starting()
 {
+
+  // Reset
+  //currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
+  //currentObservation_.mode = ModeNumber::STANCE;
+  //timeOffset_ = currentObservation_.time;
+  //currentObservation_.time = taskPeriod_; // Controller period
+
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
@@ -169,7 +180,7 @@ void MpcClass::setupMrt()
             leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
         controllerRunning_ = false;
-        ROS_ERROR_STREAM("[WoLF planner] Error : " << e.what());
+        ROS_ERROR_STREAM("[WoLF planner] Error: " << e.what());
       }
     }
   });
@@ -182,7 +193,7 @@ void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::stri
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void MpcClass::retrieveAndPublish()
+void MpcClass::updatePolicyAndPublish()
 {
 
   // Update the current state of the system
@@ -350,10 +361,17 @@ void MpcClass::retrieveAndPublish()
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
 
-  //currentObservation_.state.setZero();
-  //currentObservation_.input.setZero();
   currentObservation_.time = msg->time;
   currentObservation_.mode = msg->mode;
+
+  //currentObservation_.state.setZero();
+  //currentObservation_.input.setZero();
+  //currentObservation_.time = msg->time - timeOffset_;
+  //currentObservation_.mode = msg->mode;
+
+  //std::cout <<"********************"<<std::endl;
+  //std::cout <<"Time: " <<currentObservation_.time <<std::endl;
+  //std::cout <<"Mode: " <<currentObservation_.mode <<std::endl;
 
   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
     currentObservation_.state(i) = msg->state.value[i];
@@ -362,7 +380,7 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 
   // Update the current state of the system
   if(mpcRunning_)
-    retrieveAndPublish();
+    updatePolicyAndPublish();
 }
 
 void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)

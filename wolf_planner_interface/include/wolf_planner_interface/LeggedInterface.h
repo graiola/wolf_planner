@@ -21,7 +21,7 @@
 #include <ocs2_self_collision/PinocchioGeometryInterface.h>
 #include <ocs2_sqp/SqpSettings.h>
 
-#include "legged_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
 
 namespace legged {
 using namespace ocs2;

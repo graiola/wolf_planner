@@ -1,12 +1,8 @@
-//
-// Created by qiayuan on 23-1-29.
-//
-
 #pragma once
 
 #include <ocs2_self_collision/SelfCollisionConstraint.h>
 
-#include "legged_interface/LeggedRobotPreComputation.h"
+#include "wolf_planner_interface/LeggedRobotPreComputation.h"
 
 namespace legged {
 using namespace ocs2;
