@@ -18,6 +18,8 @@
 
 #include <angles/angles.h>
 
+#define OPENLOOP
+
 namespace legged {
 
 MpcClass::~MpcClass()
@@ -54,11 +56,11 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 
   // Initialize the observation data structure
-  currentObservationInit_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  currentObservationInit_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  currentObservationInit_.time = 0.0;
-  currentObservationInit_.mode = ModeNumber::STANCE;
-  timeOffset_ = 0.0;
+  currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
+  currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
+  currentObservation_.time = 0.0;
+  currentObservation_.mode = ModeNumber::STANCE;
+  callbackObservation_ = currentObservation_;
 
   // MPC
   mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
@@ -84,7 +86,7 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, topicPrefix);
   robotVisualizer_->frameId_ =  topicPrefix+"/world";
-  robotVisualizer_->baseName_ = "base_link"; // FIXME
+  robotVisualizer_->baseName_ = "trunk"; // FIXME load it from SRDF
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
@@ -129,18 +131,12 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
 void MpcClass::starting()
 {
 
-  // Reset
-  //currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  //currentObservation_.mode = ModeNumber::STANCE;
-  //timeOffset_ = currentObservation_.time;
-  currentObservationInit_.time = taskPeriod_;
+  currentObservation_ = callbackObservation_;
 
-  TargetTrajectories target_trajectories({currentObservationInit_.time}, {currentObservationInit_.state}, {currentObservationInit_.input});
-
-  currentObservation_ = currentObservationInit_;
+  TargetTrajectories target_trajectories({callbackObservation_.time}, {callbackObservation_.state}, {callbackObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
-  mpcMrtInterface_->setCurrentObservation(currentObservationInit_);
+  mpcMrtInterface_->setCurrentObservation(callbackObservation_);
   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
   ROS_INFO_STREAM("[WoLF planner] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
@@ -195,27 +191,28 @@ void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::stri
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void MpcClass::updatePolicyAndPublish(SystemObservation& currentObservation)
+void MpcClass::updatePolicyAndPublish(SystemObservation& observation)
 {
-
   // Update the current state of the system
-  mpcMrtInterface_->setCurrentObservation(currentObservation);
+  mpcMrtInterface_->setCurrentObservation(observation);
 
   // Load the latest MPC policy
   mpcMrtInterface_->updatePolicy();
 
   // Evaluate the current policy
   vector_t optimizedState, optimizedInput;
-  size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at.
-  mpcMrtInterface_->evaluatePolicy(currentObservation.time, currentObservation.state, optimizedState, optimizedInput, plannedMode);
+  size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at (NOTE: this is modified by the planner)
+  mpcMrtInterface_->evaluatePolicy(observation.time, observation.state, optimizedState, optimizedInput, plannedMode);
 
   // This is the input for the WBC (NOTE: we don't use it right now, instead we publish with specific topics for WoLF)
-  currentObservation.input = optimizedInput;
-  currentObservation.state = optimizedState;
-  currentObservation.time += taskPeriod_;
+  observation.input = optimizedInput;
+#ifdef OPENLOOP
+  observation.state = optimizedState;
+  observation.time += taskPeriod_;
+#endif
 
   // Safety check, if failed, stop the planner
-  if (!safetyChecker_->check(currentObservation, optimizedState, optimizedInput))
+  if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
   {
     ROS_ERROR_STREAM("[WoLF planner] Safety check failed, stopping the planner.");
     controllerRunning_ = false;
@@ -228,6 +225,12 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& currentObservation)
   pinocchio::forwardKinematics(mpc_model, mpc_data, centroidal_model::getGeneralizedCoordinates(optimizedState, leggedInterface_->getCentroidalModelInfo()));
   pinocchio::computeJointJacobians(mpc_model, mpc_data);
   pinocchio::updateFramePlacements(mpc_model, mpc_data);
+
+  CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
+  pinocchioMapping.setPinocchioInterface(leggedInterface_->getPinocchioInterface());
+  const auto& qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+  ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
+  const auto& vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
 
   // Retrieve MPC optimized output
   vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
@@ -249,12 +252,6 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& currentObservation)
   eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
   std::vector<vector3_t> mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
   std::vector<vector3_t> mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
-
-  CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-  pinocchioMapping.setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto& qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
-  ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
-  const auto& vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
@@ -334,22 +331,20 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& currentObservation)
 
   // Visualization
   if(robotVisualizer_ != nullptr)
-    robotVisualizer_->update(currentObservation, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
+    robotVisualizer_->update(observation, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
   if(selfCollisionVisualization_ != nullptr)
-    selfCollisionVisualization_->update(currentObservation);
+    selfCollisionVisualization_->update(observation);
 
   // Publish the observation. Only needed for the command interface
-  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(currentObservation));
+  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation));
 }
 
 void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
 
-   currentObservationInit_.time = msg->time;
-   currentObservationInit_.mode = msg->mode;
+   callbackObservation_.time = msg->time;
+   callbackObservation_.mode = msg->mode;
 
-   //currentObservation_.state.setZero();
-   //currentObservation_.input.setZero();
    //currentObservation_.time = msg->time - timeOffset_;
    //currentObservation_.mode = msg->mode;
    //std::cout <<"********************"<<std::endl;
@@ -357,35 +352,18 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
    //std::cout <<"Mode: " <<currentObservation_.mode <<std::endl;
 
    for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
-     currentObservationInit_.state(i) = msg->state.value[i];
+     callbackObservation_.state(i) = msg->state.value[i];
    //for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
    //  currentObservation_.input(i) = msg->input.value[i];
-
-
-  //SystemObservation currentObservation;
-  //currentObservation.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  //currentObservation.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  //currentObservation.time = msg->time;
-  //currentObservation.mode = msg->mode;
-  //for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
-  //  currentObservation.state(i) = msg->state.value[i];
-  //
-  //static bool init = false;
 
   // Update the current state of the system
   if(mpcRunning_)
   {
-    //if(!init)
-    //{
-    //  ROS_INFO("INIT!");
-    //  updatePolicyAndPublish(currentObservation);
-    //  init = true;
-    //}
-    //else
-    //{
-      //currentObservation_.time = msg->time;
-      updatePolicyAndPublish(currentObservation_);
-    //}
+#ifdef OPENLOOP
+    updatePolicyAndPublish(currentObservation_);
+#else
+    updatePolicyAndPublish(callbackObservation_);
+#endif
   }
 }
 

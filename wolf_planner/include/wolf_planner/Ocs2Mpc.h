@@ -40,7 +40,7 @@ class MpcClass {
   void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                             bool verbose);
   void setupMrt();
-  void updatePolicyAndPublish(SystemObservation& currentObservation);
+  void updatePolicyAndPublish(SystemObservation& observation);
 
   // Interface
   std::shared_ptr<LeggedInterface> leggedInterface_;
@@ -48,7 +48,7 @@ class MpcClass {
 
   // System Observation
   SystemObservation currentObservation_;
-  SystemObservation currentObservationInit_;
+  SystemObservation callbackObservation_;
 
   // Nonlinear MPC
   std::shared_ptr<MPC_BASE> mpc_;
@@ -84,7 +84,6 @@ class MpcClass {
   std::atomic_bool mpcRunning_{false}, controllerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
   std::shared_ptr<SafetyChecker> safetyChecker_;
-  double timeOffset_;
   double taskPeriod_;
 };
 
