@@ -18,7 +18,7 @@
 
 #include <angles/angles.h>
 
-#define OPENLOOP
+//#define OPENLOOP
 
 namespace legged {
 
@@ -43,6 +43,8 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   std::string referenceFile;
   std::string robotName;
   std::string topicPrefix = "wolf_planner";
+  std::vector<std::string> robotFootNames;
+  std::string robotBaseName;
   mpc_nh.getParam("/robot_name", robotName);
   mpc_nh.getParam("/task_period", taskPeriod_);
   mpc_nh.getParam("/urdfFile", urdfFile);
@@ -52,6 +54,20 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
 
   ros::NodeHandle root_nh;
+  root_nh.getParam(robotName+"/wolf_controller/robot_foot_names", robotFootNames);
+  root_nh.getParam(robotName+"/wolf_controller/robot_base_name", robotBaseName);
+
+  if(robotFootNames.empty())
+  {
+    ROS_ERROR("[WoLF planner] robot foot names is empty!");
+    return false;
+  }
+
+  if(robotBaseName.empty())
+  {
+    ROS_ERROR("[WoLF planner] robot base name is empty!");
+    return false;
+  }
 
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 
@@ -86,7 +102,7 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpc_nh, topicPrefix);
   robotVisualizer_->frameId_ =  topicPrefix+"/world";
-  robotVisualizer_->baseName_ = "trunk"; // FIXME load it from SRDF
+  robotVisualizer_->baseName_ = robotBaseName;
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
@@ -252,6 +268,10 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& observation)
   eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
   std::vector<vector3_t> mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
   std::vector<vector3_t> mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
+
+  //std::cout << "**********************" << std::endl;
+  //for(unsigned int i=0; i<qDesired.size(); i++)
+  //  std::cout << qDesired(i) << std::endl;
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
