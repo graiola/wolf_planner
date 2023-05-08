@@ -1,8 +1,5 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "misc-non-private-member-variables-in-classes"
-//
-// Created by qiayuan on 2022/7/16.
-//
 
 #pragma once
 
