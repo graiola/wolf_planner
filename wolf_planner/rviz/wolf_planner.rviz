@@ -60,6 +60,15 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_rail:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         lf_foot:
           Alpha: 1
           Show Axes: false
@@ -100,6 +109,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        rear_rail:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         rf_foot:
           Alpha: 1
           Show Axes: false
@@ -140,16 +153,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        trunk:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         trunk_imu:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         world:
           Alpha: 1
           Show Axes: false
@@ -225,19 +232,19 @@ Visualization Manager:
       Marker Topic: /wolf_planner/distance_markers
       Name: Collisions
       Namespaces:
-        12 - 16: true
-        13 - 17: true
-        4 - 12: true
-        4 - 8: true
-        5 - 13: true
-        5 - 9: true
-        8 - 16: true
-        9 - 17: true
+        2 - 5: true
+        2 - 8: true
+        3 - 6: true
+        3 - 9: true
+        5 - 11: true
+        6 - 12: true
+        8 - 11: true
+        9 - 12: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /aliengo/wolf_plot_node/contact_forces_visual_marker
+      Marker Topic: /spot/wolf_plot_node/contact_forces_visual_marker
       Name: ContactForces
       Namespaces:
         Arrow: true
@@ -245,7 +252,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/MarkerArray
       Enabled: true
-      Marker Topic: /aliengo/wolf_plot_node/friction_cones_visual_marker
+      Marker Topic: /spot/wolf_plot_node/friction_cones_visual_marker
       Name: FricitonCones
       Namespaces:
         Arrow: true

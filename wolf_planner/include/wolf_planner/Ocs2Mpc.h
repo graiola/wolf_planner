@@ -40,14 +40,15 @@ class MpcClass {
   void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                             bool verbose);
   void setupMrt();
-  void updatePolicyAndPublish();
+  void updatePolicyAndPublish(SystemObservation& currentObservation);
 
   // Interface
   std::shared_ptr<LeggedInterface> leggedInterface_;
   std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
 
-  // State Estimation
+  // System Observation
   SystemObservation currentObservation_;
+  SystemObservation currentObservationInit_;
 
   // Nonlinear MPC
   std::shared_ptr<MPC_BASE> mpc_;
