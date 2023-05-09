@@ -65,15 +65,13 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
   const Eigen::Matrix<scalar_t, 3, 1> zyx = currentPose.tail(3);
   vector_t cmdVelRot = getRotationMatrixFromZyxEulerAngles(zyx) * cmdVel.head(3);
 
-
-
   const scalar_t timeToTarget = TIME_TO_TARGET;
   const vector_t targetPose = [&]() {
     vector_t target(6);
-    target(0) = currentPose(0) + cmdVelRot(0) * timeToTarget;
-    target(1) = currentPose(1) + cmdVelRot(1) * timeToTarget;
-    target(2) = currentPose(2) + cmdVelRot(2) * timeToTarget;
-    target(3) = currentPose(3) + cmdVel(3) * timeToTarget;
+    target(0) = currentPose(0) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(0) * timeToTarget;
+    target(1) = currentPose(1) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(1) * timeToTarget;
+    target(2) = currentPose(2) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(2) * timeToTarget;
+    target(3) = currentPose(3) + TARGET_ROTATION_VELOCITY* cmdVel(3) * timeToTarget;
     target(4) = 0;
     target(5) = 0;
     return target;
