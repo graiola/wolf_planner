@@ -154,25 +154,31 @@ initialState
    ;; Base Pose: [position, orientation] ;;
    (6,0)  0.0     ; p_base_x
    (7,0)  0.0     ; p_base_y
-   (8,0)  0.5     ; p_base_z
+   (8,0)  0.53    ; p_base_z
    (9,0)  0.0     ; theta_base_z
    (10,0) 0.0     ; theta_base_y
    (11,0) 0.0     ; theta_base_x
 
    ;; Leg Joint Positions: [LF, LH, RF, RH] ;;
-   (12,0)  0.6   ; lf_haa_joint
-   (13,0) 1.35   ; lf_hfe_joint
-   (14,0) -2.7   ; lf_kfe_joint
-   (15,0)  0.6   ; lh_haa_joint
-   (16,0) 1.35   ; lh_hfe_joint
-   (17,0) -2.7   ; lh_kfe_joint
-   (18,0) -0.6   ; rf_haa_joint
-   (19,0) 1.35   ; rf_hfe_joint
-   (20,0) -2.7   ; rf_kfe_joint
-   (21,0) -0.6   ; rh_haa_joint
-   (22,0) 1.35   ; rh_hfe_joint
-   (23,0) -2.7   ; rh_kfe_joint
+   (12,0) 0.149719   ; lf_haa_joint
+   (13,0) 0.747586   ; lf_hfe_joint
+   (14,0) 4.92466    ; lf_kfe_joint
+   (15,0) 0.149567   ; lh_haa_joint
+   (16,0) 0.747238   ; lh_hfe_joint
+   (17,0) 4.92512    ; lh_kfe_joint
+   (18,0) -0.142184   ; rf_haa_joint
+   (19,0) 0.752278    ; rf_hfe_joint
+   (20,0) 4.91745     ; rf_kfe_joint
+   (21,0) -0.142058   ; rh_haa_joint
+   (22,0) 0.751895    ; rh_hfe_joint
+   (23,0) 4.91793     ; rh_kfe_joint
 }
+
+
+
+
+
+
 
 ; standard state weight matrix
 Q
