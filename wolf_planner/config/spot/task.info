@@ -9,10 +9,31 @@ model_settings
 {
   positionErrorGain             0.0
   phaseTransitionStanceTime     0.1
-
   verboseCppAd                  true
   recompileLibrariesCppAd       false
   modelFolderCppAd              /tmp/wolf_planner/spot
+  jointNames
+  {
+      [0] lf_haa_joint
+      [1] lf_hfe_joint
+      [2] lf_kfe_joint
+      [3] lh_haa_joint
+      [4] lh_hfe_joint
+      [5] lh_kfe_joint
+      [6] rf_haa_joint
+      [7] rf_hfe_joint
+      [8] rf_kfe_joint
+      [9] rh_haa_joint
+      [10] rh_hfe_joint
+      [11] rh_kfe_joint
+  }
+  contactNames3DoF
+  {
+      [0] lf_foot
+      [1] lh_foot
+      [2] rf_foot
+      [3] rh_foot
+  }
 }
 
 swing_trajectory_config
@@ -173,12 +194,6 @@ initialState
    (22,0) 0.751895    ; rh_hfe_joint
    (23,0) 4.91793     ; rh_kfe_joint
 }
-
-
-
-
-
-
 
 ; standard state weight matrix
 Q

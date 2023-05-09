@@ -63,15 +63,9 @@ LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string&
 
   // load setting from loading file
   modelSettings_ = loadModelSettings(taskFile, "model_settings", verbose);
-
-  // FIXME use srdf?
-  modelSettings_.modelFolderCppAd = "/tmp/wolf_planner";
-  modelSettings_.jointNames = {"lf_haa_joint", "lf_hfe_joint", "lf_kfe_joint",
-                               "lh_haa_joint", "lh_hfe_joint", "lh_kfe_joint",
-                               "rf_haa_joint", "rf_hfe_joint", "rf_kfe_joint",
-                               "rh_haa_joint", "rh_hfe_joint", "rh_kfe_joint"};
-
-  modelSettings_.contactNames3DoF = {"lf_foot", "lh_foot", "rf_foot", "rh_foot"};
+  loadData::loadCppDataType(taskFile, "model_settings.modelFolderCppAd", modelSettings_.modelFolderCppAd);
+  loadData::loadStdVector(taskFile, "model_settings.jointNames", modelSettings_.jointNames);
+  loadData::loadStdVector(taskFile, "model_settings.contactNames3DoF", modelSettings_.contactNames3DoF);
 
   mpcSettings_ = mpc::loadSettings(taskFile, "mpc", verbose);
   ddpSettings_ = ddp::loadSettings(taskFile, "ddp", verbose);
