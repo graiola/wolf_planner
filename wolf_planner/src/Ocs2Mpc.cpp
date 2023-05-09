@@ -18,6 +18,7 @@
 
 #include <angles/angles.h>
 
+// Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
 //#define OPENLOOP
 
 namespace legged {
@@ -37,7 +38,6 @@ MpcClass::~MpcClass()
 
 bool MpcClass::init(ros::NodeHandle& mpc_nh)
 {
-  // Initialize OCS2
   std::string urdfFile;
   std::string taskFile;
   std::string referenceFile;
@@ -46,6 +46,12 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   std::vector<std::string> robotFootNames;
   std::string robotBaseName;
   mpc_nh.getParam("/robot_name", robotName);
+
+  // Wait for the controller to start
+  ROS_INFO("[WoLF Planner] waiting for WoLF controller to start...");
+  while (!ros::service::waitForService(robotName+"/wolf_controller/stand_up") && ros::ok())
+    ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
+
   mpc_nh.getParam("/task_period", taskPeriod_);
   mpc_nh.getParam("/urdfFile", urdfFile);
   mpc_nh.getParam("/taskFile", taskFile);
@@ -112,10 +118,11 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
 
   ROS_INFO_STREAM("[WoLF planner] Robot name is: "<< robotName);
-  auto joint_names = leggedInterface_->getPinocchioInterface().getModel().names;
-  for(unsigned int i=0;i<joint_names.size();i++)
-    ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<joint_names[i]);
-  ROS_INFO_STREAM("[WoLF planner] Controller period is: "<< taskPeriod_);
+  auto jointNames = leggedInterface_->getPinocchioInterface().getModel().names;
+  for(unsigned int i=0;i<jointNames.size();i++)
+    ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<jointNames[i]);
+  ROS_INFO_STREAM("[WoLF planner] WoLF controller period is: "<< taskPeriod_);
+  ROS_INFO_STREAM("[WoLF planner] WoLF planner period is: "<< 1.0/leggedInterface_->mpcSettings().mpcDesiredFrequency_);
 
   // Observation used by the target node
   observationPublisher_ = root_nh.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
@@ -365,16 +372,8 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
    callbackObservation_.time = msg->time;
    callbackObservation_.mode = msg->mode;
 
-   //currentObservation_.time = msg->time - timeOffset_;
-   //currentObservation_.mode = msg->mode;
-   //std::cout <<"********************"<<std::endl;
-   //std::cout <<"Time: " <<currentObservation_.time <<std::endl;
-   //std::cout <<"Mode: " <<currentObservation_.mode <<std::endl;
-
    for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
      callbackObservation_.state(i) = msg->state.value[i];
-   //for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().inputDim; ++i)
-   //  currentObservation_.input(i) = msg->input.value[i];
 
   // Update the current state of the system
   if(mpcRunning_)
@@ -389,7 +388,7 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
 
 void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
-  if(msg->current_state == "ACTIVE")// && msg->current_mode == "EXT")
+  if(msg->current_state == "ACTIVE")
   {
     if(!mpcRunning_) starting();
   }
