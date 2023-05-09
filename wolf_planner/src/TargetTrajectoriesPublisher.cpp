@@ -4,7 +4,7 @@
 #include <ocs2_core/misc/LoadData.h>
 #include <ocs2_robotic_tools/common/RotationTransforms.h>
 
-using namespace legged;
+using namespace wolf_planner;
 
 namespace {
 scalar_t TARGET_DISPLACEMENT_VELOCITY;

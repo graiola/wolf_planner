@@ -6,7 +6,8 @@
 using namespace ocs2;
 using namespace legged_robot;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   const std::string topicPrefix = "wolf_planner";
 
   // Initialize ros node

@@ -1,15 +1,9 @@
-//
-// Created by qiayuan on 23-1-30.
-//
-
-#pragma once
 #include <ros/ros.h>
-
 #include <ocs2_self_collision_visualization/GeometryInterfaceVisualization.h>
-
 #include <utility>
 
-namespace legged {
+namespace wolf_planner
+{
 
 using namespace ocs2;
 
@@ -36,4 +30,4 @@ class LeggedSelfCollisionVisualization : public GeometryInterfaceVisualization {
   scalar_t minPublishTimeDifference_;
 };
 
-}  // namespace legged
+}  // namespace wolf_planner

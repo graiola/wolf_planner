@@ -4,7 +4,7 @@
 
 #include "wolf_planner_interface/LeggedRobotPreComputation.h"
 
-namespace legged {
+namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;
 
@@ -22,4 +22,4 @@ class LeggedSelfCollisionConstraint final : public SelfCollisionConstraint {
   }
 };
 
-}  // namespace legged
+}  // namespace wolf_planner

@@ -58,12 +58,12 @@ target_link_libraries(wolf_gait_node ${catkin_LIBRARIES})
 target_compile_options(wolf_gait_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # MPC library
-add_library(wolf_mpc src/Ocs2Mpc.cpp)
+add_library(wolf_mpc src/WolfMpc.cpp)
 add_dependencies(wolf_mpc ${catkin_EXPORTED_TARGETS})
 target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES})
 
 # MPC node
-add_executable(wolf_mpc_node src/Ocs2MpcNode.cpp)
+add_executable(wolf_mpc_node src/WolfMpcNode.cpp)
 target_link_libraries(wolf_mpc_node wolf_mpc)
 
 #############

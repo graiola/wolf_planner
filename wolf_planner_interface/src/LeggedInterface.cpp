@@ -30,7 +30,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-namespace legged {
+namespace wolf_planner {
 LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                  bool useHardFrictionConeConstraint)
     : useHardFrictionConeConstraint_(useHardFrictionConeConstraint) {
@@ -371,4 +371,4 @@ std::unique_ptr<StateCost> LeggedInterface::getSelfCollisionConstraint(const Pin
   return std::make_unique<StateSoftConstraint>(std::move(constraint), std::move(penalty));
 }
 
-}  // namespace legged
+}  // namespace wolf_planner

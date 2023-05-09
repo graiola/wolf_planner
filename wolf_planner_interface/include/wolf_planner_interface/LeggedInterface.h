@@ -1,8 +1,3 @@
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "misc-non-private-member-variables-in-classes"
-
-#pragma once
-
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/Types.h>
 #include <ocs2_core/initialization/Initializer.h>
@@ -20,7 +15,7 @@
 
 #include "wolf_planner_interface/SwitchedModelReferenceManager.h"
 
-namespace legged {
+namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;
 
@@ -97,6 +92,4 @@ class LeggedInterface : public RobotInterface {
   vector_t initialState_;
 };
 
-}  // namespace legged
-
-#pragma clang diagnostic pop
+}  // namespace wolf_planner

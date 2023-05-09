@@ -8,10 +8,13 @@
 #include <ocs2_mpc/SystemObservation.h>
 #include <ocs2_ros_interfaces/command/TargetTrajectoriesRosPublisher.h>
 
-namespace legged {
+namespace wolf_planner
+{
 using namespace ocs2;
 
-class TargetTrajectoriesPublisher final {
+class TargetTrajectoriesPublisher final
+{
+
  public:
   using CmdToTargetTrajectories = std::function<TargetTrajectories(const vector_t& cmd, const SystemObservation& observation)>;
 
@@ -96,4 +99,4 @@ class TargetTrajectoriesPublisher final {
   std::string robotName_;
 };
 
-}  // namespace legged
+}  // namespace wolf_planner

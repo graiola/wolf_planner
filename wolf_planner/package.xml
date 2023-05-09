@@ -2,7 +2,7 @@
 <package format="2">
     <name>wolf_planner</name>
     <version>0.0.0</version>
-    <description>The wolf_planner packages.</description>
+    <description>The wolf_planner package</description>
     <maintainer email="todo@gmail.com">ToDo</maintainer>
     <license>BSD</license>
     <author email="todo@gmail.com">ToDo</author>

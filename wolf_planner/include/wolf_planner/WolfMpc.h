@@ -7,13 +7,13 @@
 #include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
 #include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
 
-// WoLF
-#include "wolf_msgs/Wrench.h"
-#include "wolf_msgs/Cartesian.h"
-#include "wolf_msgs/Postural.h"
-#include "wolf_msgs/ControllerState.h"
+// WoLF msgs
+#include <wolf_msgs/Wrench.h>
+#include <wolf_msgs/Cartesian.h>
+#include <wolf_msgs/Postural.h>
+#include <wolf_msgs/ControllerState.h>
 
-// TbR
+// WoLF planner
 #include <wolf_planner_interface/LeggedInterface.h>
 #include "wolf_planner/SafetyChecker.h"
 #include "wolf_planner/visualization/LeggedSelfCollisionVisualization.h"
@@ -21,15 +21,18 @@
 // ROS
 #include <ros/ros.h>
 
-namespace legged {
+namespace wolf_planner
+{
 
 using namespace ocs2;
 
-class MpcClass {
+class WolfMpc
+{
+
  public:
 
-  MpcClass() = default;
-  ~MpcClass();
+  WolfMpc() = default;
+  ~WolfMpc();
   bool init(ros::NodeHandle& controller_nh);
   void update();
   void starting();
@@ -87,4 +90,4 @@ class MpcClass {
   double taskPeriod_;
 };
 
-} // namespace legged
+} // namespace wolf_planner

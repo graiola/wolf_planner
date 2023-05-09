@@ -3,7 +3,7 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 
-#include "wolf_planner/Ocs2Mpc.h"
+#include "wolf_planner/WolfMpc.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
@@ -21,9 +21,10 @@
 // Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
 //#define OPENLOOP
 
-namespace legged {
+namespace wolf_planner
+{
 
-MpcClass::~MpcClass()
+WolfMpc::~WolfMpc()
 {
   controllerRunning_ = false;
   if (mpcThread_.joinable()) {
@@ -36,7 +37,7 @@ MpcClass::~MpcClass()
   std::cerr << "########################################################################";
 }
 
-bool MpcClass::init(ros::NodeHandle& mpc_nh)
+bool WolfMpc::init(ros::NodeHandle& mpc_nh)
 {
   std::string urdfFile;
   std::string taskFile;
@@ -48,7 +49,7 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   mpc_nh.getParam("/robot_name", robotName);
 
   // Wait for the controller to start
-  ROS_INFO("[WoLF Planner] waiting for WoLF controller to start...");
+  ROS_INFO("[WoLFMpc] waiting for WoLF controller to start...");
   while (!ros::service::waitForService(robotName+"/wolf_controller/stand_up") && ros::ok())
     ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
 
@@ -65,13 +66,13 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
 
   if(robotFootNames.empty())
   {
-    ROS_ERROR("[WoLF planner] robot foot names is empty!");
+    ROS_ERROR("[WolfMpc] robot foot names is empty!");
     return false;
   }
 
   if(robotBaseName.empty())
   {
-    ROS_ERROR("[WoLF planner] robot base name is empty!");
+    ROS_ERROR("[WolfMpc] robot base name is empty!");
     return false;
   }
 
@@ -117,12 +118,12 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
 
-  ROS_INFO_STREAM("[WoLF planner] Robot name is: "<< robotName);
+  ROS_INFO_STREAM("[WolfMpc] Robot name is: "<< robotName);
   auto jointNames = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<jointNames.size();i++)
-    ROS_INFO_STREAM("[WoLF planner] Loading joint["<<i<<"]: "<<jointNames[i]);
-  ROS_INFO_STREAM("[WoLF planner] WoLF controller period is: "<< taskPeriod_);
-  ROS_INFO_STREAM("[WoLF planner] WoLF planner period is: "<< 1.0/leggedInterface_->mpcSettings().mpcDesiredFrequency_);
+    ROS_INFO_STREAM("[WolfMpc] Loading joint["<<i<<"]: "<<jointNames[i]);
+  ROS_INFO_STREAM("[WolfMpc] WoLF controller period is: "<< taskPeriod_);
+  ROS_INFO_STREAM("[WolfMpc] WoLF planner period is: "<< 1.0/leggedInterface_->mpcSettings().mpcDesiredFrequency_);
 
   // Observation used by the target node
   observationPublisher_ = root_nh.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
@@ -145,13 +146,13 @@ bool MpcClass::init(ros::NodeHandle& mpc_nh)
   mpcPosturalPublisher_   = root_nh.advertise<wolf_msgs::Postural> (robotName+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded)
-  mpcObservation_         = root_nh.subscribe(robotName+"/wolf_controller/mpc_observation",  1, &MpcClass::observationCallback, this);
-  controllerState_        = root_nh.subscribe(robotName+"/wolf_controller/controller_state", 1, &MpcClass::controllerStateCallback, this);
+  mpcObservation_         = root_nh.subscribe(robotName+"/wolf_controller/mpc_observation",  1, &WolfMpc::observationCallback, this);
+  controllerState_        = root_nh.subscribe(robotName+"/wolf_controller/controller_state", 1, &WolfMpc::controllerStateCallback, this);
 
   return true;
 }
 
-void MpcClass::starting()
+void WolfMpc::starting()
 {
 
   currentObservation_ = callbackObservation_;
@@ -161,26 +162,26 @@ void MpcClass::starting()
   // Set the first observation and command and wait for optimization to finish
   mpcMrtInterface_->setCurrentObservation(callbackObservation_);
   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
-  ROS_INFO_STREAM("[WoLF planner] Waiting for the initial policy ...");
+  ROS_INFO_STREAM("[WolfMpc] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
     mpcMrtInterface_->advanceMpc();
     ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
   }
-  ROS_INFO_STREAM("[WoLF planner] Initial policy has been received.");
+  ROS_INFO_STREAM("[WolfMpc] Initial policy has been received.");
 
-  ROS_INFO_STREAM("[WoLF planner] Starting the planner");
+  ROS_INFO_STREAM("[WolfMpc] Starting the planner");
 
   mpcRunning_ = true;
 }
 
-void MpcClass::stopping()
+void WolfMpc::stopping()
 {
-  ROS_INFO_STREAM("[WoLF planner] Stopping the planner");
+  ROS_INFO_STREAM("[WolfMpc] Stopping the planner");
 
   mpcRunning_ = false;
 }
 
-void MpcClass::setupMrt()
+void WolfMpc::setupMrt()
 {
   mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
   mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
@@ -201,20 +202,20 @@ void MpcClass::setupMrt()
             leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
         controllerRunning_ = false;
-        ROS_ERROR_STREAM("[WoLF planner] Error: " << e.what());
+        ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
       }
     }
   });
   setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
 }
 
-void MpcClass::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
+void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
   leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile);
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void MpcClass::updatePolicyAndPublish(SystemObservation& observation)
+void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 {
   // Update the current state of the system
   mpcMrtInterface_->setCurrentObservation(observation);
@@ -237,7 +238,7 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& observation)
   // Safety check, if failed, stop the planner
   if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
   {
-    ROS_ERROR_STREAM("[WoLF planner] Safety check failed, stopping the planner.");
+    ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
     controllerRunning_ = false;
     return;
   }
@@ -366,7 +367,7 @@ void MpcClass::updatePolicyAndPublish(SystemObservation& observation)
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation));
 }
 
-void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
+void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
 
    callbackObservation_.time = msg->time;
@@ -386,7 +387,7 @@ void MpcClass::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg
   }
 }
 
-void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
+void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
   if(msg->current_state == "ACTIVE")
   {
@@ -398,4 +399,4 @@ void MpcClass::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr&
   }
 }
 
-} // namespace legged
+} // namespace wolf_planner
