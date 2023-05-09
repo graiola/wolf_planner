@@ -43,5 +43,5 @@ roslaunch wolf_controller wolf_controller_bringup.launch
 use the graphic interface to set the control mode to `EXT` in order to accept external references. Then launch the mpc planner with:
 
 ```
-roslaunch legged_controllers launch_mpc.launch
+roslaunch wolf_planner launch_mpc.launch
 ```
