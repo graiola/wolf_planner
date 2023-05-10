@@ -33,7 +33,7 @@ class WolfMpc
 
   WolfMpc() = default;
   ~WolfMpc();
-  bool init(ros::NodeHandle& controller_nh);
+  bool init();
   void update();
   void starting();
   void stopping();
@@ -87,7 +87,6 @@ class WolfMpc
   std::atomic_bool mpcRunning_{false}, controllerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
   std::shared_ptr<SafetyChecker> safetyChecker_;
-  double taskPeriod_;
 };
 
 } // namespace wolf_planner

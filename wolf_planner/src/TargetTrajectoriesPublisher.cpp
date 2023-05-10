@@ -87,23 +87,22 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
 
 int main(int argc, char** argv) {
   // Initialize ros node
-  ::ros::init(argc, argv, "wolf_target_node");
-  ::ros::NodeHandle nodeHandle;
+  ros::init(argc, argv, "wolf_target_node");
+  ros::NodeHandle nodeHandle;
   // Get node parameters
   std::string referenceFile;
   std::string taskFile;
   std::string robotName;
-  nodeHandle.getParam("/robot_name", robotName);
-  nodeHandle.getParam("/referenceFile", referenceFile);
-  nodeHandle.getParam("/taskFile", taskFile);
+  std::string topicPrefix = "wolf_planner";
+  nodeHandle.getParam(topicPrefix+"/robotName", robotName);
+  nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
+  nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
 
   loadData::loadCppDataType(referenceFile, "comHeight", COM_HEIGHT);
   loadData::loadEigenMatrix(referenceFile, "defaultJointState", DEFAULT_JOINT_STATE);
   loadData::loadCppDataType(referenceFile, "targetRotationVelocity", TARGET_ROTATION_VELOCITY);
   loadData::loadCppDataType(referenceFile, "targetDisplacementVelocity", TARGET_DISPLACEMENT_VELOCITY);
   loadData::loadCppDataType(taskFile, "mpc.timeHorizon", TIME_TO_TARGET);
-
-  std::string topicPrefix = "wolf_planner";
 
   TargetTrajectoriesPublisher target_pose_command(nodeHandle, topicPrefix, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
 

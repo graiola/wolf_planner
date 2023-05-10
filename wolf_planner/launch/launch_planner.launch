@@ -10,11 +10,12 @@
 
     <node pkg="tf" type="static_transform_publisher" name="world_to_world" args="0 0 0 0 0 0 world wolf_planner/world 100"/>
 
-    <!-- make the files into global parameters -->
-    <param name="urdfFile" value="$(find wolf_planner)/config/$(arg robot_name)/$(arg robot_name).urdf"/>
-    <param name="taskFile" value="$(find wolf_planner)/config/$(arg robot_name)/task.info"/>
-    <param name="referenceFile" value="$(find wolf_planner)/config/$(arg robot_name)/reference.info"/>
-    <param name="gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_name)/gait.info"/>
+    <!-- Export some params -->
+    <param name="wolf_planner/robotName"       value="$(arg robot_name)"/>
+    <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/$(arg robot_name)/$(arg robot_name).urdf"/>
+    <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/$(arg robot_name)/task.info"/>
+    <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/$(arg robot_name)/reference.info"/>
+    <param name="wolf_planner/gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_name)/gait.info"/>
 
     <node pkg="wolf_planner" type="wolf_gait_node" name="wolf_gait_node" output="screen"/>
 
