@@ -17,8 +17,8 @@ find_package(Boost REQUIRED COMPONENTS
 
 find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(pinocchio REQUIRED pinocchio)
+find_package(pinocchio REQUIRED)
+find_package(hpp-fcl REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -31,6 +31,7 @@ catkin_package(
         ocs2_self_collision
         DEPENDS
         pinocchio
+        hpp-fcl
 )
 
 ###########
@@ -42,6 +43,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIRS}
         ${pinocchio_INCLUDE_DIRS}
+        ${hpp-fcl_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -64,8 +66,8 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
+        ${hpp-fcl_LIBRARIES}
         )
-
 target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 
 #############

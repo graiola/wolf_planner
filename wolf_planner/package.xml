@@ -14,6 +14,8 @@
     <depend>ocs2_self_collision_visualization</depend>
     <depend>angles</depend>
     <depend>wolf_msgs</depend>
+    <depend>pinocchio</depend>
+    <depend>hpp-fcl</depend>
 
     <export>
     </export>

@@ -14,8 +14,8 @@ find_package(catkin REQUIRED
         wolf_msgs
         )
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(pinocchio REQUIRED pinocchio)
+find_package(pinocchio REQUIRED)
+find_package(hpp-fcl REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -39,6 +39,7 @@ include_directories(
         include
         ${catkin_INCLUDE_DIRS}
         ${pinocchio_INCLUDE_DIRS}
+        ${hpp-fcl_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -60,7 +61,7 @@ target_compile_options(wolf_gait_node PRIVATE ${OCS2_CXX_FLAGS})
 # MPC library
 add_library(wolf_mpc src/WolfMpc.cpp)
 add_dependencies(wolf_mpc ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES})
+target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES} ${hpp-fcl_LIBRARIES})
 
 # MPC node
 add_executable(wolf_mpc_node src/WolfMpcNode.cpp)

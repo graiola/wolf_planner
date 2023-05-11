@@ -13,5 +13,6 @@
     <depend>ocs2_legged_robot</depend>
     <depend>ocs2_self_collision</depend>
     <depend>pinocchio</depend>
+    <depend>hpp-fcl</depend>
 
 </package>
