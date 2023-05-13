@@ -26,7 +26,7 @@ namespace wolf_planner
 
 WolfMpc::~WolfMpc()
 {
-  controllerRunning_ = false;
+  plannerRunning_ = false;
   if (mpcThread_.joinable()) {
     mpcThread_.join();
   }
@@ -187,9 +187,9 @@ void WolfMpc::setupMrt()
   mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
   mpcTimer_.reset();
 
-  controllerRunning_ = true;
+  plannerRunning_ = true;
   mpcThread_ = std::thread([&]() {
-    while (controllerRunning_) {
+    while (plannerRunning_) {
       try {
         executeAndSleep(
             [&]() {
@@ -201,7 +201,7 @@ void WolfMpc::setupMrt()
             },
             leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
-        controllerRunning_ = false;
+        plannerRunning_ = false;
         ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
       }
     }
@@ -240,7 +240,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
   {
     ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
-    controllerRunning_ = false;
+    plannerRunning_ = false;
     return;
   }
 
@@ -301,27 +301,27 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   foot_msg_lf.pose.position.x = mpc_foot_pos[0](0);
   foot_msg_lf.pose.position.y = mpc_foot_pos[0](1);
   foot_msg_lf.pose.position.z = mpc_foot_pos[0](2);
-  foot_msg_lf.twist.linear.x = mpc_foot_vel[0](1);
-  foot_msg_lf.twist.linear.y = mpc_foot_vel[0](2);
-  foot_msg_lf.twist.linear.z = mpc_foot_vel[0](3);
+  foot_msg_lf.twist.linear.x = mpc_foot_vel[0](0);
+  foot_msg_lf.twist.linear.y = mpc_foot_vel[0](1);
+  foot_msg_lf.twist.linear.z = mpc_foot_vel[0](2);
   foot_msg_lh.pose.position.x = mpc_foot_pos[1](0);
   foot_msg_lh.pose.position.y = mpc_foot_pos[1](1);
   foot_msg_lh.pose.position.z = mpc_foot_pos[1](2);
-  foot_msg_lh.twist.linear.x = mpc_foot_vel[1](1);
-  foot_msg_lh.twist.linear.y = mpc_foot_vel[1](2);
-  foot_msg_lh.twist.linear.z = mpc_foot_vel[1](3);
+  foot_msg_lh.twist.linear.x = mpc_foot_vel[1](0);
+  foot_msg_lh.twist.linear.y = mpc_foot_vel[1](1);
+  foot_msg_lh.twist.linear.z = mpc_foot_vel[1](2);
   foot_msg_rf.pose.position.x = mpc_foot_pos[2](0);
   foot_msg_rf.pose.position.y = mpc_foot_pos[2](1);
   foot_msg_rf.pose.position.z = mpc_foot_pos[2](2);
-  foot_msg_rf.twist.linear.x = mpc_foot_vel[2](1);
-  foot_msg_rf.twist.linear.y = mpc_foot_vel[2](2);
-  foot_msg_rf.twist.linear.z = mpc_foot_vel[2](3);
+  foot_msg_rf.twist.linear.x = mpc_foot_vel[2](0);
+  foot_msg_rf.twist.linear.y = mpc_foot_vel[2](1);
+  foot_msg_rf.twist.linear.z = mpc_foot_vel[2](2);
   foot_msg_rh.pose.position.x = mpc_foot_pos[3](0);
   foot_msg_rh.pose.position.y = mpc_foot_pos[3](1);
   foot_msg_rh.pose.position.z = mpc_foot_pos[3](2);
-  foot_msg_rh.twist.linear.x = mpc_foot_vel[3](1);
-  foot_msg_rh.twist.linear.y = mpc_foot_vel[3](2);
-  foot_msg_rh.twist.linear.z = mpc_foot_vel[3](3);
+  foot_msg_rh.twist.linear.x = mpc_foot_vel[3](0);
+  foot_msg_rh.twist.linear.y = mpc_foot_vel[3](1);
+  foot_msg_rh.twist.linear.z = mpc_foot_vel[3](2);
 
   wolf_msgs::Cartesian base_msg;
   base_msg.pose.position.x = mpc_basePosDes_eul(0);
