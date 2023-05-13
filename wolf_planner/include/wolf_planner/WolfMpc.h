@@ -84,7 +84,7 @@ class WolfMpc
 
  private:
   std::thread mpcThread_;
-  std::atomic_bool mpcRunning_{false}, controllerRunning_{false};
+  std::atomic_bool mpcRunning_{false}, plannerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
   std::shared_ptr<SafetyChecker> safetyChecker_;
   double taskPeriod_;

@@ -26,7 +26,7 @@ namespace wolf_planner
 
 WolfMpc::~WolfMpc()
 {
-  controllerRunning_ = false;
+  plannerRunning_ = false;
   if (mpcThread_.joinable()) {
     mpcThread_.join();
   }
@@ -187,9 +187,9 @@ void WolfMpc::setupMrt()
   mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
   mpcTimer_.reset();
 
-  controllerRunning_ = true;
+  plannerRunning_ = true;
   mpcThread_ = std::thread([&]() {
-    while (controllerRunning_) {
+    while (plannerRunning_) {
       try {
         executeAndSleep(
             [&]() {
@@ -201,7 +201,7 @@ void WolfMpc::setupMrt()
             },
             leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
-        controllerRunning_ = false;
+        plannerRunning_ = false;
         ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
       }
     }
@@ -239,7 +239,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
   {
     ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
-    controllerRunning_ = false;
+    plannerRunning_ = false;
     return;
   }
 
