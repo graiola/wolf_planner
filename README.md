@@ -2,31 +2,26 @@
 
 ## Installation:
 
-clone the necessary repos in a catkin workspace:
+install the required dependencies and clone the necessary repos in a catkin workspace:
 
 ```
-# Clone OCS2
+# Install dependencies
+sudo apt install liburdfdom-dev liboctomap-dev libassimp-dev ros-${ROS_DISTRO}-pinocchio ros-${ROS_DISTRO}-hpp-fcl
+# Clone OCS2 
 git clone git@github.com:graiola/ocs2.git
-# Clone pinocchio
-git clone --recurse-submodules https://github.com/graiola/pinocchio.git
-# Clone hpp-fcl
-git clone --recurse-submodules https://github.com/graiola/hpp-fcl.git
 # Clone ocs2_robotic_assets
 git clone https://github.com/graiola/ocs2_robotic_assets.git
-# Install dependencies
-sudo apt install liburdfdom-dev liboctomap-dev libassimp-dev
 ```
 
 compile only the necesary ocs2 packages:
 
 ```
-catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
-catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization
+catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization -DCMAKE_BUILD_TYPE=Release
 ```
 
 ## Create the robot urdf:
 
-for example, with spot:
+if you want to use a different robot you need first to generate the urdf model for it. For example, with spot:
 
 ```
 rosrun wolf_description_utils create_urdf_model.sh -r spot -d /tmp/wolf_planner
