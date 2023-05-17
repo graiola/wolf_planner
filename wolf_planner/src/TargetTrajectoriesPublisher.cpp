@@ -93,8 +93,10 @@ int main(int argc, char** argv) {
   std::string referenceFile;
   std::string taskFile;
   std::string robotName;
+  std::string robotModel;
   std::string topicPrefix = "wolf_planner";
   nodeHandle.getParam(topicPrefix+"/robotName", robotName);
+  nodeHandle.getParam(topicPrefix+"/robotModel", robotModel);
   nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
   nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
 

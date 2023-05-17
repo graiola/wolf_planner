@@ -45,17 +45,17 @@ bool WolfMpc::init()
   std::string taskFile;
   std::string referenceFile;
   std::string robotName;
+  std::string robotModel;
   std::string topicPrefix = "wolf_planner";
   std::vector<std::string> robotFootNames;
   std::string robotBaseName;
-  nodeHandle.getParam(topicPrefix+"/robotName", robotName);
+  nodeHandle.getParam(topicPrefix+"/robotName",  robotName);
+  nodeHandle.getParam(topicPrefix+"/robotModel", robotModel);
   nodeHandle.getParam(topicPrefix+"/urdfFile", urdfFile);
   nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
   nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
   bool verbose = true;
   loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
-
-
 
   // Wait for the controller to start
   ROS_INFO("[WoLFMpc] waiting for WoLF controller to start...");
