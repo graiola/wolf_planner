@@ -5,19 +5,22 @@ comHeight                           0.3
 
 defaultJointState
 {
-   (0,0)  -0.20   ; lf_haa_joint
-   (1,0)   0.72   ; lf_hfe_joint
-   (2,0)  -1.44   ; lf_kfe_joint
-   (3,0)  -0.20   ; lh_haa_joint
-   (4,0)   0.72   ; lh_hfe_joint
-   (5,0)  -1.44   ; lh_kfe_joint
-   (6,0)   0.20   ; rf_haa_joint
-   (7,0)   0.72   ; rf_hfe_joint
-   (8,0)  -1.44   ; rf_kfe_joint
-   (9,0)   0.20   ; rh_haa_joint
-   (10,0)  0.72   ; rh_hfe_joint
-   (11,0) -1.44   ; rh_kfe_joint
+   (0,0)  0.104001   ; lf_haa_joint
+   (1,0)  0.705525   ; lf_hfe_joint
+   (2,0)  4.99638    ; lf_kfe_joint
+   (3,0)  0.124401   ; lh_haa_joint
+   (4,0)  0.625241   ; lh_hfe_joint
+   (5,0)  5.01181    ; lh_kfe_joint
+   (6,0)  -0.0909993 ; rf_haa_joint
+   (7,0)  0.71294    ; rf_hfe_joint
+   (8,0)  4.98416    ; rf_kfe_joint
+   (9,0)  -0.111876  ; rh_haa_joint
+   (10,0) 0.631184   ; rh_hfe_joint
+   (11,0) 4.99901    ; rh_kfe_joint
 }
+
+
+
 
 initialModeSchedule
 {
