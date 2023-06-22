@@ -119,7 +119,9 @@ bool WolfMpc::init()
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
 
+  ROS_INFO_STREAM("[WolfMpc] Robot model is: "<< robotModel);
   ROS_INFO_STREAM("[WolfMpc] Robot name is: "<< robotName);
+  ROS_INFO_STREAM("[WolfMpc] Robot base name is: "<< robotBaseName);
   auto jointNames = leggedInterface_->getPinocchioInterface().getModel().names;
   for(unsigned int i=0;i<jointNames.size();i++)
     ROS_INFO_STREAM("[WolfMpc] Loading joint["<<i<<"]: "<<jointNames[i]);
