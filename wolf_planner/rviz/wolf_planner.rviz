@@ -174,7 +174,7 @@ Visualization Manager:
       Marker Topic: /wolf_planner/desiredFeetTrajectory/LF
       Name: LF
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -182,7 +182,7 @@ Visualization Manager:
       Marker Topic: /wolf_planner/desiredFeetTrajectory/LH
       Name: LH
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -190,7 +190,7 @@ Visualization Manager:
       Marker Topic: /wolf_planner/desiredFeetTrajectory/RF
       Name: RF
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -198,7 +198,7 @@ Visualization Manager:
       Marker Topic: /wolf_planner/desiredFeetTrajectory/RH
       Name: RH
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -206,7 +206,10 @@ Visualization Manager:
       Marker Topic: /wolf_planner/currentState
       Name: CurrentState
       Namespaces:
-        {}
+        Center of Pressure: true
+        EE Forces: true
+        EE Positions: true
+        Support Polygon: true
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -214,7 +217,7 @@ Visualization Manager:
       Marker Topic: /wolf_planner/desiredBaseTrajectory
       Name: Base
       Namespaces:
-        {}
+        "": true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -222,7 +225,8 @@ Visualization Manager:
       Marker Topic: /wolf_planner/optimizedStateTrajectory
       Name: OptimizedTrajectory
       Namespaces:
-        {}
+        CoM Trajectory: true
+        EE Trajectories: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -230,7 +234,14 @@ Visualization Manager:
       Marker Topic: /wolf_planner/distance_markers
       Name: Collisions
       Namespaces:
-        {}
+        2 - 5: true
+        2 - 8: true
+        3 - 6: true
+        3 - 9: true
+        5 - 11: true
+        6 - 12: true
+        8 - 11: true
+        9 - 12: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -247,6 +258,14 @@ Visualization Manager:
       Name: FricitonCones
       Namespaces:
         {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /wolf_plot_node/contact_forces_visual_marker
+      Name: MarkerArray
+      Namespaces:
+        Arrow: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -293,9 +312,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.2703986167907715
+      Pitch: 0.4453984797000885
       Target Frame: <Fixed Frame>
-      Yaw: 5.53857421875
+      Yaw: 5.328571319580078
     Saved: ~
 Window Geometry:
   Displays:
