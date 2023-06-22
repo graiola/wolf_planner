@@ -9,10 +9,31 @@ model_settings
 {
   positionErrorGain             0.0
   phaseTransitionStanceTime     0.1
-
   verboseCppAd                  true
   recompileLibrariesCppAd       false
   modelFolderCppAd              /tmp/wolf_planner/aliengo
+  jointNames
+  {
+      [0] lf_haa_joint
+      [1] lf_hfe_joint
+      [2] lf_kfe_joint
+      [3] lh_haa_joint
+      [4] lh_hfe_joint
+      [5] lh_kfe_joint
+      [6] rf_haa_joint
+      [7] rf_hfe_joint
+      [8] rf_kfe_joint
+      [9] rh_haa_joint
+      [10] rh_hfe_joint
+      [11] rh_kfe_joint
+  }
+  contactNames3DoF
+  {
+      [0] lf_foot
+      [1] lh_foot
+      [2] rf_foot
+      [3] rh_foot
+  }
 }
 
 swing_trajectory_config
@@ -160,18 +181,18 @@ initialState
    (11,0) 0.0     ; theta_base_x
 
    ;; Leg Joint Positions: [LF, LH, RF, RH] ;;
-   (12,0) -0.20   ; lf_haa_joint
-   (13,0)  0.62   ; lf_hfe_joint
-   (14,0) -1.24   ; lf_kfe_joint
-   (15,0) -0.20   ; lh_haa_joint
-   (16,0)  0.62   ; lh_hfe_joint
-   (17,0) -1.24   ; lh_kfe_joint
-   (18,0)  0.20   ; rf_haa_joint
-   (19,0)  0.62   ; rf_hfe_joint
-   (20,0) -1.24   ; rf_kfe_joint
-   (21,0)  0.20   ; rh_haa_joint
-   (22,0)  0.62   ; rh_hfe_joint
-   (23,0) -1.24   ; rh_kfe_joint
+   (12,0) 0.111867    ; lf_haa_joint
+   (13,0) 0.679737    ; lf_hfe_joint
+   (14,0) 4.9998      ; lf_kfe_joint
+   (15,0) 0.127203    ; lh_haa_joint
+   (16,0) 0.599766    ; lh_hfe_joint
+   (17,0) 5.01177     ; lh_kfe_joint
+   (18,0) -0.102892   ; rf_haa_joint
+   (19,0) 0.679507    ; rf_hfe_joint
+   (20,0) 4.99156     ; rf_kfe_joint
+   (21,0) -0.116068   ; rh_haa_joint
+   (22,0) 0.611145    ; rh_hfe_joint
+   (23,0) 5.00105     ; rh_kfe_joint
 }
 
 ; standard state weight matrix
