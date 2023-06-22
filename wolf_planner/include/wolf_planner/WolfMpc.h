@@ -12,6 +12,7 @@
 #include <wolf_msgs/Cartesian.h>
 #include <wolf_msgs/Postural.h>
 #include <wolf_msgs/ControllerState.h>
+#include <wolf_msgs/string.h>
 
 // WoLF planner
 #include <wolf_planner_interface/LeggedInterface.h>
@@ -81,6 +82,9 @@ class WolfMpc
   // Controller state
   ros::Subscriber controllerState_;
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
+
+  // ROS Services
+  ros::ServiceClient controller_mode_;
 
  private:
   std::thread mpcThread_;

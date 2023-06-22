@@ -127,6 +127,9 @@ bool WolfMpc::init()
     ROS_INFO_STREAM("[WolfMpc] Loading joint["<<i<<"]: "<<jointNames[i]);
   ROS_INFO_STREAM("[WolfMpc] WoLF planner period is: "<< 1.0/leggedInterface_->mpcSettings().mpcDesiredFrequency_);
 
+  // ROS services
+  controller_mode_= nodeHandle.serviceClient<wolf_msgs::string>(robotName+"/wolf_controller/set_control_mode");
+
   // Observation used by the target node
   observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
@@ -178,6 +181,13 @@ void WolfMpc::starting()
 
 void WolfMpc::stopping()
 {
+   wolf_msgs::string srv;
+   srv.request.data = "WPG";
+   if (controller_mode_.call(srv))
+     ROS_WARN_STREAM("[WolfMpc] Set controller mode to WPG");
+   else
+     ROS_ERROR("[WolfMpc] Failed to set controller mode to WPG");
+
   ROS_INFO_STREAM("[WolfMpc] Stopping the planner");
 
   mpcRunning_ = false;
@@ -191,8 +201,8 @@ void WolfMpc::setupMrt()
 
   plannerRunning_ = true;
   mpcThread_ = std::thread([&]() {
+  try {
     while (plannerRunning_) {
-      try {
         executeAndSleep(
             [&]() {
               if (mpcRunning_) {
@@ -202,10 +212,10 @@ void WolfMpc::setupMrt()
               }
             },
             leggedInterface_->mpcSettings().mpcDesiredFrequency_);
-      } catch (const std::exception& e) {
-        plannerRunning_ = false;
-        ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
       }
+    } catch (const std::exception& e) {
+      plannerRunning_ = false;
+      ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
     }
   });
   setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
@@ -243,6 +253,8 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   {
     ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
     plannerRunning_ = false;
+    stopping();
+    mpcObservation_.shutdown();
     return;
   }
 
@@ -283,6 +295,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   //std::cout << "**********************" << std::endl;
   //for(unsigned int i=0; i<qDesired.size(); i++)
   //  std::cout << qDesired(i) << std::endl;
+  //getchar();
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
