@@ -1,8 +1,13 @@
 <?xml version="1.0" ?>
 <launch>
-    <arg name="robot_name"  default=""      doc="robot namespace"/>
-    <arg name="robot_model" default="spot"  doc="robot model: [a1, aliengo, spot]"/>
-    <arg name="rviz_gui"    default="false" doc="launch planner visualization"/>
+    <arg name="robot_name"           default=""      doc="robot namespace"/>
+    <arg name="robot_model"          default="spot"  doc="robot model: [a1, aliengo, spot]"/>
+    <arg name="launch_controller"    default="true"  doc="launch controller"/>
+    <arg name="world_name"           default="empty" doc="gazebo world name"/>
+    <arg name="rviz_gui"             default="true"  doc="launch planner visualization"/>
+    <arg name="plotjuggler_gui"      default="true"  doc="launch plotjuggler"/>
+    <arg name="plot_node_gui"        default="true"  doc="launch controller visualization node"/>
+    <arg name="rqt_gui"              default="true"  doc="launch rqt reconfigure"/>
 
     <!-- Use this node to generate the URDFs -->
     <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
@@ -23,5 +28,16 @@
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
          </include>
     </group>
+
+    <!-- Launch the WoLF controller -->
+    <include file="$(find wolf_controller)/launch/wolf_controller_bringup.launch" if="$(arg launch_controller)" >
+        <arg name="robot_name"               value="$(arg robot_name)" />
+        <arg name="robot_model"              value="$(arg robot_model)" />
+        <arg name="world_name"               value="$(arg world_name)" />
+        <arg name="rqt_gui"                  value="$(arg rqt_gui)"/>
+        <arg name="plotjuggler_gui"          value="$(arg plotjuggler_gui)"/>
+        <arg name="plot_node_gui"            value="$(arg plot_node_gui)"/>
+        <arg name="rviz_gui"                 value="false"/>
+    </include>
 
 </launch>
