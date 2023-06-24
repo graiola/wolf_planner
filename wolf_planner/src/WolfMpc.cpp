@@ -79,6 +79,7 @@ bool WolfMpc::init()
   setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
 
   // Initialize the observation data structure
+  timeOffset_ = 0.0;
   currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
   currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
   currentObservation_.time = 0.0;
@@ -157,12 +158,14 @@ bool WolfMpc::init()
 void WolfMpc::starting()
 {
 
+  timeOffset_ = callbackObservation_.time;
   currentObservation_ = callbackObservation_;
+  currentObservation_.time = 0.0;
 
-  TargetTrajectories target_trajectories({callbackObservation_.time}, {callbackObservation_.state}, {callbackObservation_.input});
+  TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
-  mpcMrtInterface_->setCurrentObservation(callbackObservation_);
+  mpcMrtInterface_->setCurrentObservation(currentObservation_);
   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
   ROS_INFO_STREAM("[WolfMpc] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
@@ -219,6 +222,11 @@ void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::strin
 
 void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 {
+
+  // Remove time offset
+#ifndef OPENLOOP
+  observation.time = observation.time - timeOffset_;
+#endif
 
   // Update the current state of the system
   mpcMrtInterface_->setCurrentObservation(observation);

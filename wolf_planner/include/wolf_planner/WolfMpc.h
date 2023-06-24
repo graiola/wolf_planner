@@ -52,6 +52,7 @@ class WolfMpc
   // System Observation
   SystemObservation currentObservation_;
   SystemObservation callbackObservation_;
+  double timeOffset_;
 
   // Nonlinear MPC
   std::shared_ptr<MPC_BASE> mpc_;
