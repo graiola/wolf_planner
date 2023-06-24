@@ -250,6 +250,8 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   {
     ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
     plannerRunning_ = false;
+    mpcObservation_.shutdown();
+    controllerState_.shutdown();
     return;
   }
 
