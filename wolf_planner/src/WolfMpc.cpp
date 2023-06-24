@@ -157,10 +157,11 @@ bool WolfMpc::init()
 
 void WolfMpc::starting()
 {
-
+  obsMutex_.lock();
   timeOffset_ = callbackObservation_.time;
   currentObservation_ = callbackObservation_;
   currentObservation_.time = 0.0;
+  obsMutex_.unlock();
 
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
@@ -380,6 +381,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 
 void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
+   obsMutex_.lock();
 
    callbackObservation_.time = msg->time;
    callbackObservation_.mode = msg->mode;
@@ -396,6 +398,8 @@ void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
     updatePolicyAndPublish(callbackObservation_);
 #endif
   }
+
+  obsMutex_.unlock();
 }
 
 void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)

@@ -88,6 +88,7 @@ class WolfMpc
   std::atomic_bool mpcRunning_{false}, plannerRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
   std::shared_ptr<SafetyChecker> safetyChecker_;
+  std::mutex obsMutex_;
 };
 
 } // namespace wolf_planner
