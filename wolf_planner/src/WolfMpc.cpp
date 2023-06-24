@@ -157,11 +157,9 @@ bool WolfMpc::init()
 
 void WolfMpc::starting()
 {
-  obsMutex_.lock();
   timeOffset_ = callbackObservation_.time;
   currentObservation_ = callbackObservation_;
   currentObservation_.time = 0.0;
-  obsMutex_.unlock();
 
   TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
@@ -381,13 +379,17 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 
 void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
-   obsMutex_.lock();
-
+   // Create the observation from the ROS message
    callbackObservation_.time = msg->time;
    callbackObservation_.mode = msg->mode;
-
    for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
      callbackObservation_.state(i) = msg->state.value[i];
+
+  // Start/Stop the mpc
+  if(controllerRunning_ && !mpcRunning_)
+    starting();
+  else if (!controllerRunning_ && mpcRunning_)
+    stopping();
 
   // Update the current state of the system
   if(mpcRunning_)
@@ -398,19 +400,19 @@ void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
     updatePolicyAndPublish(callbackObservation_);
 #endif
   }
-
-  obsMutex_.unlock();
 }
 
 void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
   if(msg->current_state == "ACTIVE")
   {
-    if(!mpcRunning_) starting();
+    //if(!mpcRunning_) starting();
+    controllerRunning_ = true;
   }
   else
   {
-    if(mpcRunning_) stopping();
+    controllerRunning_ = false;
+    //if(mpcRunning_) stopping();
   }
 }
 
