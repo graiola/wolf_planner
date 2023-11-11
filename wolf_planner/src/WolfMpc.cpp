@@ -20,6 +20,7 @@
 
 // Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
 //#define OPENLOOP
+#define WORLD_FRAME_NAME "world"
 
 namespace wolf_planner
 {
@@ -110,7 +111,7 @@ bool WolfMpc::init()
   ros::NodeHandle mpcNodeHandle(topicPrefix);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpcNodeHandle, topicPrefix);
-  robotVisualizer_->frameId_ =  topicPrefix+"/world";
+  robotVisualizer_->frameId_ =  topicPrefix+"/"+WORLD_FRAME_NAME;
   robotVisualizer_->baseName_ = robotBaseName;
 
   // Self collision visualizer
@@ -262,11 +263,16 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   pinocchio::computeJointJacobians(mpc_model, mpc_data);
   pinocchio::updateFramePlacements(mpc_model, mpc_data);
 
+  // Update desired values
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
   pinocchioMapping.setPinocchioInterface(leggedInterface_->getPinocchioInterface());
   const auto& qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
+  pinocchio::forwardKinematics(mpc_model, mpc_data, qDesired);
+  pinocchio::computeJointJacobians(mpc_model, mpc_data, qDesired);
+  pinocchio::updateFramePlacements(mpc_model, mpc_data);
   ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
   const auto& vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
+  pinocchio::forwardKinematics(mpc_model, mpc_data, qDesired, vDesired);
 
   // Retrieve MPC optimized output
   vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
@@ -295,6 +301,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
+  force_msg_lf.header.frame_id = force_msg_lh.header.frame_id = force_msg_rf.header.frame_id = force_msg_rh.header.frame_id = WORLD_FRAME_NAME;
   force_msg_lf.wrench.force.x = mpc_contactDes_lf(0); // LF
   force_msg_lf.wrench.force.y = mpc_contactDes_lf(1); // LF
   force_msg_lf.wrench.force.z = mpc_contactDes_lf(2); // LF
@@ -309,6 +316,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   force_msg_rh.wrench.force.z = mpc_contactDes_rh(2); // RH
 
   wolf_msgs::Cartesian foot_msg_lf, foot_msg_lh, foot_msg_rf, foot_msg_rh;
+  foot_msg_lf.header.frame_id = foot_msg_lh.header.frame_id = foot_msg_rf.header.frame_id = foot_msg_rh.header.frame_id = WORLD_FRAME_NAME;
   foot_msg_lf.pose.position.x = mpc_foot_pos[0](0);
   foot_msg_lf.pose.position.y = mpc_foot_pos[0](1);
   foot_msg_lf.pose.position.z = mpc_foot_pos[0](2);
@@ -335,6 +343,7 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   foot_msg_rh.twist.linear.z = mpc_foot_vel[3](2);
 
   wolf_msgs::Cartesian base_msg;
+  base_msg.header.frame_id = WORLD_FRAME_NAME;
   base_msg.pose.position.x = mpc_basePosDes_eul(0);
   base_msg.pose.position.y = mpc_basePosDes_eul(1);
   base_msg.pose.position.z = mpc_basePosDes_eul(2);
@@ -342,7 +351,6 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   base_msg.pose.orientation.x = mpc_base_quat.x();
   base_msg.pose.orientation.y = mpc_base_quat.y();
   base_msg.pose.orientation.z = mpc_base_quat.z();
-
   base_msg.twist.linear.x =  vDesired(0);
   base_msg.twist.linear.y =  vDesired(1);
   base_msg.twist.linear.z =  vDesired(2);

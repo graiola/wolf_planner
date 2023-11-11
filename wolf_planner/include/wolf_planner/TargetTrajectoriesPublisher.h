@@ -8,6 +8,8 @@
 #include <ocs2_mpc/SystemObservation.h>
 #include <ocs2_ros_interfaces/command/TargetTrajectoriesRosPublisher.h>
 
+#define WORLD_FRAME_NAME "world"
+
 namespace wolf_planner
 {
 using namespace ocs2;
@@ -44,7 +46,7 @@ class TargetTrajectoriesPublisher final
       }
       geometry_msgs::PoseStamped pose = *msg;
       try {
-        buffer_.transform(pose, pose, topicPrefix_+"/world", ros::Duration(0.2)); // FIXME hardcoded frame name
+        buffer_.transform(pose, pose, topicPrefix_+"/"+WORLD_FRAME_NAME, ros::Duration(0.2)); // FIXME hardcoded frame name
       } catch (tf2::TransformException& ex) {
         ROS_WARN("Failure %s\n", ex.what());
         return;
