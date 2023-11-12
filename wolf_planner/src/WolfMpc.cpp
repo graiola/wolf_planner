@@ -275,9 +275,9 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   pinocchio::forwardKinematics(mpc_model, mpc_data, qDesired, vDesired);
 
   // Retrieve MPC optimized output
-  vector_t mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
 
   Eigen::Quaterniond mpc_base_quat;
   mpc_base_quat = Eigen::AngleAxisd(mpc_basePosDes_eul(3), Eigen::Vector3d::UnitZ())
@@ -286,14 +286,14 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
 
   // std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
   // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
-  vector_t mpc_contactDes_lf = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
-  vector_t mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_contactDes_lf = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
+  const auto& mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
 
   eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  std::vector<vector3_t> mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
-  std::vector<vector3_t> mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
+  const auto& mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
+  const auto& mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
 
   //std::cout << "**********************" << std::endl;
   //for(unsigned int i=0; i<qDesired.size(); i++)
