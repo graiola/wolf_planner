@@ -18,6 +18,8 @@
 
 #include <angles/angles.h>
 
+#include <wolf_controller_utils/geometry.h>
+
 // Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
 //#define OPENLOOP
 #define WORLD_FRAME_NAME "world"
@@ -279,10 +281,10 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   const auto& mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
   const auto& mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
 
+  // ZYX conversion to quat
   Eigen::Quaterniond mpc_base_quat;
-  mpc_base_quat = Eigen::AngleAxisd(mpc_basePosDes_eul(3), Eigen::Vector3d::UnitZ())
-                * Eigen::AngleAxisd(mpc_basePosDes_eul(4), Eigen::Vector3d::UnitY())
-                * Eigen::AngleAxisd(mpc_basePosDes_eul(5), Eigen::Vector3d::UnitX());
+  wolf_controller_utils::rpyToQuat(qDesired(5),qDesired(4),qDesired(3),mpc_base_quat);
+  mpc_base_quat.normalize();
 
   // std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
   // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
@@ -354,9 +356,10 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   base_msg.twist.linear.x =  vDesired(0);
   base_msg.twist.linear.y =  vDesired(1);
   base_msg.twist.linear.z =  vDesired(2);
-  base_msg.twist.angular.z = vDesired(3);
-  base_msg.twist.angular.y = vDesired(4);
-  base_msg.twist.angular.x = vDesired(5);
+  // FIXME the angular velocities are coupled once the robot rotates more than 180
+  //base_msg.twist.angular.z = vDesired(3);
+  //base_msg.twist.angular.y = vDesired(4);
+  //base_msg.twist.angular.x = vDesired(5);
 
   wolf_msgs::Postural postural_msg;
   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i)

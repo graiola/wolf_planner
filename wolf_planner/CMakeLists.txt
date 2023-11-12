@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
         ocs2_self_collision_visualization
         angles
         wolf_msgs
+        wolf_controller_utils
         )
 
 find_package(pinocchio REQUIRED)
@@ -29,6 +30,7 @@ catkin_package(
         ocs2_self_collision_visualization
         angles
         wolf_msgs
+        wolf_controller_utils
 )
 
 ###########
