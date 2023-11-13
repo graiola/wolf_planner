@@ -111,20 +111,16 @@ void LeggedInterface::setupOptimalControlProblem(const std::string& taskFile, co
     if (useHardFrictionConeConstraint_) {
       problemPtr_->inequalityConstraintPtr->add(footName + "_frictionCone", getFrictionConeConstraint(i, frictionCoefficient));
     } else {
-      problemPtr_->softConstraintPtr->add(footName + "_frictionCone",
-                                          getFrictionConeSoftConstraint(i, frictionCoefficient, barrierPenaltyConfig));
+      problemPtr_->softConstraintPtr->add(footName + "_frictionCone", getFrictionConeSoftConstraint(i, frictionCoefficient, barrierPenaltyConfig));
     }
     problemPtr_->equalityConstraintPtr->add(footName + "_zeroForce", std::unique_ptr<StateInputConstraint>(new ZeroForceConstraint(
                                                                          *referenceManagerPtr_, i, centroidalModelInfo_)));
     problemPtr_->equalityConstraintPtr->add(footName + "_zeroVelocity", getZeroVelocityConstraint(*eeKinematicsPtr, i));
-    problemPtr_->equalityConstraintPtr->add(
-        footName + "_normalVelocity",
-        std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, *eeKinematicsPtr, i)));
+    problemPtr_->equalityConstraintPtr->add(footName + "_normalVelocity", std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, *eeKinematicsPtr, i)));
   }
 
   // Self-collision avoidance constraint
-  problemPtr_->stateSoftConstraintPtr->add("selfCollision",
-                                           getSelfCollisionConstraint(*pinocchioInterfacePtr_, taskFile, "selfCollision", verbose));
+  problemPtr_->stateSoftConstraintPtr->add("selfCollision", getSelfCollisionConstraint(*pinocchioInterfacePtr_, taskFile, "selfCollision", verbose));
 
   setupPreComputation(taskFile, urdfFile, referenceFile, verbose);
 
@@ -369,6 +365,19 @@ std::unique_ptr<StateCost> LeggedInterface::getSelfCollisionConstraint(const Pin
   auto penalty = std::make_unique<RelaxedBarrierPenalty>(RelaxedBarrierPenalty::Config{mu, delta});
 
   return std::make_unique<StateSoftConstraint>(std::move(constraint), std::move(penalty));
+}
+
+void LeggedInterface::setFrictionConeNormal(const std::string& footName, const vector3_t& normal)
+{
+  problemPtr_->inequalityConstraintPtr->get<FrictionConeConstraint>(footName + "_frictionCone").setSurfaceNormalInWorld(normal);
+}
+
+void LeggedInterface::setTerrainNormal(const vector3_t& normal)
+{
+  for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; i++) {
+    const std::string& footName = modelSettings_.contactNames3DoF[i];
+    problemPtr_->inequalityConstraintPtr->get<FrictionConeConstraint>(footName + "_frictionCone").setSurfaceNormalInWorld(normal);
+  }
 }
 
 }  // namespace wolf_planner

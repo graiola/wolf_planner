@@ -12,6 +12,7 @@
 #include <wolf_msgs/Cartesian.h>
 #include <wolf_msgs/Postural.h>
 #include <wolf_msgs/ControllerState.h>
+#include <wolf_msgs/TerrainEstimation.h>
 
 // WoLF planner
 #include <wolf_planner_interface/LeggedInterface.h>
@@ -82,6 +83,10 @@ class WolfMpc
   // Controller state
   ros::Subscriber controllerState_;
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
+
+  // Terrain estimation
+  ros::Subscriber mpcTerrainEstimation_;
+  void terrainEstimationCallback(const wolf_msgs::TerrainEstimationConstPtr& msg);
 
  private:
   std::thread mpcThread_;

@@ -134,7 +134,7 @@ bool WolfMpc::init()
   // Observation used by the target node
   observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
-  // MPC publishers (FIXME hardcoded)
+  // MPC publishers (FIXME hardcoded, export to a config file)
   mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/lf_foot_wrench", 1);
   mpcFootPublisher_lf_    = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/lf_foot",   1);
 
@@ -151,9 +151,10 @@ bool WolfMpc::init()
 
   mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> (robotName+"/wolf_controller/reference/postural",  1);
 
-  // MPC subscribers (FIXME hardcoded)
-  mpcObservation_         = nodeHandle.subscribe(robotName+"/wolf_controller/mpc_observation",  1, &WolfMpc::observationCallback, this);
-  controllerState_        = nodeHandle.subscribe(robotName+"/wolf_controller/controller_state", 1, &WolfMpc::controllerStateCallback, this);
+  // MPC subscribers (FIXME hardcoded, export to a config file)
+  mpcObservation_         = nodeHandle.subscribe(robotName+"/wolf_controller/mpc_observation",   1, &WolfMpc::observationCallback, this);
+  controllerState_        = nodeHandle.subscribe(robotName+"/wolf_controller/controller_state",  1, &WolfMpc::controllerStateCallback, this);
+  mpcTerrainEstimation_   = nodeHandle.subscribe(robotName+"/wolf_controller/terrain_estimation",1, &WolfMpc::terrainEstimationCallback, this);
 
   return true;
 }
@@ -218,7 +219,7 @@ void WolfMpc::setupMrt()
 
 void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
-  leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile);
+  leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
@@ -427,6 +428,11 @@ void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& 
     controllerRunning_ = false;
     //if(mpcRunning_) stopping();
   }
+}
+
+void WolfMpc::terrainEstimationCallback(const wolf_msgs::TerrainEstimationConstPtr& msg)
+{
+  //leggedInterface_->setTerrainNormal(Eigen::Vector3d(msg->terrain_normal.x, msg->terrain_normal.y, msg->terrain_normal.z));
 }
 
 } // namespace wolf_planner

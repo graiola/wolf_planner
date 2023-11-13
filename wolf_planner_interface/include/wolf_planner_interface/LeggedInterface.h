@@ -22,7 +22,7 @@ using namespace legged_robot;
 class LeggedInterface : public RobotInterface {
  public:
   LeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                  bool useHardFrictionConeConstraint = false);
+                  bool useHardFrictionConeConstraint = true);
 
   ~LeggedInterface() override = default;
 
@@ -47,6 +47,9 @@ class LeggedInterface : public RobotInterface {
 
   const Initializer& getInitializer() const override { return *initializerPtr_; }
   std::shared_ptr<ReferenceManagerInterface> getReferenceManagerPtr() const override { return referenceManagerPtr_; }
+
+  void setTerrainNormal(const vector3_t& normal);
+  void setFrictionConeNormal(const std::string& footName, const vector3_t& normal);
 
  protected:
   virtual void setupModel(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose);

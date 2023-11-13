@@ -49,8 +49,12 @@ FrictionConeConstraint::FrictionConeConstraint(const SwitchedModelReferenceManag
 /******************************************************************************************************/
 /******************************************************************************************************/
 void FrictionConeConstraint::setSurfaceNormalInWorld(const vector3_t& surfaceNormalInWorld) {
-  t_R_w.setIdentity();
-  throw std::runtime_error("[FrictionConeConstraint] setSurfaceNormalInWorld() is not implemented!");
+  //t_R_w.setIdentity();
+  //throw std::runtime_error("[FrictionConeConstraint] setSurfaceNormalInWorld() is not implemented!");
+  t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
+  std::cout << "setSurfaceNormalInWorld " << this << std::endl;
+  std::cout << t_R_w << std::endl;
 }
 
 /******************************************************************************************************/
@@ -79,6 +83,9 @@ VectorFunctionLinearApproximation FrictionConeConstraint::getLinearApproximation
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
 
+  std::cout <<"VectorFunctionLinearApproximation " << this << std::endl;
+  std::cout << t_R_w << std::endl;
+
   const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame);
   const auto coneLocalDerivatives = computeConeLocalDerivatives(localForce);
   const auto coneDerivatives = computeConeConstraintDerivatives(coneLocalDerivatives, localForceDerivatives);
@@ -98,6 +105,9 @@ VectorFunctionQuadraticApproximation FrictionConeConstraint::getQuadraticApproxi
                                                                                        const PreComputation& preComp) const {
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
+
+  std::cout << "VectorFunctionQuadraticApproximation " << this << std::endl;
+  std::cout << t_R_w << std::endl;
 
   const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame);
   const auto coneLocalDerivatives = computeConeLocalDerivatives(localForce);
