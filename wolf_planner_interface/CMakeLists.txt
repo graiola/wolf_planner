@@ -8,6 +8,7 @@ find_package(catkin REQUIRED
         roscpp
         ocs2_legged_robot
         ocs2_self_collision
+        wolf_msgs
         )
 
 find_package(Boost REQUIRED COMPONENTS
@@ -58,6 +59,7 @@ add_library(${PROJECT_NAME}
         src/constraint/ZeroVelocityConstraintCppAd.cpp
         src/constraint/SwingTrajectoryPlanner.cpp
         src/initialization/LeggedRobotInitializer.cpp
+        src/synchronizer/TerrainEstimationReceiver.cpp
         src/SwitchedModelReferenceManager.cpp
         src/LeggedRobotPreComputation.cpp
         src/LeggedInterface.cpp

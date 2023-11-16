@@ -16,6 +16,8 @@
 #include <ocs2_sqp/SqpMpc.h>
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 
+#include <wolf_planner_interface/synchronizer/TerrainEstimationReceiver.h>
+
 #include <angles/angles.h>
 
 #include <wolf_controller_utils/geometry.h>
@@ -94,10 +96,15 @@ bool WolfMpc::init()
                                   leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
   // Gait receiver
   auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
+
+  // Terrain estimation receiver
+  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getOptimalControlProblemPtr(), topicPrefix);
+
   // ROS ReferenceManager
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
   rosReferenceManagerPtr->subscribe(nodeHandle);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
+  mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
 
   // Setup the MPC thread loop
