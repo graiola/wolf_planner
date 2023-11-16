@@ -31,6 +31,8 @@ class LeggedInterface : public RobotInterface {
 
   const OptimalControlProblem& getOptimalControlProblem() const override { return *problemPtr_; }
 
+  std::shared_ptr<OptimalControlProblem> getOptimalControlProblemPtr() const { return problemPtr_; }
+
   const ModelSettings& modelSettings() const { return modelSettings_; }
   const ddp::Settings& ddpSettings() const { return ddpSettings_; }
   const mpc::Settings& mpcSettings() const { return mpcSettings_; }
@@ -82,7 +84,7 @@ class LeggedInterface : public RobotInterface {
   CentroidalModelInfo centroidalModelInfo_;
   std::unique_ptr<PinocchioGeometryInterface> geometryInterfacePtr_;
 
-  std::unique_ptr<OptimalControlProblem> problemPtr_;
+  std::shared_ptr<OptimalControlProblem> problemPtr_;
   std::shared_ptr<SwitchedModelReferenceManager> referenceManagerPtr_;
 
   rollout::Settings rolloutSettings_;
