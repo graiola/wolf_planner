@@ -84,10 +84,6 @@ class WolfMpc
   ros::Subscriber controllerState_;
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
 
-  // Terrain estimation
-  ros::Subscriber mpcTerrainEstimation_;
-  void terrainEstimationCallback(const wolf_msgs::TerrainEstimationConstPtr& msg);
-
  private:
   std::thread mpcThread_;
   std::atomic_bool mpcRunning_{false}, plannerRunning_{false}, controllerRunning_{false};

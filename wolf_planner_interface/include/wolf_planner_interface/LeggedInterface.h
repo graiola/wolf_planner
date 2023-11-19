@@ -1,3 +1,5 @@
+#pragma once
+
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/Types.h>
 #include <ocs2_core/initialization/Initializer.h>
@@ -30,8 +32,6 @@ class LeggedInterface : public RobotInterface {
                                           bool verbose);
 
   const OptimalControlProblem& getOptimalControlProblem() const override { return *problemPtr_; }
-
-  std::shared_ptr<OptimalControlProblem> getOptimalControlProblemPtr() const { return problemPtr_; }
 
   const ModelSettings& modelSettings() const { return modelSettings_; }
   const ddp::Settings& ddpSettings() const { return ddpSettings_; }

@@ -98,7 +98,7 @@ bool WolfMpc::init()
   auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
-  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getOptimalControlProblemPtr(), topicPrefix);
+  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_, topicPrefix);
 
   // ROS ReferenceManager
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
@@ -161,7 +161,6 @@ bool WolfMpc::init()
   // MPC subscribers (FIXME hardcoded, export to a config file)
   mpcObservation_         = nodeHandle.subscribe(robotName+"/wolf_controller/mpc_observation",   1, &WolfMpc::observationCallback, this);
   controllerState_        = nodeHandle.subscribe(robotName+"/wolf_controller/controller_state",  1, &WolfMpc::controllerStateCallback, this);
-  mpcTerrainEstimation_   = nodeHandle.subscribe(robotName+"/wolf_controller/terrain_estimation",1, &WolfMpc::terrainEstimationCallback, this);
 
   return true;
 }
@@ -435,11 +434,6 @@ void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& 
     controllerRunning_ = false;
     //if(mpcRunning_) stopping();
   }
-}
-
-void WolfMpc::terrainEstimationCallback(const wolf_msgs::TerrainEstimationConstPtr& msg)
-{
-  //leggedInterface_->setTerrainNormal(Eigen::Vector3d(msg->terrain_normal.x, msg->terrain_normal.y, msg->terrain_normal.z));
 }
 
 } // namespace wolf_planner

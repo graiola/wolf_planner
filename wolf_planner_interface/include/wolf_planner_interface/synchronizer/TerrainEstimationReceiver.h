@@ -6,19 +6,18 @@
 
 #include <ocs2_core/Types.h>
 #include <ocs2_oc/synchronized_module/SolverSynchronizedModule.h>
-#include <ocs2_oc/oc_problem/OptimalControlProblem.h>
-#include <ocs2_oc/oc_problem/OptimalControlProblemHelperFunction.h>
 
-#include <ocs2_legged_robot/gait/GaitSchedule.h>
+#include "wolf_planner_interface/LeggedInterface.h"
 
 #include <wolf_msgs/TerrainEstimation.h>
 
-namespace ocs2 {
-namespace legged_robot {
+namespace wolf_planner {
+using namespace ocs2;
+using namespace legged_robot;
 
 class TerrainEstimationReceiver : public SolverSynchronizedModule {
  public:
-  TerrainEstimationReceiver(::ros::NodeHandle nodeHandle, std::shared_ptr<OptimalControlProblem> optmialControlProblemPtr, const std::string& robotName);
+  TerrainEstimationReceiver(::ros::NodeHandle nodeHandle, std::shared_ptr<LeggedInterface> ptr, const std::string& robotName);
 
   void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t& currentState,
                     const ReferenceManagerInterface& referenceManager) override;
@@ -28,13 +27,14 @@ class TerrainEstimationReceiver : public SolverSynchronizedModule {
  private:
   void terrainEstimationCallback(const wolf_msgs::TerrainEstimation::ConstPtr& msg);
 
-  std::shared_ptr<OptimalControlProblem> ptr_;
+  std::shared_ptr<LeggedInterface> ptr_;
 
   ::ros::Subscriber subscriber_;
 
   std::mutex mtx_;
   std::atomic_bool updated_;
+
+  Eigen::Vector3d terrain_normal_;
 };
 
-}  // namespace legged_robot
-}  // namespace ocs2
+}  // namespace wolf_planner
