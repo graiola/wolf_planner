@@ -1,8 +1,11 @@
-# WoLF planner (WIP)
+# WoLF planner
+
+MPC planner for WoLF based on OCS2. 
+This work is based on [ocs2_legged_robot](https://github.com/leggedrobotics/ocs2/tree/main/ocs2_robotic_examples/ocs2_legged_robot) and [legged_control](https://github.com/qiayuanl/legged_control.git) from `qiayuanl`.
 
 ## Installation:
 
-install the required dependencies and clone the necessary repos in a catkin workspace:
+Install the required dependencies and clone the necessary repos in a catkin workspace:
 
 ```
 # Install dependencies
@@ -13,15 +16,16 @@ git clone git@github.com:graiola/ocs2.git
 git clone https://github.com/graiola/ocs2_robotic_assets.git
 ```
 
-compile only the necesary ocs2 packages:
+Compile only the necesary ocs2 packages:
 
 ```
 catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization -DCMAKE_BUILD_TYPE=Release
 ```
+For the wolf dependencies please refer to [wolf-setup](https://github.com/graiola/wolf-setup).
 
 ## Create the robot urdf:
 
-if you want to use a different robot you need first to generate the urdf model for it. For example, with spot:
+If you want to use a different robot you need first to generate the urdf model for it. For example, with spot:
 
 ```
 rosrun wolf_description_utils create_urdf_model.sh -r spot -d /tmp/wolf_planner
@@ -29,14 +33,10 @@ rosrun wolf_description_utils create_urdf_model.sh -r spot -d /tmp/wolf_planner
 
 ## Execution:
 
-launch the `wolf_controller` with:
-
-```
-roslaunch wolf_controller wolf_controller_bringup.launch
-```
-
-use the graphic interface to set the control mode to `EXT` in order to accept external references. Then launch the mpc planner with:
+launch the `wolf_planner` and the `wolf_controller` with:
 
 ```
 roslaunch wolf_planner launch_planner.launch
 ```
+
+Stand up the robot by pressing `Enter` on the virtual keyboard or by using the RVIZ Wolf panel. Once the robot is up, change the control mode to `EXT` by pressing `Spacebar` on the virtual keyboard. At this point, the MPC will be connected with the whole-body controller and ready to use. To move the robot around, use the virtual keyboard. You can use the terminal commands to change the gait; use the `list` command to see what available gaits are.
