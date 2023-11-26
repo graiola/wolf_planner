@@ -2,6 +2,10 @@
 
 MPC planner for WoLF based on ocs2. 
 
+<p align="center">
+  <img src="https://github.com/graiola/wolf-setup/blob/master/docs/mpc.gif" width="250" height="185" />
+</p>
+
 This work is based on [ocs2_legged_robot](https://github.com/leggedrobotics/ocs2/tree/main/ocs2_robotic_examples/ocs2_legged_robot) and [legged_control](https://github.com/qiayuanl/legged_control.git) from `qiayuanl`.
 
 ## Installation:
