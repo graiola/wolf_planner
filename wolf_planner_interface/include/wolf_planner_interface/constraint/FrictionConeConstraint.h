@@ -65,20 +65,24 @@ class FrictionConeConstraint final : public StateInputConstraint {
    */
   struct Config {
     explicit Config(scalar_t frictionCoefficientParam = 0.7, scalar_t regularizationParam = 25.0, scalar_t gripperForceParam = 0.0,
-                    scalar_t hessianDiagonalShiftParam = 1e-6)
+                    scalar_t hessianDiagonalShiftParam = 1e-6, vector3_t terrainNormal = {0.0,0.0,1.0})
         : frictionCoefficient(frictionCoefficientParam),
           regularization(regularizationParam),
           gripperForce(gripperForceParam),
-          hessianDiagonalShift(hessianDiagonalShiftParam) {
+          hessianDiagonalShift(hessianDiagonalShiftParam),
+          terrainNormal(terrainNormal)
+          {
       assert(frictionCoefficient > 0.0);
       assert(regularization > 0.0);
       assert(hessianDiagonalShift >= 0.0);
+      assert(terrainNormal.norm() <= 1.0);
     }
 
     scalar_t frictionCoefficient;
     scalar_t regularization;
     scalar_t gripperForce;
     scalar_t hessianDiagonalShift;
+    vector3_t terrainNormal;
   };
 
   /**
@@ -93,6 +97,11 @@ class FrictionConeConstraint final : public StateInputConstraint {
 
   ~FrictionConeConstraint() override = default;
   FrictionConeConstraint* clone() const override { return new FrictionConeConstraint(*this); }
+
+  /** Sets a new constraint coefficients. */
+  void configure(Config&& config);
+  /** Sets a new constraint coefficients. */
+  void configure(const Config& config) const { this->configure(Config(config)); }
 
   bool isActive(scalar_t time) const override;
   size_t getNumConstraints(scalar_t time) const override { return 1; };
@@ -136,7 +145,7 @@ class FrictionConeConstraint final : public StateInputConstraint {
 
   const SwitchedModelReferenceManager* referenceManagerPtr_;
 
-  const Config config_;
+  Config config_;
   const size_t contactPointIndex_;
   const CentroidalModelInfo info_;
 

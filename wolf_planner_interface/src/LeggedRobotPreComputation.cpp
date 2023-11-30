@@ -52,6 +52,7 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchi
       mappingPtr_(new CentroidalModelPinocchioMapping(info_)),
       settings_(std::move(settings)) {
   eeNormalVelConConfigs_.resize(info_.numThreeDofContacts);
+  frictionConeConConfigs_.resize(info_.numThreeDofContacts);
   mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
@@ -65,6 +66,7 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(const LeggedRobotPreComputa
       mappingPtr_(rhs.mappingPtr_->clone()),
       settings_(rhs.settings_) {
   eeNormalVelConConfigs_.resize(rhs.eeNormalVelConConfigs_.size());
+  frictionConeConConfigs_.resize(rhs.frictionConeConConfigs_.size());
   mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
@@ -88,9 +90,18 @@ void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const ve
     return config;
   };
 
+  // lambda to set config for friction cone constraints
+  auto frictionConeConConfig = [&](size_t footIndex) {
+    FrictionConeConstraint::Config config;
+    config.terrainNormal << 0.0, 0.0, 1.0; // TODO
+    return config;
+  };
+
   if (request.contains(Request::Constraint)) {
     for (size_t i = 0; i < info_.numThreeDofContacts; i++) {
       eeNormalVelConConfigs_[i] = eeNormalVelConConfig(i);
+      frictionConeConConfigs_[i] = frictionConeConConfig(i);
+
     }
   }
 

@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_legged_robot/common/ModelSettings.h>
 
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
+#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
 #include "wolf_planner_interface/constraint/SwingTrajectoryPlanner.h"
 
 namespace ocs2 {
@@ -58,6 +59,8 @@ class LeggedRobotPreComputation : public PreComputation {
 
   const std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() const { return eeNormalVelConConfigs_; }
 
+  const std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() const { return frictionConeConConfigs_; }
+
   PinocchioInterface& getPinocchioInterface() { return pinocchioInterface_; }
   const PinocchioInterface& getPinocchioInterface() const { return pinocchioInterface_; }
 
@@ -72,6 +75,8 @@ class LeggedRobotPreComputation : public PreComputation {
   const ModelSettings settings_;
 
   std::vector<EndEffectorLinearConstraint::Config> eeNormalVelConConfigs_;
+
+  std::vector<FrictionConeConstraint::Config> frictionConeConConfigs_;
 };
 
 }  // namespace legged_robot
