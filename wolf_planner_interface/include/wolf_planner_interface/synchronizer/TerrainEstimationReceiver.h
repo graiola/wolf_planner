@@ -17,7 +17,7 @@ using namespace legged_robot;
 
 class TerrainEstimationReceiver : public SolverSynchronizedModule {
  public:
-  TerrainEstimationReceiver(::ros::NodeHandle nodeHandle, std::shared_ptr<TerrainEstimator> TerrainEstimatorPtr, const std::string& robotName);
+  TerrainEstimationReceiver(ros::NodeHandle nodeHandle, std::shared_ptr<TerrainEstimator> TerrainEstimatorPtr, const std::string& robotName);
 
   void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t& currentState,
                     const ReferenceManagerInterface& referenceManager) override;
@@ -29,7 +29,7 @@ class TerrainEstimationReceiver : public SolverSynchronizedModule {
 
   std::shared_ptr<TerrainEstimator> ptr_;
 
-  ::ros::Subscriber subscriber_;
+  ros::Subscriber subscriber_;
 
   std::mutex mtx_;
   std::atomic_bool updated_;

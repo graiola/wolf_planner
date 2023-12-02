@@ -86,7 +86,7 @@ class TargetTrajectoriesPublisher final
     };
 
     goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
-    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>(robotName_+"/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
+    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/"+robotName+"/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
   }
 
  private:
