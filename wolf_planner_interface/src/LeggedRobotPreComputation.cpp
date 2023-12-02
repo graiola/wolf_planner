@@ -45,10 +45,12 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings)
+                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner, const TerrainEstimator& terrainEstimator,
+                                                     ModelSettings settings)
     : pinocchioInterface_(std::move(pinocchioInterface)),
       info_(std::move(info)),
       swingTrajectoryPlannerPtr_(&swingTrajectoryPlanner),
+      terrainEstimatorPtr_(&terrainEstimator),
       mappingPtr_(new CentroidalModelPinocchioMapping(info_)),
       settings_(std::move(settings)) {
   eeNormalVelConConfigs_.resize(info_.numThreeDofContacts);
@@ -63,6 +65,7 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(const LeggedRobotPreComputa
     : pinocchioInterface_(rhs.pinocchioInterface_),
       info_(rhs.info_),
       swingTrajectoryPlannerPtr_(rhs.swingTrajectoryPlannerPtr_),
+      terrainEstimatorPtr_(rhs.terrainEstimatorPtr_),
       mappingPtr_(rhs.mappingPtr_->clone()),
       settings_(rhs.settings_) {
   eeNormalVelConConfigs_.resize(rhs.eeNormalVelConConfigs_.size());
@@ -93,7 +96,8 @@ void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const ve
   // lambda to set config for friction cone constraints
   auto frictionConeConConfig = [&](size_t footIndex) {
     FrictionConeConstraint::Config config;
-    config.terrainNormal << 0.0, 0.0, 1.0; // TODO
+    config.terrainNormal << terrainEstimatorPtr_->getTerrainNormal();
+    // TODO missing other params
     return config;
   };
 
@@ -101,7 +105,6 @@ void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const ve
     for (size_t i = 0; i < info_.numThreeDofContacts; i++) {
       eeNormalVelConConfigs_[i] = eeNormalVelConConfig(i);
       frictionConeConConfigs_[i] = frictionConeConConfig(i);
-
     }
   }
 

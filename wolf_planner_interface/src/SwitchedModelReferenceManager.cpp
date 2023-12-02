@@ -36,10 +36,13 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 SwitchedModelReferenceManager::SwitchedModelReferenceManager(std::shared_ptr<GaitSchedule> gaitSchedulePtr,
-                                                             std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr)
+                                                             std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
+                                                             std::shared_ptr<TerrainEstimator> terrainEstimator)
     : ReferenceManager(TargetTrajectories(), ModeSchedule()),
       gaitSchedulePtr_(std::move(gaitSchedulePtr)),
-      swingTrajectoryPtr_(std::move(swingTrajectoryPtr)) {}
+      swingTrajectoryPtr_(std::move(swingTrajectoryPtr)),
+      terrainEstimatorPtr_(std::move(terrainEstimator))
+{}
 
 /******************************************************************************************************/
 /******************************************************************************************************/
@@ -66,6 +69,8 @@ void SwitchedModelReferenceManager::modifyReferences(scalar_t initTime, scalar_t
 
   const scalar_t terrainHeight = 0.0;
   swingTrajectoryPtr_->update(modeSchedule, terrainHeight);
+
+  terrainEstimatorPtr_->update();
 }
 
 }  // namespace legged_robot

@@ -27,48 +27,35 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#pragma once
-
-#include <ocs2_core/thread_support/Synchronized.h>
-#include <ocs2_oc/synchronized_module/ReferenceManager.h>
-
-#include <ocs2_legged_robot/gait/GaitSchedule.h>
-#include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
 
 #include "wolf_planner_interface/TerrainEstimator.h"
-#include "wolf_planner_interface/SwingTrajectoryPlanner.h"
+
+#include <iostream>
+
 
 namespace ocs2 {
 namespace legged_robot {
 
-/**
- * Manages the ModeSchedule and the TargetTrajectories for switched model.
- */
-class SwitchedModelReferenceManager : public ReferenceManager {
- public:
-  SwitchedModelReferenceManager(std::shared_ptr<GaitSchedule> gaitSchedulePtr, std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
-                                std::shared_ptr<TerrainEstimator> terrainEstimator);
+TerrainEstimator::TerrainEstimator()
+  :terrainNormal_(0.0,0.0,1.0)
+{
+}
 
-  ~SwitchedModelReferenceManager() override = default;
+void TerrainEstimator::update()
+{
 
-  void setModeSchedule(const ModeSchedule& modeSchedule) override;
+}
 
-  contact_flag_t getContactFlags(scalar_t time) const;
+const vector3_t& TerrainEstimator::getTerrainNormal() const
+{
+  return terrainNormal_;
+}
 
-  const std::shared_ptr<GaitSchedule>& getGaitSchedule() { return gaitSchedulePtr_; }
+void TerrainEstimator::setTerrainNormal(const vector3_t& terrainNormal)
+{
+  terrainNormal_ = terrainNormal;
+}
 
-  const std::shared_ptr<SwingTrajectoryPlanner>& getSwingTrajectoryPlanner() { return swingTrajectoryPtr_; }
-
-  const std::shared_ptr<TerrainEstimator>& getTerrainEstimator() { return terrainEstimatorPtr_; }
-
- protected:
-  void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
-                        ModeSchedule& modeSchedule) override;
-
-  std::shared_ptr<GaitSchedule> gaitSchedulePtr_;
-  std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr_;
-  std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
-};
 
 }  // namespace legged_robot
 }  // namespace ocs2

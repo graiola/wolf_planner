@@ -1,3 +1,5 @@
+#pragma once
+
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/Types.h>
 #include <ocs2_core/initialization/Initializer.h>
@@ -22,7 +24,7 @@ using namespace legged_robot;
 class LeggedInterface : public RobotInterface {
  public:
   LeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                  bool useHardFrictionConeConstraint = false);
+                  bool useHardFrictionConeConstraint = true);
 
   ~LeggedInterface() override = default;
 
@@ -82,7 +84,7 @@ class LeggedInterface : public RobotInterface {
   CentroidalModelInfo centroidalModelInfo_;
   std::unique_ptr<PinocchioGeometryInterface> geometryInterfacePtr_;
 
-  std::unique_ptr<OptimalControlProblem> problemPtr_;
+  std::shared_ptr<OptimalControlProblem> problemPtr_;
   std::shared_ptr<SwitchedModelReferenceManager> referenceManagerPtr_;
 
   rollout::Settings rolloutSettings_;
