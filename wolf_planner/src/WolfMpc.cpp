@@ -44,8 +44,7 @@ WolfMpc::~WolfMpc()
 
 bool WolfMpc::init()
 {
-
-  ros::NodeHandle nodeHandle;
+  ros::NodeHandle nodeHandle; // robotNamespace
   std::string urdfFile;
   std::string taskFile;
   std::string referenceFile;
@@ -54,6 +53,7 @@ bool WolfMpc::init()
   std::string topicPrefix = "wolf_planner";
   std::vector<std::string> robotFootNames;
   std::string robotBaseName;
+
   nodeHandle.getParam(topicPrefix+"/robotName",  robotName);
   nodeHandle.getParam(topicPrefix+"/robotModel", robotModel);
   nodeHandle.getParam(topicPrefix+"/urdfFile", urdfFile);
@@ -64,17 +64,17 @@ bool WolfMpc::init()
 
   // Wait for the controller to start
   ROS_INFO("[WoLFMpc] waiting for WoLF controller to start...");
-  while (!nodeHandle.hasParam(robotName+"/wolf_controller/robot_foot_names") && ros::ok())
+  while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_foot_names") && ros::ok())
     ros::Rate(1).sleep();
-  nodeHandle.getParam(robotName+"/wolf_controller/robot_foot_names", robotFootNames);
+  nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_foot_names", robotFootNames);
   if(robotFootNames.empty())
   {
     ROS_ERROR("[WolfMpc] robot foot names is empty!");
     return false;
   }
-  while (!nodeHandle.hasParam(robotName+"/wolf_controller/robot_base_name") && ros::ok())
+  while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_base_name") && ros::ok())
     ros::Rate(1).sleep();
-  nodeHandle.getParam(robotName+"/wolf_controller/robot_base_name", robotBaseName);
+  nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_base_name", robotBaseName);
   if(robotBaseName.empty())
   {
     ROS_ERROR("[WolfMpc] robot base name is empty!");
@@ -98,7 +98,7 @@ bool WolfMpc::init()
   auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
-  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), topicPrefix);
+  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
 
   // ROS ReferenceManager
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
@@ -142,25 +142,25 @@ bool WolfMpc::init()
   observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
   // MPC publishers (FIXME hardcoded, export to a config file)
-  mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/lf_foot_wrench", 1);
-  mpcFootPublisher_lf_    = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/lf_foot",   1);
+  mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/lf_foot_wrench", 1);
+  mpcFootPublisher_lf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = nodeHandle.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/lh_foot_wrench", 1);
-  mpcFootPublisher_lh_    = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/lh_foot",   1);
+  mpcWrenchPublisher_lh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/lh_foot_wrench", 1);
+  mpcFootPublisher_lh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = nodeHandle.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/rf_foot_wrench", 1);
-  mpcFootPublisher_rf_    = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/rf_foot",   1);
+  mpcWrenchPublisher_rf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/rf_foot_wrench", 1);
+  mpcFootPublisher_rf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = nodeHandle.advertise<wolf_msgs::Wrench>   (robotName+"/wolf_controller/reference/rh_foot_wrench", 1);
-  mpcFootPublisher_rh_    = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/rh_foot",   1);
+  mpcWrenchPublisher_rh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/rh_foot_wrench", 1);
+  mpcFootPublisher_rh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/rh_foot",   1);
 
-  mpcBasePublisher_       = nodeHandle.advertise<wolf_msgs::Cartesian>(robotName+"/wolf_controller/reference/waist",     1);
+  mpcBasePublisher_       = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/waist",     1);
 
-  mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> (robotName+"/wolf_controller/reference/postural",  1);
+  mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> ("/"+robotName+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded, export to a config file)
-  mpcObservation_         = nodeHandle.subscribe(robotName+"/wolf_controller/mpc_observation",   1, &WolfMpc::observationCallback, this);
-  controllerState_        = nodeHandle.subscribe(robotName+"/wolf_controller/controller_state",  1, &WolfMpc::controllerStateCallback, this);
+  mpcObservation_         = nodeHandle.subscribe("/"+robotName+"/wolf_controller/mpc_observation",   1, &WolfMpc::observationCallback, this);
+  controllerState_        = nodeHandle.subscribe("/"+robotName+"/wolf_controller/controller_state",  1, &WolfMpc::controllerStateCallback, this);
 
   return true;
 }

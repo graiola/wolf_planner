@@ -5,11 +5,10 @@ namespace wolf_planner {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-TerrainEstimationReceiver::TerrainEstimationReceiver(::ros::NodeHandle nodeHandle, std::shared_ptr<TerrainEstimator> ptr, const std::string& robotName)
+TerrainEstimationReceiver::TerrainEstimationReceiver(ros::NodeHandle nodeHandle, std::shared_ptr<TerrainEstimator> ptr, const std::string& robotName)
     : ptr_(ptr), updated_(false) {
   terrainNormal_ << 0.0, 0.0, 1.0;
-  subscriber_ = nodeHandle.subscribe("/wolf_controller/terrain_estimation", 1, &TerrainEstimationReceiver::terrainEstimationCallback, this,
-                                                    ::ros::TransportHints().udp());
+  subscriber_ = nodeHandle.subscribe("/"+robotName+"/wolf_controller/terrain_estimation", 1, &TerrainEstimationReceiver::terrainEstimationCallback, this);
 }
 
 /******************************************************************************************************/
