@@ -67,7 +67,11 @@ class TargetTrajectoriesPublisher final
 
     // cmd_vel subscriber
     auto cmdVelCallback = [this](const geometry_msgs::Twist::ConstPtr& msg) {
-      if (latestObservation_.time == 0.0) {
+
+      bool active = (std::abs(msg->linear.x)  > 0.0  || std::abs(msg->linear.y)   > 0.0 ||
+                     std::abs(msg->linear.z ) > 0.0  || std::abs(msg->angular.z) > 0.0 );
+
+      if (latestObservation_.time == 0.0 || !active) {
         return;
       }
 
