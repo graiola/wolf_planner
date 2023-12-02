@@ -27,7 +27,8 @@ class TargetTrajectoriesPublisher final
         cmdVelToTargetTrajectories_(std::move(cmdVelToTargetTrajectories)),
         topicPrefix_(topicPrefix),
         robotName_(robotName),
-        tf2_(buffer_)
+        tf2_(buffer_),
+        resetVelDone_(false)
   {
     // Trajectories publisher
     targetTrajectoriesPublisher_.reset(new TargetTrajectoriesRosPublisher(nh, topicPrefix_));
@@ -68,25 +69,33 @@ class TargetTrajectoriesPublisher final
     // cmd_vel subscriber
     auto cmdVelCallback = [this](const geometry_msgs::Twist::ConstPtr& msg) {
 
-      bool active = (std::abs(msg->linear.x)  > 0.0  || std::abs(msg->linear.y)   > 0.0 ||
-                     std::abs(msg->linear.z ) > 0.0  || std::abs(msg->angular.z) > 0.0 );
-
-      if (latestObservation_.time == 0.0 || !active) {
-        return;
-      }
-
       vector_t cmdVel = vector_t::Zero(4);
-      cmdVel[0] = msg->linear.x;
-      cmdVel[1] = msg->linear.y;
-      cmdVel[2] = msg->linear.z;
-      cmdVel[3] = msg->angular.z;
+
+      bool active = (std::abs(msg->linear.x)  > 0.0  || std::abs(msg->linear.y)   > 0.0 ||
+                     std::abs(msg->linear.z ) > 0.0  || std::abs(msg->angular.z)  > 0.0 );
+
+      if (!active)
+      {
+        if(!resetVelDone_ && latestObservation_.time != 0.0 )
+          resetVelDone_ = true;
+        else
+          return;
+      }
+      else
+      {
+        cmdVel[0] = msg->linear.x;
+        cmdVel[1] = msg->linear.y;
+        cmdVel[2] = msg->linear.z;
+        cmdVel[3] = msg->angular.z;
+        resetVelDone_ = false;
+      }
 
       const auto trajectories = cmdVelToTargetTrajectories_(cmdVel, latestObservation_);
       targetTrajectoriesPublisher_->publishTargetTrajectories(trajectories);
     };
 
     goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
-    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>(robotName_+"/wolf_controller/keyboard", 1, cmdVelCallback); // FIXME hardcoded
+    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>(robotName_+"/wolf_controller/keyboard", 1, cmdVelCallback);
   }
 
  private:
@@ -103,6 +112,8 @@ class TargetTrajectoriesPublisher final
 
   std::string topicPrefix_;
   std::string robotName_;
+
+  bool resetVelDone_;
 };
 
 }  // namespace wolf_planner
