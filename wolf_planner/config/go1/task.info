@@ -1,0 +1,340 @@
+centroidalModelType             0      // 0: FullCentroidalDynamics, 1: Single Rigid Body Dynamics
+
+wolf_planner_interface
+{
+  verbose                               false  // show the loaded parameters
+}
+
+model_settings
+{
+  positionErrorGain             0.0
+  phaseTransitionStanceTime     0.1
+  verboseCppAd                  true
+  recompileLibrariesCppAd       false
+  modelFolderCppAd              /tmp/wolf_planner/go1
+  jointNames
+  {
+      [0] lf_haa_joint
+      [1] lf_hfe_joint
+      [2] lf_kfe_joint
+      [3] lh_haa_joint
+      [4] lh_hfe_joint
+      [5] lh_kfe_joint
+      [6] rf_haa_joint
+      [7] rf_hfe_joint
+      [8] rf_kfe_joint
+      [9] rh_haa_joint
+      [10] rh_hfe_joint
+      [11] rh_kfe_joint
+  }
+  contactNames3DoF
+  {
+      [0] lf_foot
+      [1] lh_foot
+      [2] rf_foot
+      [3] rh_foot
+  }
+}
+
+swing_trajectory_config
+{
+  liftOffVelocity               0.05
+  touchDownVelocity            -0.1
+  swingHeight                   0.12
+  swingTimeScale                0.15
+}
+
+; DDP settings
+ddp
+{
+  algorithm                       SLQ
+
+  nThreads                        3
+  threadPriority                  50
+
+  maxNumIterations                1
+  minRelCost                      1e-1
+  constraintTolerance             5e-3
+
+  displayInfo                     false
+  displayShortSummary             false
+  checkNumericalStability         false
+  debugPrintRollout               false
+  debugCaching                    false
+
+  AbsTolODE                       1e-5
+  RelTolODE                       1e-3
+  maxNumStepsPerSecond            10000
+  timeStep                        0.015
+  backwardPassIntegratorType      ODE45
+
+  constraintPenaltyInitialValue   20.0
+  constraintPenaltyIncreaseRate   2.0
+
+  preComputeRiccatiTerms          true
+
+  useFeedbackPolicy               false
+
+  strategy                        LINE_SEARCH
+  lineSearch
+  {
+    minStepLength                 1e-2
+    maxStepLength                 1.0
+    hessianCorrectionStrategy     DIAGONAL_SHIFT
+    hessianCorrectionMultiple     1e-5
+  }
+}
+
+
+; Multiple_Shooting SQP settings
+sqp
+{
+  nThreads                              3
+  dt                                    0.015
+  sqpIteration                          1
+  deltaTol                              1e-4
+  g_max                                 1e-2
+  g_min                                 1e-6
+  inequalityConstraintMu                0.1
+  inequalityConstraintDelta             5.0
+  projectStateInputEqualityConstraints  true
+  printSolverStatistics                 true
+  printSolverStatus                     false
+  printLinesearch                       false
+  useFeedbackPolicy                     false
+  integratorType                        RK2
+  threadPriority                        50
+}
+
+; Multiple_Shooting IPM settings
+ipm
+{
+  nThreads                              3
+  dt                                    0.015
+  ipmIteration                          1
+  deltaTol                              1e-4
+  g_max                                 10.0
+  g_min                                 1e-6
+  computeLagrangeMultipliers            true
+  printSolverStatistics                 true
+  printSolverStatus                     false
+  printLinesearch                       false
+  useFeedbackPolicy                     false
+  integratorType                        RK2
+  threadPriority                        50
+
+  initialBarrierParameter               1e-4
+  targetBarrierParameter                1e-4
+  barrierLinearDecreaseFactor           0.2
+  barrierSuperlinearDecreasePower       1.5
+  barrierReductionCostTol               1e-3
+  barrierReductionConstraintTol         1e-3
+
+  fractionToBoundaryMargin              0.995
+  usePrimalStepSizeForDual              false
+
+  initialSlackLowerBound                1e-4
+  initialDualLowerBound                 1e-4
+  initialSlackMarginRate                1e-2
+  initialDualMarginRate                 1e-2
+}
+
+; Rollout settings
+rollout
+{
+  AbsTolODE                       1e-5
+  RelTolODE                       1e-3
+  timeStep                        0.015
+  integratorType                  ODE45
+  maxNumStepsPerSecond            10000
+  checkNumericalStability         false
+}
+
+mpc
+{
+  timeHorizon                     1.0  ; [s]
+  solutionTimeWindow              -1   ; maximum [s]
+  coldStart                       false
+
+  debugPrint                      false
+
+  mpcDesiredFrequency             100  ; [Hz]
+  mrtDesiredFrequency             1000 ; [Hz] Useless
+}
+
+initialState
+{
+   ;; Normalized Centroidal Momentum: [linear, angular] ;;
+   (0,0)  0.0     ; vcom_x
+   (1,0)  0.0     ; vcom_y
+   (2,0)  0.0     ; vcom_z
+   (3,0)  0.0     ; L_x / robotMass
+   (4,0)  0.0     ; L_y / robotMass
+   (5,0)  0.0     ; L_z / robotMass
+
+   ;; Base Pose: [position, orientation] ;;
+   (6,0)  0.0     ; p_base_x
+   (7,0)  0.0     ; p_base_y
+   (8,0)  0.3     ; p_base_z
+   (9,0)  0.0     ; theta_base_z
+   (10,0) 0.0     ; theta_base_y
+   (11,0) 0.0     ; theta_base_x
+
+   ;; Leg Joint Positions: [LF, LH, RF, RH] ;;
+   (12,0) 0.104001     ; lf_haa_joint
+   (13,0) 0.705525     ; lf_hfe_joint
+   (14,0) 4.99638      ; lf_kfe_joint
+   (15,0) 0.124401     ; lh_haa_joint
+   (16,0) 0.625241     ; lh_hfe_joint
+   (17,0) 5.01181      ; lh_kfe_joint
+   (18,0) -0.0909993   ; rf_haa_joint
+   (19,0) 0.71294      ; rf_hfe_joint
+   (20,0) 4.98416      ; rf_kfe_joint
+   (21,0) -0.111876    ; rh_haa_joint
+   (22,0) 0.631184     ; rh_hfe_joint
+   (23,0) 4.99901      ; rh_kfe_joint
+}
+
+; standard state weight matrix
+Q
+{
+  scaling 1e+0
+
+  ;; Normalized Centroidal Momentum: [linear, angular] ;;
+  (0,0)   15.0     ; vcom_x
+  (1,1)   15.0     ; vcom_y
+  (2,2)   100.0    ; vcom_z
+  (3,3)   10.0     ; L_x / robotMass
+  (4,4)   30.0     ; L_y / robotMass
+  (5,5)   30.0     ; L_z / robotMass
+
+  ;; Base Pose: [position, orientation] ;;
+  (6,6)   1000.0   ; p_base_x
+  (7,7)   1000.0   ; p_base_y
+  (8,8)   1500.0   ; p_base_z
+  (9,9)   100.0    ; theta_base_z
+  (10,10) 300.0    ; theta_base_y
+  (11,11) 300.0    ; theta_base_x
+
+  ;; Leg Joint Positions: [LF, LH, RF, RH] ;;
+  (12,12) 5.0     ; lf_haa_joint
+  (13,13) 5.0     ; lf_hfe_joint
+  (14,14) 2.5     ; lf_kfe_joint
+  (15,15) 5.0     ; lh_haa_joint
+  (16,16) 5.0     ; lh_hfe_joint
+  (17,17) 2.5     ; lh_kfe_joint
+  (18,18) 5.0     ; rf_haa_joint
+  (19,19) 5.0     ; rf_hfe_joint
+  (20,20) 2.5     ; rf_kfe_joint
+  (21,21) 5.0     ; rh_haa_joint
+  (22,22) 5.0     ; rh_hfe_joint
+  (23,23) 2.5     ; rh_kfe_joint
+}
+
+; control weight matrix
+R
+{
+  scaling 1e-3
+
+  ;; Feet Contact Forces: [LF, RF, LH, RH] ;;
+  (0,0)   5.0       ; left_front_force
+  (1,1)   5.0       ; left_front_force
+  (2,2)   5.0       ; left_front_force
+  (3,3)   5.0       ; right_front_force
+  (4,4)   5.0       ; right_front_force
+  (5,5)   5.0       ; right_front_force
+  (6,6)   5.0       ; left_hind_force
+  (7,7)   5.0       ; left_hind_force
+  (8,8)   5.0       ; left_hind_force
+  (9,9)   5.0       ; right_hind_force
+  (10,10) 5.0       ; right_hind_force
+  (11,11) 5.0       ; right_hind_force
+
+  ;; foot velocity relative to base: [LF, LH, RF, RH] (uses the Jacobian at nominal configuration) ;;
+  (12,12) 5000.0    ; x
+  (13,13) 5000.0    ; y
+  (14,14) 5000.0    ; z
+  (15,15) 5000.0    ; x
+  (16,16) 5000.0    ; y
+  (17,17) 5000.0    ; z
+  (18,18) 5000.0    ; x
+  (19,19) 5000.0    ; y
+  (20,20) 5000.0    ; z
+  (21,21) 5000.0    ; x
+  (22,22) 5000.0    ; y
+  (23,23) 5000.0    ; z
+}
+
+frictionConeSoftConstraint
+{
+  frictionCoefficient    0.3
+
+  ; relaxed log barrier parameters
+  mu                     0.1
+  delta                  5.0
+}
+
+selfCollision
+{
+  ; Self Collision raw object pairs
+  collisionObjectPairs
+  {
+  }
+
+  ; Self Collision pairs
+  collisionLinkPairs
+  {
+    [0] "lf_lowerleg, rf_lowerleg"
+    [1] "lh_lowerleg, rh_lowerleg"
+    [2] "lf_lowerleg, lh_lowerleg"
+    [3] "rf_lowerleg, rh_lowerleg"
+    [4] "lf_foot, rf_foot"
+    [5] "lh_foot, rh_foot"
+    [6] "lf_foot, lh_foot"
+    [7] "rf_foot, rh_foot"
+  }
+
+  minimumDistance  0.05
+
+  ; relaxed log barrier parameters
+  mu      1e-2
+  delta   1e-3
+}
+
+; Whole body control
+torqueLimitsTask
+{
+   (0,0)  33.5     ; HAA
+   (1,0)  33.5     ; HFE
+   (2,0)  33.5     ; KFE
+}
+
+frictionConeTask
+{
+  frictionCoefficient    0.3
+}
+
+swingLegTask
+{
+    kp                   350
+    kd                   37
+}
+
+weight
+{
+    swingLeg        100
+    baseAccel       1
+    contactForce    0.01
+}
+
+; State Estimation
+kalmanFilter
+{
+    footRadius                  0.02
+    imuProcessNoisePosition     0.02
+    imuProcessNoiseVelocity     0.02
+    footProcessNoisePosition    0.002
+    footSensorNoisePosition     0.005
+    footSensorNoiseVelocity     0.1
+    footHeightSensorNoise       0.01
+}
