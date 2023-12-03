@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
     <arg name="robot_name"           default=""      doc="robot namespace"/>
-    <arg name="robot_model"          default="spot"  doc="robot model: [a1, aliengo, spot]"/>
+    <arg name="robot_model"          default="spot"  doc="robot model: [a1, aliengo, spot, go1]"/>
     <arg name="launch_controller"    default="true"  doc="launch controller"/>
     <arg name="world_name"           default="empty" doc="gazebo world name"/>
     <arg name="rviz_gui"             default="true"  doc="launch planner visualization"/>
@@ -38,6 +38,7 @@
         <arg name="plotjuggler_gui"          value="$(arg plotjuggler_gui)"/>
         <arg name="plot_node_gui"            value="$(arg plot_node_gui)"/>
         <arg name="rviz_gui"                 value="false"/>
+        <arg name="sensors"                  value="false"/>
     </include>
 
 </launch>
