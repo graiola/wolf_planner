@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
     <name>wolf_planner_interface</name>
-    <version>0.0.0</version>
+    <version>0.0.1</version>
     <description>Legged interface base on OCS2</description>
     <maintainer email="todo@gmail.com">ToDo</maintainer>
 
@@ -12,6 +12,7 @@
     <depend>roscpp</depend>
     <depend>ocs2_legged_robot</depend>
     <depend>ocs2_self_collision</depend>
+    <depend>wolf_msgs</depend>
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
 

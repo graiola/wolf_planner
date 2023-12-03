@@ -111,20 +111,16 @@ void LeggedInterface::setupOptimalControlProblem(const std::string& taskFile, co
     if (useHardFrictionConeConstraint_) {
       problemPtr_->inequalityConstraintPtr->add(footName + "_frictionCone", getFrictionConeConstraint(i, frictionCoefficient));
     } else {
-      problemPtr_->softConstraintPtr->add(footName + "_frictionCone",
-                                          getFrictionConeSoftConstraint(i, frictionCoefficient, barrierPenaltyConfig));
+      problemPtr_->softConstraintPtr->add(footName + "_frictionCone", getFrictionConeSoftConstraint(i, frictionCoefficient, barrierPenaltyConfig));
     }
     problemPtr_->equalityConstraintPtr->add(footName + "_zeroForce", std::unique_ptr<StateInputConstraint>(new ZeroForceConstraint(
                                                                          *referenceManagerPtr_, i, centroidalModelInfo_)));
     problemPtr_->equalityConstraintPtr->add(footName + "_zeroVelocity", getZeroVelocityConstraint(*eeKinematicsPtr, i));
-    problemPtr_->equalityConstraintPtr->add(
-        footName + "_normalVelocity",
-        std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, *eeKinematicsPtr, i)));
+    problemPtr_->equalityConstraintPtr->add(footName + "_normalVelocity", std::unique_ptr<StateInputConstraint>(new NormalVelocityConstraintCppAd(*referenceManagerPtr_, *eeKinematicsPtr, i)));
   }
 
   // Self-collision avoidance constraint
-  problemPtr_->stateSoftConstraintPtr->add("selfCollision",
-                                           getSelfCollisionConstraint(*pinocchioInterfacePtr_, taskFile, "selfCollision", verbose));
+  problemPtr_->stateSoftConstraintPtr->add("selfCollision", getSelfCollisionConstraint(*pinocchioInterfacePtr_, taskFile, "selfCollision", verbose));
 
   setupPreComputation(taskFile, urdfFile, referenceFile, verbose);
 
@@ -157,10 +153,9 @@ void LeggedInterface::setupModel(const std::string& taskFile, const std::string&
 /******************************************************************************************************/
 void LeggedInterface::setupReferenceManager(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                             bool verbose) {
-  auto swingTrajectoryPlanner =
-      std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
-  referenceManagerPtr_ =
-      std::make_shared<SwitchedModelReferenceManager>(loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner));
+  auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
+  auto terrainEstimator = std::make_unique<TerrainEstimator>();
+  referenceManagerPtr_ = std::make_shared<SwitchedModelReferenceManager>(loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner), std::move(terrainEstimator));
 }
 
 /******************************************************************************************************/
@@ -169,7 +164,7 @@ void LeggedInterface::setupReferenceManager(const std::string& taskFile, const s
 void LeggedInterface::setupPreComputation(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                           bool verbose) {
   problemPtr_->preComputationPtr = std::make_unique<LeggedRobotPreComputation>(
-      *pinocchioInterfacePtr_, centroidalModelInfo_, *referenceManagerPtr_->getSwingTrajectoryPlanner(), modelSettings_);
+      *pinocchioInterfacePtr_, centroidalModelInfo_, *referenceManagerPtr_->getSwingTrajectoryPlanner(), *referenceManagerPtr_->getTerrainEstimator(), modelSettings_);
 }
 
 /******************************************************************************************************/

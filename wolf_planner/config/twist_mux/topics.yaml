@@ -1,0 +1,21 @@
+topics:
+-
+  name    : priority_twist
+  topic   : wolf_controller/priority_twist
+  timeout : 2.0
+  priority: 100
+-
+  name    : twist
+  topic   : wolf_controller/twist
+  timeout : 2.0
+  priority: 90
+-
+  name    : joystick
+  topic   : wolf_controller/joy
+  timeout : 2.0
+  priority: 80
+-
+  name    : keyboard
+  topic   : wolf_controller/keyboard
+  timeout : 2.0
+  priority: 70

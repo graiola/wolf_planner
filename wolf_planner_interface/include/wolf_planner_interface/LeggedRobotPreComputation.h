@@ -40,7 +40,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_legged_robot/common/ModelSettings.h>
 
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
-#include "wolf_planner_interface/constraint/SwingTrajectoryPlanner.h"
+#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
+
+#include "wolf_planner_interface/SwingTrajectoryPlanner.h"
+#include "wolf_planner_interface/TerrainEstimator.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -49,14 +52,20 @@ namespace legged_robot {
 class LeggedRobotPreComputation : public PreComputation {
  public:
   LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                            const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings);
+                            const SwingTrajectoryPlanner& swingTrajectoryPlanner,
+                            const TerrainEstimator& terrainEstimator,
+                            ModelSettings settings);
   ~LeggedRobotPreComputation() override = default;
 
   LeggedRobotPreComputation* clone() const override { return new LeggedRobotPreComputation(*this); }
 
   void request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) override;
 
+  std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() { return eeNormalVelConConfigs_; }
   const std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() const { return eeNormalVelConConfigs_; }
+
+  std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() { return frictionConeConConfigs_; }
+  const std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() const { return frictionConeConConfigs_; }
 
   PinocchioInterface& getPinocchioInterface() { return pinocchioInterface_; }
   const PinocchioInterface& getPinocchioInterface() const { return pinocchioInterface_; }
@@ -68,10 +77,12 @@ class LeggedRobotPreComputation : public PreComputation {
   PinocchioInterface pinocchioInterface_;
   CentroidalModelInfo info_;
   const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;
+  const TerrainEstimator* terrainEstimatorPtr_;
   std::unique_ptr<CentroidalModelPinocchioMapping> mappingPtr_;
   const ModelSettings settings_;
 
   std::vector<EndEffectorLinearConstraint::Config> eeNormalVelConConfigs_;
+  std::vector<FrictionConeConstraint::Config> frictionConeConConfigs_;
 };
 
 }  // namespace legged_robot
