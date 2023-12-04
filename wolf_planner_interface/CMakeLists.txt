@@ -31,6 +31,7 @@ catkin_package(
         DEPENDS
         pinocchio
         hpp-fcl
+        wolf_msgs
 )
 
 ###########
