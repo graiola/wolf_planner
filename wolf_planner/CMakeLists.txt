@@ -8,8 +8,6 @@ find_package(catkin REQUIRED
         COMPONENTS
         roscpp
         wolf_planner_interface
-        ocs2_legged_robot_ros
-        ocs2_self_collision_visualization
         angles
         wolf_msgs
         wolf_controller_utils
@@ -17,6 +15,9 @@ find_package(catkin REQUIRED
 
 find_package(pinocchio REQUIRED)
 find_package(hpp-fcl REQUIRED)
+find_package(ocs2_legged_robot REQUIRED)
+find_package(ocs2_legged_robot_ros REQUIRED)
+find_package(ocs2_self_collision_visualization REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -26,8 +27,6 @@ catkin_package(
         CATKIN_DEPENDS
         roscpp
         wolf_planner_interface
-        ocs2_legged_robot_ros
-        ocs2_self_collision_visualization
         angles
         wolf_msgs
         wolf_controller_utils
@@ -42,6 +41,9 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${pinocchio_INCLUDE_DIRS}
         ${hpp-fcl_INCLUDE_DIRS}
+        ${ocs2_legged_robot_INCLUDE_DIRS}
+        ${ocs2_legged_robot_ros_INCLUDE_DIRS}
+        ${ocs2_self_collision_visualization_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -51,19 +53,28 @@ link_directories(
 # Target trajectories publish node
 add_executable(wolf_target_node src/TargetTrajectoriesPublisher.cpp)
 add_dependencies(wolf_target_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_target_node ${catkin_LIBRARIES})
+target_link_libraries(wolf_target_node ${catkin_LIBRARIES}
+    ${ocs2_legged_robot_LIBRARIES}
+    ${ocs2_legged_robot_ros_LIBRARIES}
+    ${ocs2_self_collision_visualization_LIBRARIES})
 target_compile_options(wolf_target_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # Gait command node
 add_executable(wolf_gait_node src/GaitCommandNode.cpp)
 add_dependencies(wolf_gait_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_gait_node ${catkin_LIBRARIES})
+target_link_libraries(wolf_gait_node ${catkin_LIBRARIES}
+    ${ocs2_legged_robot_LIBRARIES}
+    ${ocs2_legged_robot_ros_LIBRARIES}
+    ${ocs2_self_collision_visualization_LIBRARIES})
 target_compile_options(wolf_gait_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # MPC library
 add_library(wolf_mpc src/WolfMpc.cpp)
 add_dependencies(wolf_mpc ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES} ${hpp-fcl_LIBRARIES})
+target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES} ${hpp-fcl_LIBRARIES}
+    ${ocs2_legged_robot_LIBRARIES}
+    ${ocs2_legged_robot_ros_LIBRARIES}
+    ${ocs2_self_collision_visualization_LIBRARIES})
 
 # MPC node
 add_executable(wolf_mpc_node src/WolfMpcNode.cpp)

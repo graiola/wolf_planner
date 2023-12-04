@@ -6,8 +6,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED
         COMPONENTS
         roscpp
-        ocs2_legged_robot
-        ocs2_self_collision
         wolf_msgs
         )
 
@@ -20,6 +18,8 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(pinocchio REQUIRED)
 find_package(hpp-fcl REQUIRED)
+find_package(ocs2_legged_robot REQUIRED)
+find_package(ocs2_self_collision REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -28,8 +28,6 @@ catkin_package(
         ${PROJECT_NAME}
         CATKIN_DEPENDS
         roscpp
-        ocs2_legged_robot
-        ocs2_self_collision
         DEPENDS
         pinocchio
         hpp-fcl
@@ -45,6 +43,8 @@ include_directories(
         ${EIGEN3_INCLUDE_DIRS}
         ${pinocchio_INCLUDE_DIRS}
         ${hpp-fcl_INCLUDE_DIRS}
+        ${ocs2_legged_robot_INCLUDE_DIRS}
+        ${ocs2_self_collision_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -70,6 +70,8 @@ target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         ${hpp-fcl_LIBRARIES}
+        ${ocs2_legged_robot_LIBRARIES}
+        ${ocs2_self_collision_LIBRARIES}
         )
 target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 

@@ -10,8 +10,6 @@
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>roscpp</depend>
-    <depend>ocs2_legged_robot</depend>
-    <depend>ocs2_self_collision</depend>
     <depend>wolf_msgs</depend>
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
