@@ -28,10 +28,10 @@ catkin_package(
         ${PROJECT_NAME}
         CATKIN_DEPENDS
         roscpp
+        wolf_msgs
         DEPENDS
         pinocchio
         hpp-fcl
-        wolf_msgs
 )
 
 ###########
