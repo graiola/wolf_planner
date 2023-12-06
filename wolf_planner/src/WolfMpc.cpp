@@ -171,11 +171,11 @@ void WolfMpc::starting()
   currentObservation_ = callbackObservation_;
   currentObservation_.time = 0.0;
 
-  TargetTrajectories target_trajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
+  TargetTrajectories targetTrajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
 
   // Set the first observation and command and wait for optimization to finish
   mpcMrtInterface_->setCurrentObservation(currentObservation_);
-  mpcMrtInterface_->getReferenceManager().setTargetTrajectories(target_trajectories);
+  mpcMrtInterface_->getReferenceManager().setTargetTrajectories(targetTrajectories);
   ROS_INFO_STREAM("[WolfMpc] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
     mpcMrtInterface_->advanceMpc();
