@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_legged_robot/gait/GaitSchedule.h>
 #include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
 
+#include <ocs2_centroidal_model/CentroidalModelInfo.h>
+
 #include "wolf_planner_interface/TerrainEstimator.h"
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
 
@@ -46,8 +48,11 @@ namespace legged_robot {
  */
 class SwitchedModelReferenceManager : public ReferenceManager {
  public:
-  SwitchedModelReferenceManager(std::shared_ptr<GaitSchedule> gaitSchedulePtr, std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
-                                std::shared_ptr<TerrainEstimator> terrainEstimator);
+  SwitchedModelReferenceManager(CentroidalModelInfo info,
+                                std::shared_ptr<GaitSchedule> gaitSchedulePtr,
+                                std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
+                                std::shared_ptr<TerrainEstimator> terrainEstimator,
+                                scalar_t comHeight);
 
   ~SwitchedModelReferenceManager() override = default;
 
@@ -65,9 +70,12 @@ class SwitchedModelReferenceManager : public ReferenceManager {
   void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
                         ModeSchedule& modeSchedule) override;
 
+
+  const CentroidalModelInfo info_;
   std::shared_ptr<GaitSchedule> gaitSchedulePtr_;
   std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr_;
   std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
+  scalar_t comHeight_;
 };
 
 }  // namespace legged_robot

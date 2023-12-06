@@ -35,6 +35,7 @@ class TerrainEstimationReceiver : public SolverSynchronizedModule {
   std::atomic_bool updated_;
 
   Eigen::Vector3d terrainNormal_;
+  Eigen::Vector3d terrainCenter_;
 };
 
 }  // namespace wolf_planner
