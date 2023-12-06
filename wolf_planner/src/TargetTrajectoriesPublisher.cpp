@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
   loadData::loadCppDataType(referenceFile, "targetDisplacementVelocity", TARGET_DISPLACEMENT_VELOCITY);
   loadData::loadCppDataType(taskFile, "mpc.timeHorizon", TIME_TO_TARGET);
 
-  TargetTrajectoriesPublisher target_pose_command(nodeHandle, topicPrefix, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
+  TargetTrajectoriesPublisher targetPoseCommand(nodeHandle, topicPrefix, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
 
   ros::spin();
   // Successful exit
