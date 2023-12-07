@@ -80,11 +80,11 @@ void SwitchedModelReferenceManager::modifyReferences(scalar_t initTime, scalar_t
   // Modify targetTrajectory to adapt the base posture wrt terrain
   TargetTrajectories newTargetTrajectories;
 
-  int nodeNum = 2;
+  size_t nodeNum = targetTrajectories.timeTrajectory.size();
   for (size_t i = 0; i < nodeNum; ++i) {
-    scalar_t time = initTime + static_cast<double>(i) * timeHorizon / (nodeNum - 1);
+    scalar_t time  = targetTrajectories.timeTrajectory[i];
     vector_t state = targetTrajectories.getDesiredState(time);
-    vector_t input = targetTrajectories.getDesiredState(time);
+    vector_t input = targetTrajectories.getDesiredInput(time);
 
     vector_t pos = centroidal_model::getBasePose(state, info_).head(3);
 
