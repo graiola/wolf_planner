@@ -50,7 +50,9 @@ class SwitchedModelReferenceManager : public ReferenceManager {
  public:
   SwitchedModelReferenceManager(CentroidalModelInfo info,
                                 std::shared_ptr<GaitSchedule> gaitSchedulePtr,
-                                std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr);
+                                std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
+                                std::shared_ptr<TerrainEstimator> terrainEstimator,
+                                scalar_t comHeight);
 
   ~SwitchedModelReferenceManager() override = default;
 
@@ -62,6 +64,8 @@ class SwitchedModelReferenceManager : public ReferenceManager {
 
   const std::shared_ptr<SwingTrajectoryPlanner>& getSwingTrajectoryPlanner() { return swingTrajectoryPtr_; }
 
+  const std::shared_ptr<TerrainEstimator>& getTerrainEstimator() { return terrainEstimatorPtr_; }
+
  protected:
   void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
                         ModeSchedule& modeSchedule) override;
@@ -70,6 +74,8 @@ class SwitchedModelReferenceManager : public ReferenceManager {
   const CentroidalModelInfo info_;
   std::shared_ptr<GaitSchedule> gaitSchedulePtr_;
   std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr_;
+  std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
+  scalar_t comHeight_;
 };
 
 }  // namespace legged_robot

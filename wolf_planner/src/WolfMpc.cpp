@@ -90,7 +90,6 @@ bool WolfMpc::init()
   currentObservation_.time = 0.0;
   currentObservation_.mode = ModeNumber::STANCE;
   callbackObservation_ = currentObservation_;
-
   // MPC
   mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
                                   leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
@@ -98,13 +97,14 @@ bool WolfMpc::init()
   auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
-  auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
+  //auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
 
   // ROS ReferenceManager
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
+
   rosReferenceManagerPtr->subscribe(nodeHandle);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
-  mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
+  //mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
 
   // Setup the MPC thread loop
@@ -226,6 +226,7 @@ void WolfMpc::setupMrt()
 void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
   leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
+
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 

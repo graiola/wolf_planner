@@ -60,8 +60,10 @@ vector_t FrictionConeConstraint::getValue(scalar_t time, const vector_t& state, 
                                           const PreComputation& preComp) const {
 
   const auto& preCompLegged = cast<LeggedRobotPreComputation>(preComp);
-  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
-  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+  //const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  //auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
+  matrix3_t t_R_w = Eigen::Matrix3d::Identity();
 
   const auto forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
@@ -75,8 +77,10 @@ VectorFunctionLinearApproximation FrictionConeConstraint::getLinearApproximation
                                                                                  const vector_t& input,
                                                                                  const PreComputation& preComp) const {
   const auto& preCompLegged = cast<LeggedRobotPreComputation>(preComp);
-  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
-  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+  //const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  //auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
+  matrix3_t t_R_w = Eigen::Matrix3d::Identity();
 
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
@@ -100,8 +104,10 @@ VectorFunctionQuadraticApproximation FrictionConeConstraint::getQuadraticApproxi
                                                                                        const PreComputation& preComp) const {
 
   const auto& preCompLegged = cast<LeggedRobotPreComputation>(preComp);
-  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
-  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+  //const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  //auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
+  matrix3_t t_R_w = Eigen::Matrix3d::Identity();
 
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
