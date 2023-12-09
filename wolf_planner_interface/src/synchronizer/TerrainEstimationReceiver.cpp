@@ -19,6 +19,7 @@ void TerrainEstimationReceiver::preSolverRun(scalar_t initTime, scalar_t finalTi
   if (updated_) {
     std::lock_guard<std::mutex> lock(mtx_);
     ptr_->setTerrainNormal(terrainNormal_);
+    ptr_->setTerrainCenter(terrainCenter_);
     updated_ = false;
   }
 }
@@ -29,6 +30,7 @@ void TerrainEstimationReceiver::preSolverRun(scalar_t initTime, scalar_t finalTi
 void TerrainEstimationReceiver::terrainEstimationCallback(const wolf_msgs::TerrainEstimation::ConstPtr& msg) {
   std::lock_guard<std::mutex> lock(mtx_);
   terrainNormal_ << msg->terrain_normal.x, msg->terrain_normal.y, msg->terrain_normal.z;
+  terrainCenter_ << msg->central_point.x,  msg->central_point.y, msg->central_point.z;
   updated_ = true;
 }
 

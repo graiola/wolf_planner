@@ -51,11 +51,20 @@ const vector3_t& TerrainEstimator::getTerrainNormal() const
   return terrainNormal_;
 }
 
+const vector3_t& TerrainEstimator::getTerrainCenter() const
+{
+  return terrainCenter_;
+}
+
 void TerrainEstimator::setTerrainNormal(const vector3_t& terrainNormal)
 {
   terrainNormal_ = terrainNormal;
 }
 
+void TerrainEstimator::setTerrainCenter(const vector3_t& terrainCenter)
+{
+  terrainCenter_ = terrainCenter;
+}
 
 }  // namespace legged_robot
 }  // namespace ocs2
