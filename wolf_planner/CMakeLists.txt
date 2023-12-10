@@ -19,6 +19,16 @@ find_package(ocs2_legged_robot REQUIRED)
 find_package(ocs2_legged_robot_ros REQUIRED)
 find_package(ocs2_self_collision_visualization REQUIRED)
 
+find_package(wolf_planner_perceptive_interface QUIET)
+
+if(${wolf_planner_perceptive_interface_FOUND})
+    message(STATUS "Found wolf_planner_perceptive_interface, creating perceptive interface for wolf_planner.")
+    add_definitions(-DPERCEPTIVE_INTERFACE)
+    find_package(ocs2_sphere_approximation REQUIRED)
+else()
+    message(STATUS "wolf_planner_perceptive_interface not found.")
+endif()
+
 catkin_package(
         INCLUDE_DIRS
         include
@@ -44,6 +54,8 @@ include_directories(
         ${ocs2_legged_robot_INCLUDE_DIRS}
         ${ocs2_legged_robot_ros_INCLUDE_DIRS}
         ${ocs2_self_collision_visualization_INCLUDE_DIRS}
+        ${ocs2_sphere_approximation_INCLUDE_DIRS}
+        ${wolf_planner_perceptive_interface_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -74,7 +86,9 @@ add_dependencies(wolf_mpc ${catkin_EXPORTED_TARGETS})
 target_link_libraries(wolf_mpc ${catkin_LIBRARIES} ${pinocchio_LIBRARIES} ${hpp-fcl_LIBRARIES}
     ${ocs2_legged_robot_LIBRARIES}
     ${ocs2_legged_robot_ros_LIBRARIES}
-    ${ocs2_self_collision_visualization_LIBRARIES})
+    ${ocs2_self_collision_visualization_LIBRARIES}
+    ${ocs2_sphere_approximation_INCLUDE_LIBRARIES}
+    ${wolf_planner_perceptive_interface_LIBRARIES})
 
 # MPC node
 add_executable(wolf_mpc_node src/WolfMpcNode.cpp)
