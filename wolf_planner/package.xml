@@ -1,11 +1,12 @@
-<?xml version="1.0"?>
-<package format="2">
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
     <name>wolf_planner</name>
     <version>0.0.1</version>
     <description>The wolf_planner package</description>
-    <maintainer email="todo@gmail.com">ToDo</maintainer>
+    <maintainer email="gennaro.raiola@gmail.com">ToDo</maintainer>
     <license>BSD</license>
-    <author email="todo@gmail.com">ToDo</author>
+    <author email="gennaro.raiola@gmail.com">ToDo</author>
 
     <buildtool_depend>catkin</buildtool_depend>
     <depend>roscpp</depend>
@@ -15,6 +16,7 @@
     <depend>wolf_controller_utils</depend>
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
+    <depend condition="$wolf_planner_perceptive_interface_FOUND == True">wolf_planner_perceptive_interface</depend>
 
     <export>
     </export>
