@@ -37,6 +37,9 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
     // Base Orientation
     scalar_t step = 0.3;
     grid_map::Vector3 normalVector;
+    //normalVector(0) = 0.0;
+    //normalVector(1) = 0.0;
+    //normalVector(2) = 1.0;
     normalVector(0) = (map.atPosition("smooth_planar", pos + grid_map::Position(-step, 0)) -
                        map.atPosition("smooth_planar", pos + grid_map::Position(step, 0))) /
                       (2 * step);
@@ -48,14 +51,15 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
     matrix3_t R;
     scalar_t z = centroidal_model::getBasePose(state, info_)(3);
     R << cos(z), -sin(z), 0,  // clang-format off
-             sin(z), cos(z), 0,
-             0, 0, 1;  // clang-format on
+         sin(z), cos(z), 0,
+         0, 0, 1;  // clang-format on
     vector_t v = R.transpose() * normalVector;
     centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
 
     // Base Z Position
     centroidal_model::getBasePose(state, info_)(2) =
         map.atPosition("smooth_planar", pos) + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
+    //centroidal_model::getBasePose(state, info_)(2) = comHeight_;
 
     newTargetTrajectories.timeTrajectory.push_back(time);
     newTargetTrajectories.stateTrajectory.push_back(state);

@@ -67,6 +67,47 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        d435_bottom_screw_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_color_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_color_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_depth_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_depth_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_left_ir_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_left_ir_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        d435_right_ir_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        d435_right_ir_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         front_rail:
           Alpha: 1
           Show Axes: false
@@ -107,6 +148,16 @@ Visualization Manager:
           Show Trail: false
           Value: true
         lh_upperleg:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        lidar_mount:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        pack_mount:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -155,10 +206,62 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        t265_accel_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_fisheye1_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_fisheye1_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_fisheye2_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_fisheye2_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_gyro_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_odom_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        t265_pose_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         trunk_imu:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+        velodyne:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        velodyne_base_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        velodyne_mount:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         world:
           Alpha: 1
           Show Axes: false
@@ -268,6 +371,30 @@ Visualization Manager:
         {}
       Queue Size: 100
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Class: grid_map_rviz_plugin/GridMap
+      Color: 200; 200; 200
+      Color Layer: elevation
+      Color Transformer: GridMapLayer
+      ColorMap: default
+      Enabled: true
+      Grid Cell Decimation: 1
+      Grid Line Thickness: 0.10000000149011612
+      Height Layer: elevation_before_postprocess
+      Height Transformer: GridMapLayer
+      History Length: 1
+      Invert ColorMap: false
+      Max Color: 255; 255; 255
+      Max Intensity: 10
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: GridMap
+      Show Grid Lines: true
+      Topic: /convex_plane_decomposition_ros/filtered_map
+      Unreliable: false
+      Use ColorMap: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -296,7 +423,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.423471927642822
+      Distance: 4.8765363693237305
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -312,9 +439,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6203978657722473
+      Pitch: 0.43039828538894653
       Target Frame: <Fixed Frame>
-      Yaw: 5.458579063415527
+      Yaw: 4.698580741882324
     Saved: ~
 Window Geometry:
   Displays:

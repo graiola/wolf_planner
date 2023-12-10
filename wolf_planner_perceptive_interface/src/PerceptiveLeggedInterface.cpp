@@ -68,10 +68,10 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
 
   // For collision avoidance
   scalar_t thighExcess = 0.025;
-  scalar_t calfExcess = 0.02;
+  scalar_t lowerlegExcess = 0.02;
 
-  std::vector<std::string> collisionLinks = {"LF_calf", "RF_calf", "LH_calf", "RH_calf"};
-  const std::vector<scalar_t>& maxExcesses = {calfExcess, calfExcess, calfExcess, calfExcess};
+  std::vector<std::string> collisionLinks = {"lf_lowerleg", "rf_lowerleg", "lh_lowerleg", "rh_lowerleg"};
+  const std::vector<scalar_t>& maxExcesses = {lowerlegExcess, lowerlegExcess, lowerlegExcess, lowerlegExcess};
 
   pinocchioSphereInterfacePtr_ = std::make_shared<PinocchioSphereInterface>(*pinocchioInterfacePtr_, collisionLinks, maxExcesses, 0.6);
 
@@ -90,7 +90,7 @@ void PerceptiveLeggedInterface::setupReferenceManager(const std::string& taskFil
   auto swingTrajectoryPlanner =
       std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
 
-  std::unique_ptr<EndEffectorKinematics<scalar_t>> eeKinematicsPtr = getEeKinematicsPtr({modelSettings_.contactNames3DoF}, "ALL_FOOT");
+  std::unique_ptr<EndEffectorKinematics<scalar_t>> eeKinematicsPtr = getEeKinematicsPtr({modelSettings_.contactNames3DoF}, "all_feet");
   auto convexRegionSelector =
       std::make_unique<ConvexRegionSelector>(centroidalModelInfo_, planarTerrainPtr_, *eeKinematicsPtr, numVertices_);
 

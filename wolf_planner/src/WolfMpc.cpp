@@ -22,6 +22,10 @@
 
 #include <wolf_controller_utils/geometry.h>
 
+#ifdef PERCEPTIVE_INTERFACE
+  #include <wolf_planner_perceptive_interface/PerceptiveLeggedInterface.h>
+#endif
+
 // Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
 //#define OPENLOOP
 #define WORLD_FRAME_NAME "world"
@@ -225,7 +229,8 @@ void WolfMpc::setupMrt()
 
 void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
-  leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
+  // FIXME make an enum
+  leggedInterface_ = std::make_shared<PerceptiveLeggedInterface>(taskFile, urdfFile, referenceFile, true);
 
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }

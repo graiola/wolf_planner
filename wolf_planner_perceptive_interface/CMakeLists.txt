@@ -19,6 +19,7 @@ find_package(ocs2_legged_robot REQUIRED)
 find_package(ocs2_sphere_approximation REQUIRED)
 find_package(ocs2_centroidal_model REQUIRED)
 find_package(ocs2_self_collision REQUIRED)
+find_package(ocs2_ros_interfaces REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -58,6 +59,7 @@ include_directories(
         ${ocs2_sphere_approximation_INCLUDE_DIRS}
         ${ocs2_centroidal_model_INCLUDE_DIRS}
         ${ocs2_self_collision_INCLUDE_DIRS}
+        ${ocs2_ros_interfaces_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -68,10 +70,14 @@ add_library(${PROJECT_NAME}
         src/constraint/FootCollisionConstraint.cpp
         src/constraint/FootPlacementConstraint.cpp
         src/constraint/SphereSdfConstraint.cpp
+        src/visualization/FootPlacementVisualization.cpp
+        src/visualization/SphereVisualization.cpp
+        src/synchronized_module/PlanarTerrainReceiver.cpp
         src/ConvexRegionSelector.cpp
         src/PerceptiveLeggedReferenceManager.cpp
         src/PerceptiveLeggedPrecomputation.cpp
         src/PerceptiveLeggedInterface.cpp
+        src/PerceptiveController.cpp
         )
 
 target_link_libraries(${PROJECT_NAME}
@@ -81,6 +87,7 @@ target_link_libraries(${PROJECT_NAME}
         ${ocs2_sphere_approximation_LIBRARIES}
         ${ocs2_centroidal_model_LIBRARIES}
         ${ocs2_self_collision_LIBRARIES}
+        ${ocs2_ros_interfaces_LIBRARIES}
         )
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${FLAGS})
