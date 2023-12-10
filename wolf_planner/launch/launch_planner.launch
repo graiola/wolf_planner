@@ -2,9 +2,10 @@
 <launch>
 
     <!-- Common arguments -->
-    <arg name="robot_name"           default=""      doc="robot namespace"/>
-    <arg name="robot_model"          default="spot"  doc="robot model: [a1, aliengo, spot, go1]"/>
-    <arg name="rviz_gui"             default="true"  doc="launch planner visualization"/>
+    <arg name="robot_name"           default=""           doc="robot namespace"/>
+    <arg name="robot_model"          default="spot"       doc="robot model: [a1, aliengo, spot, go1]"/>
+    <arg name="rviz_gui"             default="true"       doc="launch planner visualization"/>
+    <arg name="planner_type"         default="perceptive" doc="planner type: [default, adaptive, perceptive]"/>
 
     <!-- Controller arguments -->
     <arg name="launch_controller"    default="true"  doc="launch controller"/>
@@ -23,6 +24,7 @@
              <arg name="robot_name"      value="$(arg robot_name)"/>
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
+             <arg name="planner_type"    value="$(arg planner_type)" />
          </include>
     </group>
 
@@ -31,6 +33,7 @@
              <arg name="robot_name"      value="$(arg robot_name)"/>
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
+             <arg name="planner_type"    value="$(arg planner_type)" />
          </include>
     </group>
 

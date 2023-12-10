@@ -1,35 +1,42 @@
 <?xml version="1.0" ?>
 
 <launch>
-    <arg name="robot_name"  default=""/>
-    <arg name="robot_model" default=""/>
-    <arg name="rviz_gui"    default=""/>
+    <arg name="robot_name"   default=""/>
+    <arg name="robot_model"  default=""/>
+    <arg name="rviz_gui"     default=""/>
+    <arg name="planner_type" default=""/>
 
     <!-- Use this node to generate the URDFs -->
     <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
     args="-r $(arg robot_name) -d /tmp/wolf_planner"/> -->
 
+    <!-- Export some params -->
+    <param name="wolf_planner/robotName"       value="$(arg robot_name)"/>
+    <param name="wolf_planner/robotModel"      value="$(arg robot_model)"/>
+    <param name="wolf_planner/plannerType"     value="$(arg planner_type)"/>
+    <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/$(arg robot_model)/$(arg robot_model).urdf"/>
+    <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/$(arg robot_model)/task.info"/>
+    <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/$(arg robot_model)/reference.info"/>
+    <param name="wolf_planner/gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_model)/gait.info"/>
+
+    <!-- Twist mux -->
     <include file="$(find twist_mux)/launch/twist_mux.launch">
         <arg name="cmd_vel_out"     value="wolf_planner/twist"/>
         <arg name="config_topics"   value="$(find wolf_planner)/config/twist_mux/topics.yaml"/>
         <arg name="config_locks"    value="$(find wolf_planner)/config/twist_mux/locks.yaml"/>
     </include>
 
+    <!-- World To World static transform -->
     <node pkg="tf" type="static_transform_publisher" name="world_to_world" args="0 0 0 0 0 0 world wolf_planner/world 100"/>
 
-    <!-- Export some params -->
-    <param name="wolf_planner/robotName"       value="$(arg robot_name)"/>
-    <param name="wolf_planner/robotModel"      value="$(arg robot_model)"/>
-    <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/$(arg robot_model)/$(arg robot_model).urdf"/>
-    <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/$(arg robot_model)/task.info"/>
-    <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/$(arg robot_model)/reference.info"/>
-    <param name="wolf_planner/gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_model)/gait.info"/>
-
-    <node pkg="wolf_planner" type="wolf_gait_node" name="wolf_gait_node" output="screen"/>
-
+    <!-- Planner nodes -->
+    <node pkg="wolf_planner" type="wolf_gait_node"   name="wolf_gait_node"   output="screen"/>
     <node pkg="wolf_planner" type="wolf_target_node" name="wolf_target_node" output="screen"/>
+    <node pkg="wolf_planner" type="wolf_mpc_node"    name="wolf_mpc_node"    output="screen"/>
 
-    <node pkg="wolf_planner" type="wolf_mpc_node" name="wolf_mpc_node" output="screen"/>
+    <!-- Elevation Mapping -->
+    <include file="$(find wolf_planner)/launch/include/elevation_mapping.launch" if="$(eval planner_type == 'perceptive')">
+    </include>
 
     <!-- rviz -->
     <node name="wolf_planner_rviz" pkg="rviz" type="rviz" args="-d $(find wolf_planner)/rviz/wolf_planner.rviz" if="$(arg rviz_gui)"/>
