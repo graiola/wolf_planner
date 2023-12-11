@@ -15,7 +15,7 @@
 #include <wolf_msgs/TerrainEstimation.h>
 
 // WoLF planner
-#include <wolf_planner_interface/LeggedInterface.h>
+#include <wolf_planner_interface/ControllerInterface.h>
 #include "wolf_planner/SafetyChecker.h"
 #include "wolf_planner/visualization/LeggedSelfCollisionVisualization.h"
 
@@ -41,14 +41,15 @@ class WolfMpc
 
  protected:
 
-  void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                            bool verbose);
+  void setupController(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose);
+
   void setupMrt();
   void updatePolicyAndPublish(SystemObservation& observation);
 
   // Interface
+  std::shared_ptr<ControllerInterface> controller_;
   std::shared_ptr<LeggedInterface> leggedInterface_;
-  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematicsPtr_;
+  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematics_;
 
   // System Observation
   SystemObservation currentObservation_;

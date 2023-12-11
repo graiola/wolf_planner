@@ -13,23 +13,31 @@ using namespace legged_robot;
 
 class ControllerInterface {
 
-  virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                            bool verbose) = 0;
+public:
 
-  virtual void setupSynchronizedModules(ros::NodeHandle& nh, std::shared_ptr<MPC_BASE> mpc) = 0;
+  ControllerInterface() {};
 
-  virtual void setupVisualization(ros::NodeHandle& nh) = 0;
+  virtual ~ControllerInterface() {};
 
-  virtual void updateVisualization(const SystemObservation& currentObservation) = 0;
+  virtual void setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                     bool verbose = false, bool visualization = false) = 0;
 
-  std::shared_ptr<ReferenceManagerInterface> getReferenceManagerPtr() const { return referenceManagerPtr_; }
+  virtual void updateVisualization(const SystemObservation& currentObservation) {};
 
   std::shared_ptr<LeggedInterface> getLeggedInterfacePtr() const { return leggedInterfacePtr_; }
 
+  std::shared_ptr<MPC_BASE> getMpcPtr() const { return mpcPtr_; }
+
 protected:
 
+  virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose) = 0;
+
+  virtual void setupSynchronizedModules(ros::NodeHandle& nodeHandle) {};
+
+  virtual void setupVisualization(ros::NodeHandle& nodeHandle) {};
+
+  std::shared_ptr<MPC_BASE> mpcPtr_;
   std::shared_ptr<LeggedInterface> leggedInterfacePtr_;
-  std::shared_ptr<SwitchedModelReferenceManager> referenceManagerPtr_;
 
 };
 

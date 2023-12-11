@@ -12,15 +12,26 @@ using namespace ocs2;
 using namespace legged_robot;
 
 class PerceptiveController : public ControllerInterface {
- protected:
+
+public:
+
+  PerceptiveController() {};
+
+  virtual ~PerceptiveController() {};
+
+  virtual void setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                     bool verbose = false, bool visualization = false) override;
+
+  virtual void updateVisualization(const SystemObservation& currentObservation) override;
+
+protected:
+
   virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                             bool verbose) override;
 
-  virtual void setupSynchronizedModules(ros::NodeHandle &nh, std::shared_ptr<MPC_BASE> mpc) override;
+  virtual void setupSynchronizedModules(ros::NodeHandle& nodeHandle) override;
 
-  virtual void setupVisualization(ros::NodeHandle& nh) override;
-
-  virtual void updateVisualization(const SystemObservation& currentObservation) override;
+  virtual void setupVisualization(ros::NodeHandle& nodeHandle) override;
 
 private:
 

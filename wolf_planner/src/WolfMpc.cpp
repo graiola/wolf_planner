@@ -22,8 +22,9 @@
 
 #include <wolf_controller_utils/geometry.h>
 
+
 #ifdef PERCEPTIVE_INTERFACE
-  #include <wolf_planner_perceptive_interface/PerceptiveLeggedInterface.h>
+  #include <wolf_planner_perceptive_interface/PerceptiveController.h>
 #endif
 
 // Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
@@ -85,7 +86,12 @@ bool WolfMpc::init()
     return false;
   }
 
-  setupLeggedInterface(taskFile, urdfFile, referenceFile, verbose);
+  // Initialize the controller
+  setupController(nodeHandle, taskFile, urdfFile, referenceFile, verbose);
+  leggedInterface_ = controller_->getLeggedInterfacePtr();
+  mpc_ = controller_->getMpcPtr();
+  //leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
+  //leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 
   // Initialize the observation data structure
   timeOffset_ = 0.0;
@@ -94,11 +100,14 @@ bool WolfMpc::init()
   currentObservation_.time = 0.0;
   currentObservation_.mode = ModeNumber::STANCE;
   callbackObservation_ = currentObservation_;
-  // MPC
-  mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
-                                  leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
-  // Gait receiver
-  auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
+
+  //mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
+  //                                leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
+
+
+
+  // FIXME move in default controller setupSynchModules
+ auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
   //auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
@@ -107,6 +116,7 @@ bool WolfMpc::init()
   auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
 
   rosReferenceManagerPtr->subscribe(nodeHandle);
+  // FIXME move
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
   //mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
@@ -116,14 +126,14 @@ bool WolfMpc::init()
 
   // Pinocchio EE Kinematics
   CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-  eeKinematicsPtr_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
+  eeKinematics_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
                                                                       leggedInterface_->modelSettings().contactNames3DoF);
-  eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
+  eeKinematics_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
 
-  // Robot visualizer
+  // Robot visualizer (FIXME move in Controller interface)
   ros::NodeHandle mpcNodeHandle(topicPrefix);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematicsPtr_, mpcNodeHandle, topicPrefix);
+                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, mpcNodeHandle, topicPrefix);
   robotVisualizer_->frameId_ =  topicPrefix+"/"+WORLD_FRAME_NAME;
   robotVisualizer_->baseName_ = robotBaseName;
 
@@ -227,12 +237,11 @@ void WolfMpc::setupMrt()
   setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
 }
 
-void WolfMpc::setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
+void WolfMpc::setupController(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
-  // FIXME make an enum
-  leggedInterface_ = std::make_shared<PerceptiveLeggedInterface>(taskFile, urdfFile, referenceFile, true);
-
-  leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
+  // FIXME create a factory
+  controller_ = std::make_shared<PerceptiveController>();
+  controller_->setup(nodeHandle,taskFile,urdfFile,referenceFile,verbose,true);
 }
 
 void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
@@ -306,9 +315,9 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   const auto& mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
   const auto& mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
 
-  eeKinematicsPtr_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto& mpc_foot_pos = eeKinematicsPtr_->getPosition(optimizedState);
-  const auto& mpc_foot_vel = eeKinematicsPtr_->getVelocity(optimizedState, optimizedInput);
+  eeKinematics_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
+  const auto& mpc_foot_pos = eeKinematics_->getPosition(optimizedState);
+  const auto& mpc_foot_vel = eeKinematics_->getVelocity(optimizedState, optimizedInput);
 
   //std::cout << "**********************" << std::endl;
   //for(unsigned int i=0; i<qDesired.size(); i++)

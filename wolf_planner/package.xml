@@ -16,7 +16,9 @@
     <depend>wolf_controller_utils</depend>
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
-    <depend condition="$wolf_planner_perceptive_interface_FOUND == True">wolf_planner_perceptive_interface</depend>
+    <depend condition="$wolf_planner_perceptive_interface_FOUND == True">
+       wolf_planner_perceptive_interface
+    </depend>
 
     <export>
     </export>

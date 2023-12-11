@@ -67,7 +67,7 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
   }
 
   // For collision avoidance
-  scalar_t thighExcess = 0.025;
+  scalar_t upperlegExcess = 0.025;
   scalar_t lowerlegExcess = 0.02;
 
   std::vector<std::string> collisionLinks = {"lf_lowerleg", "rf_lowerleg", "lh_lowerleg", "rh_lowerleg"};
