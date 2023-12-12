@@ -1,11 +1,5 @@
 // OCS2
-#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
-#include <ocs2_core/misc/Benchmark.h>
-#include <ocs2_mpc/MPC_MRT_Interface.h>
 #include <ocs2_msgs/mpc_observation.h>
-#include <ocs2_pinocchio_interface/PinocchioInterface.h>
-#include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
-#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
 
 // WoLF msgs
 #include <wolf_msgs/Wrench.h>
@@ -15,9 +9,7 @@
 #include <wolf_msgs/TerrainEstimation.h>
 
 // WoLF planner
-#include <wolf_planner_interface/ControllerInterface.h>
-#include "wolf_planner/SafetyChecker.h"
-#include "wolf_planner/visualization/LeggedSelfCollisionVisualization.h"
+#include <wolf_planner_interface/PlannerInterface.h>
 
 // ROS
 #include <ros/ros.h>
@@ -33,36 +25,16 @@ class WolfMpc
  public:
 
   WolfMpc() = default;
-  ~WolfMpc();
   bool init();
-  void update();
-  void starting();
-  void stopping();
 
  protected:
 
-  void setupController(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose);
-
-  void setupMrt();
-  void updatePolicyAndPublish(SystemObservation& observation);
+  void updatePolicyAndPublish();
 
   // Interface
-  std::shared_ptr<ControllerInterface> controller_;
-  std::shared_ptr<LeggedInterface> leggedInterface_;
-  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematics_;
+  std::shared_ptr<PlannerInterface> planner_;
 
-  // System Observation
-  SystemObservation currentObservation_;
-  SystemObservation callbackObservation_;
-  double timeOffset_;
-
-  // Nonlinear MPC
-  std::shared_ptr<MPC_BASE> mpc_;
-  std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
-
-  // Visualization
-  std::shared_ptr<LeggedRobotVisualizer> robotVisualizer_;
-  std::shared_ptr<LeggedSelfCollisionVisualization> selfCollisionVisualization_;
+  // Observation publisher
   ros::Publisher observationPublisher_;
 
   // MPC Output
@@ -77,6 +49,9 @@ class WolfMpc
   ros::Publisher mpcBasePublisher_;
   ros::Publisher mpcPosturalPublisher_;
 
+  // System Observation
+  SystemObservation observation_;
+
   // Observation Input
   ros::Subscriber mpcObservation_;
   void observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg);
@@ -85,11 +60,9 @@ class WolfMpc
   ros::Subscriber controllerState_;
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
 
- private:
-  std::thread mpcThread_;
-  std::atomic_bool mpcRunning_{false}, plannerRunning_{false}, controllerRunning_{false};
-  benchmark::RepeatedTimer mpcTimer_;
-  std::shared_ptr<SafetyChecker> safetyChecker_;
+
+  std::atomic_bool controllerRunning_{false};
+
 };
 
 } // namespace wolf_planner

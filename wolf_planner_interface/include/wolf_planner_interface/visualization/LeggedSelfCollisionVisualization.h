@@ -1,5 +1,8 @@
 #include <ros/ros.h>
+
 #include <ocs2_self_collision_visualization/GeometryInterfaceVisualization.h>
+#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
+
 #include <utility>
 
 namespace wolf_planner

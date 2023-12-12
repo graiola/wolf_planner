@@ -1,51 +1,13 @@
-#include <pinocchio/fwd.hpp>  // forward declarations must be included first.
-
-#include <pinocchio/algorithm/frames.hpp>
-#include <pinocchio/algorithm/kinematics.hpp>
-
 #include "wolf_planner/WolfMpc.h"
 
-#include <ocs2_centroidal_model/AccessHelperFunctions.h>
-#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
-#include <ocs2_core/thread_support/ExecuteAndSleep.h>
-#include <ocs2_core/thread_support/SetThreadPriority.h>
-#include <ocs2_legged_robot_ros/gait/GaitReceiver.h>
-#include <ocs2_msgs/mpc_observation.h>
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
-#include <ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h>
-#include <ocs2_sqp/SqpMpc.h>
-#include <ocs2_centroidal_model/ModelHelperFunctions.h>
-
-#include <wolf_planner_interface/synchronizer/TerrainEstimationReceiver.h>
-
-#include <angles/angles.h>
-
-#include <wolf_controller_utils/geometry.h>
-
 
 #ifdef PERCEPTIVE_INTERFACE
-  #include <wolf_planner_perceptive_interface/PerceptiveController.h>
+  #include <wolf_planner_perceptive_interface/PerceptivePlanner.h>
 #endif
-
-// Uncomment this macro to run the planner openloop i.e. by integrating its own solution over time
-//#define OPENLOOP
-#define WORLD_FRAME_NAME "world"
 
 namespace wolf_planner
 {
-
-WolfMpc::~WolfMpc()
-{
-  plannerRunning_ = false;
-  if (mpcThread_.joinable()) {
-    mpcThread_.join();
-  }
-  std::cerr << "########################################################################";
-  std::cerr << "\n### MPC Benchmarking";
-  std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
-  std::cerr << "\n###   Average : " << mpcTimer_.getAverageInMilliseconds() << "[ms]." << std::endl;
-  std::cerr << "########################################################################";
-}
 
 bool WolfMpc::init()
 {
@@ -86,71 +48,32 @@ bool WolfMpc::init()
     return false;
   }
 
-  // Initialize the controller
-  setupController(nodeHandle, taskFile, urdfFile, referenceFile, verbose);
-  leggedInterface_ = controller_->getLeggedInterfacePtr();
-  //mpc_ = controller_->getMpcPtr();
-  //leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
-  //leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
+  // Initialize the planner
+  // FIXME create a factory
+  planner_ = std::make_shared<PlannerInterface>(taskFile,urdfFile,referenceFile,verbose);
 
-  // Initialize the observation data structure
-  timeOffset_ = 0.0;
-  currentObservation_.state.setZero(leggedInterface_->getCentroidalModelInfo().stateDim);
-  currentObservation_.input.setZero(leggedInterface_->getCentroidalModelInfo().inputDim);
-  currentObservation_.time = 0.0;
-  currentObservation_.mode = ModeNumber::STANCE;
-  callbackObservation_ = currentObservation_;
+  planner_->setupMrt();
 
-  mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
-                                  leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
-
-
-
-  // FIXME move in default controller setupSynchModules
- auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
-
-  // Terrain estimation receiver
-  //auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
-
-  // ROS ReferenceManager
-  auto rosReferenceManagerPtr = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
-
-  rosReferenceManagerPtr->subscribe(nodeHandle);
-  // FIXME move
-  mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiverPtr);
-  //mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
-  mpc_->getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
-
-  // Setup the MPC thread loop
-  setupMrt();
-
-  // Pinocchio EE Kinematics
-  CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-  eeKinematics_ = std::make_shared<PinocchioEndEffectorKinematics>(leggedInterface_->getPinocchioInterface(), pinocchioMapping,
-                                                                      leggedInterface_->modelSettings().contactNames3DoF);
-  eeKinematics_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-
-  // Robot visualizer (FIXME move in Controller interface)
-  ros::NodeHandle mpcNodeHandle(topicPrefix);
-  robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, mpcNodeHandle, topicPrefix);
-  robotVisualizer_->frameId_ =  topicPrefix+"/"+WORLD_FRAME_NAME;
-  robotVisualizer_->baseName_ = robotBaseName;
-
-  // Self collision visualizer
-  selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                         leggedInterface_->getGeometryInterface(), pinocchioMapping, mpcNodeHandle, topicPrefix);
-
-  // Safety Checker
-  safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
+  planner_->setupPinocchioKinematics();
 
   ROS_INFO_STREAM("[WolfMpc] Robot model is: "<< robotModel);
   ROS_INFO_STREAM("[WolfMpc] Robot name is: "<< robotName);
   ROS_INFO_STREAM("[WolfMpc] Robot base name is: "<< robotBaseName);
-  auto jointNames = leggedInterface_->getPinocchioInterface().getModel().names;
+  auto jointNames = planner_->getJointNames();
   for(unsigned int i=0;i<jointNames.size();i++)
     ROS_INFO_STREAM("[WolfMpc] Loading joint["<<i<<"]: "<<jointNames[i]);
-  ROS_INFO_STREAM("[WolfMpc] WoLF planner period is: "<< 1.0/leggedInterface_->mpcSettings().mpcDesiredFrequency_);
+  ROS_INFO_STREAM("[WolfMpc] WoLF planner period is: "<< 1.0/planner_->getLeggedInterface()->mpcSettings().mpcDesiredFrequency_);
+
+  ros::NodeHandle mpcNodeHandle(topicPrefix);
+  planner_->setupVisualization(mpcNodeHandle,robotBaseName,topicPrefix);
+
+  planner_->setupSynchronizedModules(nodeHandle,topicPrefix);
+
+  // Initialize the observation data structure
+  observation_.state.setZero(planner_->getLeggedInterface()->getCentroidalModelInfo().stateDim);
+  observation_.input.setZero(planner_->getLeggedInterface()->getCentroidalModelInfo().inputDim);
+  observation_.time = 0.0;
+  observation_.mode = ModeNumber::STANCE;
 
   // Observation used by the target node
   observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
@@ -179,215 +102,91 @@ bool WolfMpc::init()
   return true;
 }
 
-void WolfMpc::starting()
+void WolfMpc::updatePolicyAndPublish()
 {
-  timeOffset_ = callbackObservation_.time;
-  currentObservation_ = callbackObservation_;
-  currentObservation_.time = 0.0;
-
-  TargetTrajectories targetTrajectories({currentObservation_.time}, {currentObservation_.state}, {currentObservation_.input});
-
-  // Set the first observation and command and wait for optimization to finish
-  mpcMrtInterface_->setCurrentObservation(currentObservation_);
-  mpcMrtInterface_->getReferenceManager().setTargetTrajectories(targetTrajectories);
-  ROS_INFO_STREAM("[WolfMpc] Waiting for the initial policy ...");
-  while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
-    mpcMrtInterface_->advanceMpc();
-    ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
-  }
-  ROS_INFO_STREAM("[WolfMpc] Initial policy has been received.");
-
-  ROS_INFO_STREAM("[WolfMpc] Starting the planner");
-
-  mpcRunning_ = true;
-}
-
-void WolfMpc::stopping()
-{
-  ROS_INFO_STREAM("[WolfMpc] Stopping the planner");
-
-  mpcRunning_ = false;
-}
-
-void WolfMpc::setupMrt()
-{
-  mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
-  mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
-  mpcTimer_.reset();
-
-  plannerRunning_ = true;
-  mpcThread_ = std::thread([&]() {
-    while (plannerRunning_) {
-      try {
-        executeAndSleep(
-            [&]() {
-              if (mpcRunning_) {
-                mpcTimer_.startTimer();
-                mpcMrtInterface_->advanceMpc();
-                mpcTimer_.endTimer();
-              }
-            },
-            leggedInterface_->mpcSettings().mpcDesiredFrequency_);
-      } catch (const std::exception& e) {
-        plannerRunning_ = false;
-        ROS_ERROR_STREAM("[WolfMpc] MPC error: " << e.what());
-      }
-    }
-  });
-  setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
-}
-
-void WolfMpc::setupController(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
-{
-  // FIXME create a factory
-  controller_ = std::make_shared<PerceptiveController>();
-  controller_->setup(nodeHandle,taskFile,urdfFile,referenceFile,verbose,true);
-}
-
-void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
-{
-
-  // Remove time offset
-#ifndef OPENLOOP
-  observation.time = observation.time - timeOffset_;
-#endif
 
   // Update the current state of the system
-  mpcMrtInterface_->setCurrentObservation(observation);
-
-  // Load the latest MPC policy
-  mpcMrtInterface_->updatePolicy();
-
-  // Evaluate the current policy
-  vector_t optimizedState, optimizedInput;
-  size_t plannedMode = 0;  // The mode that is active at the time the policy is evaluated at (NOTE: this is modified by the planner)
-  mpcMrtInterface_->evaluatePolicy(observation.time, observation.state, optimizedState, optimizedInput, plannedMode);
-
-  // This is the input for the WBC (NOTE: we don't use it right now, instead we publish with specific topics for WoLF)
-  observation.input = optimizedInput;
-#ifdef OPENLOOP
-  observation.state = optimizedState;
-  observation.time += 0.001;
-#endif
-
-  // Safety check, if failed, stop the planner
-  if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
+  if(!planner_->updatePolicy(observation_))
   {
-    ROS_ERROR_STREAM("[WolfMpc] Safety check failed, stopping the planner.");
-    plannerRunning_ = false;
     mpcObservation_.shutdown();
     controllerState_.shutdown();
     return;
   }
 
-  // Update pinocchio
-  const auto& mpc_model = leggedInterface_->getPinocchioInterface().getModel();
-  auto& mpc_data = leggedInterface_->getPinocchioInterface().getData();
-  pinocchio::forwardKinematics(mpc_model, mpc_data, centroidal_model::getGeneralizedCoordinates(optimizedState, leggedInterface_->getCentroidalModelInfo()));
-  pinocchio::computeJointJacobians(mpc_model, mpc_data);
-  pinocchio::updateFramePlacements(mpc_model, mpc_data);
-
-  // Update desired values
-  CentroidalModelPinocchioMapping pinocchioMapping(leggedInterface_->getCentroidalModelInfo());
-  pinocchioMapping.setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto& qDesired = pinocchioMapping.getPinocchioJointPosition(optimizedState);
-  pinocchio::forwardKinematics(mpc_model, mpc_data, qDesired);
-  pinocchio::computeJointJacobians(mpc_model, mpc_data, qDesired);
-  pinocchio::updateFramePlacements(mpc_model, mpc_data);
-  ocs2::updateCentroidalDynamics(leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(), qDesired);
-  const auto& vDesired = pinocchioMapping.getPinocchioJointVelocity(optimizedState, optimizedInput);
-  pinocchio::forwardKinematics(mpc_model, mpc_data, qDesired, vDesired);
-
-  // Retrieve MPC optimized output
-  const auto& mpc_posDes = centroidal_model::getJointAngles(optimizedState, leggedInterface_->getCentroidalModelInfo());
-  const auto& mpc_velDes = centroidal_model::getJointVelocities(optimizedInput, leggedInterface_->getCentroidalModelInfo());
-  const auto& mpc_basePosDes_eul = centroidal_model::getBasePose(optimizedState, leggedInterface_->getCentroidalModelInfo());
-
-  // ZYX conversion to quat
-  Eigen::Quaterniond mpc_base_quat;
-  wolf_controller_utils::rpyToQuat(qDesired(5),qDesired(4),qDesired(3),mpc_base_quat);
-  mpc_base_quat.normalize();
-
-  // std::vector<size_t> contactIds = leggedInterface_->getCentroidalModelInfo().endEffectorFrameIndices;
-  // Absolute ids not required. Ids are referred to leggedInterface_->getCentroidalModelInfo().numThreeDofContacts
-  const auto& mpc_contactDes_lf = centroidal_model::getContactForces(optimizedInput, 0, leggedInterface_->getCentroidalModelInfo());
-  const auto& mpc_contactDes_lh = centroidal_model::getContactForces(optimizedInput, 1, leggedInterface_->getCentroidalModelInfo());
-  const auto& mpc_contactDes_rf = centroidal_model::getContactForces(optimizedInput, 2, leggedInterface_->getCentroidalModelInfo());
-  const auto& mpc_contactDes_rh = centroidal_model::getContactForces(optimizedInput, 3, leggedInterface_->getCentroidalModelInfo());
-
-  eeKinematics_->setPinocchioInterface(leggedInterface_->getPinocchioInterface());
-  const auto& mpc_foot_pos = eeKinematics_->getPosition(optimizedState);
-  const auto& mpc_foot_vel = eeKinematics_->getVelocity(optimizedState, optimizedInput);
-
-  //std::cout << "**********************" << std::endl;
-  //for(unsigned int i=0; i<qDesired.size(); i++)
-  //  std::cout << qDesired(i) << std::endl;
+  const auto& desiredContactForces = planner_->getDesiredContactForces();
+  const auto& desiredFootPositions = planner_->getDesiredFootPositions();
+  const auto& desiredFootVelocities = planner_->getDesiredFootVelocities();
+  const auto& desiredBaseQuaternion = planner_->getDesiredBaseQuaternion();
+  const auto& desiredBasePosition = planner_->getDesiredBasePosition();
+  const auto& desiredBaseVelocity = planner_->getDesiredBaseVelocity();
+  const auto& desiredJointPositions = planner_->getDesiredJointPositions();
+  const auto& desiredJointVelocities = planner_->getDesiredJointVelocities();
 
   // Pack messages
   wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
   force_msg_lf.header.frame_id = force_msg_lh.header.frame_id = force_msg_rf.header.frame_id = force_msg_rh.header.frame_id = WORLD_FRAME_NAME;
-  force_msg_lf.wrench.force.x = mpc_contactDes_lf(0); // LF
-  force_msg_lf.wrench.force.y = mpc_contactDes_lf(1); // LF
-  force_msg_lf.wrench.force.z = mpc_contactDes_lf(2); // LF
-  force_msg_lh.wrench.force.x = mpc_contactDes_lh(0); // LH
-  force_msg_lh.wrench.force.y = mpc_contactDes_lh(1); // LH
-  force_msg_lh.wrench.force.z = mpc_contactDes_lh(2); // LH
-  force_msg_rf.wrench.force.x = mpc_contactDes_rf(0); // RF
-  force_msg_rf.wrench.force.y = mpc_contactDes_rf(1); // RF
-  force_msg_rf.wrench.force.z = mpc_contactDes_rf(2); // RF
-  force_msg_rh.wrench.force.x = mpc_contactDes_rh(0); // RH
-  force_msg_rh.wrench.force.y = mpc_contactDes_rh(1); // RH
-  force_msg_rh.wrench.force.z = mpc_contactDes_rh(2); // RH
+  force_msg_lf.wrench.force.x = desiredContactForces[0](0); // LF
+  force_msg_lf.wrench.force.y = desiredContactForces[0](1); // LF
+  force_msg_lf.wrench.force.z = desiredContactForces[0](2); // LF
+  force_msg_lh.wrench.force.x = desiredContactForces[1](0); // LH
+  force_msg_lh.wrench.force.y = desiredContactForces[1](1); // LH
+  force_msg_lh.wrench.force.z = desiredContactForces[1](2); // LH
+  force_msg_rf.wrench.force.x = desiredContactForces[2](0); // RF
+  force_msg_rf.wrench.force.y = desiredContactForces[2](1); // RF
+  force_msg_rf.wrench.force.z = desiredContactForces[2](2); // RF
+  force_msg_rh.wrench.force.x = desiredContactForces[3](0); // RH
+  force_msg_rh.wrench.force.y = desiredContactForces[3](1); // RH
+  force_msg_rh.wrench.force.z = desiredContactForces[3](2); // RH
 
   wolf_msgs::Cartesian foot_msg_lf, foot_msg_lh, foot_msg_rf, foot_msg_rh;
   foot_msg_lf.header.frame_id = foot_msg_lh.header.frame_id = foot_msg_rf.header.frame_id = foot_msg_rh.header.frame_id = WORLD_FRAME_NAME;
-  foot_msg_lf.pose.position.x = mpc_foot_pos[0](0);
-  foot_msg_lf.pose.position.y = mpc_foot_pos[0](1);
-  foot_msg_lf.pose.position.z = mpc_foot_pos[0](2);
-  foot_msg_lf.twist.linear.x = mpc_foot_vel[0](0);
-  foot_msg_lf.twist.linear.y = mpc_foot_vel[0](1);
-  foot_msg_lf.twist.linear.z = mpc_foot_vel[0](2);
-  foot_msg_lh.pose.position.x = mpc_foot_pos[1](0);
-  foot_msg_lh.pose.position.y = mpc_foot_pos[1](1);
-  foot_msg_lh.pose.position.z = mpc_foot_pos[1](2);
-  foot_msg_lh.twist.linear.x = mpc_foot_vel[1](0);
-  foot_msg_lh.twist.linear.y = mpc_foot_vel[1](1);
-  foot_msg_lh.twist.linear.z = mpc_foot_vel[1](2);
-  foot_msg_rf.pose.position.x = mpc_foot_pos[2](0);
-  foot_msg_rf.pose.position.y = mpc_foot_pos[2](1);
-  foot_msg_rf.pose.position.z = mpc_foot_pos[2](2);
-  foot_msg_rf.twist.linear.x = mpc_foot_vel[2](0);
-  foot_msg_rf.twist.linear.y = mpc_foot_vel[2](1);
-  foot_msg_rf.twist.linear.z = mpc_foot_vel[2](2);
-  foot_msg_rh.pose.position.x = mpc_foot_pos[3](0);
-  foot_msg_rh.pose.position.y = mpc_foot_pos[3](1);
-  foot_msg_rh.pose.position.z = mpc_foot_pos[3](2);
-  foot_msg_rh.twist.linear.x = mpc_foot_vel[3](0);
-  foot_msg_rh.twist.linear.y = mpc_foot_vel[3](1);
-  foot_msg_rh.twist.linear.z = mpc_foot_vel[3](2);
+  foot_msg_lf.pose.position.x = desiredFootPositions[0](0);
+  foot_msg_lf.pose.position.y = desiredFootPositions[0](1);
+  foot_msg_lf.pose.position.z = desiredFootPositions[0](2);
+  foot_msg_lf.twist.linear.x = desiredFootVelocities[0](0);
+  foot_msg_lf.twist.linear.y = desiredFootVelocities[0](1);
+  foot_msg_lf.twist.linear.z = desiredFootVelocities[0](2);
+  foot_msg_lh.pose.position.x = desiredFootPositions[1](0);
+  foot_msg_lh.pose.position.y = desiredFootPositions[1](1);
+  foot_msg_lh.pose.position.z = desiredFootPositions[1](2);
+  foot_msg_lh.twist.linear.x = desiredFootVelocities[1](0);
+  foot_msg_lh.twist.linear.y = desiredFootVelocities[1](1);
+  foot_msg_lh.twist.linear.z = desiredFootVelocities[1](2);
+  foot_msg_rf.pose.position.x = desiredFootPositions[2](0);
+  foot_msg_rf.pose.position.y = desiredFootPositions[2](1);
+  foot_msg_rf.pose.position.z = desiredFootPositions[2](2);
+  foot_msg_rf.twist.linear.x = desiredFootVelocities[2](0);
+  foot_msg_rf.twist.linear.y = desiredFootVelocities[2](1);
+  foot_msg_rf.twist.linear.z = desiredFootVelocities[2](2);
+  foot_msg_rh.pose.position.x = desiredFootPositions[3](0);
+  foot_msg_rh.pose.position.y = desiredFootPositions[3](1);
+  foot_msg_rh.pose.position.z = desiredFootPositions[3](2);
+  foot_msg_rh.twist.linear.x = desiredFootVelocities[3](0);
+  foot_msg_rh.twist.linear.y = desiredFootVelocities[3](1);
+  foot_msg_rh.twist.linear.z = desiredFootVelocities[3](2);
 
   wolf_msgs::Cartesian base_msg;
   base_msg.header.frame_id = WORLD_FRAME_NAME;
-  base_msg.pose.position.x = mpc_basePosDes_eul(0);
-  base_msg.pose.position.y = mpc_basePosDes_eul(1);
-  base_msg.pose.position.z = mpc_basePosDes_eul(2);
-  base_msg.pose.orientation.w = mpc_base_quat.w();
-  base_msg.pose.orientation.x = mpc_base_quat.x();
-  base_msg.pose.orientation.y = mpc_base_quat.y();
-  base_msg.pose.orientation.z = mpc_base_quat.z();
-  base_msg.twist.linear.x =  vDesired(0);
-  base_msg.twist.linear.y =  vDesired(1);
-  base_msg.twist.linear.z =  vDesired(2);
+  base_msg.pose.position.x = desiredBasePosition(0);
+  base_msg.pose.position.y = desiredBasePosition(1);
+  base_msg.pose.position.z = desiredBasePosition(2);
+  base_msg.pose.orientation.w = desiredBaseQuaternion.w();
+  base_msg.pose.orientation.x = desiredBaseQuaternion.x();
+  base_msg.pose.orientation.y = desiredBaseQuaternion.y();
+  base_msg.pose.orientation.z = desiredBaseQuaternion.z();
+  base_msg.twist.linear.x =  desiredBaseVelocity(0);
+  base_msg.twist.linear.y =  desiredBaseVelocity(1);
+  base_msg.twist.linear.z =  desiredBaseVelocity(2);
   // FIXME the angular velocities are coupled once the robot rotates more than 180
   //base_msg.twist.angular.z = vDesired(3);
   //base_msg.twist.angular.y = vDesired(4);
   //base_msg.twist.angular.x = vDesired(5);
 
   wolf_msgs::Postural postural_msg;
-  for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().actuatedDofNum; ++i)
+  for (size_t i = 0; i < planner_->getLeggedInterface()->getCentroidalModelInfo().actuatedDofNum; ++i)
   {
-    postural_msg.positions.push_back(mpc_posDes(i));
-    postural_msg.velocities.push_back(mpc_velDes(i));
+    postural_msg.positions.push_back(desiredJointPositions(i));
+    postural_msg.velocities.push_back(desiredJointVelocities(i));
   }
 
   // Publish the MPC output
@@ -402,53 +201,40 @@ void WolfMpc::updatePolicyAndPublish(SystemObservation& observation)
   mpcBasePublisher_.publish(base_msg);
   mpcPosturalPublisher_.publish(postural_msg);
 
-  // Visualization
-  if(robotVisualizer_ != nullptr)
-    robotVisualizer_->update(observation, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
-  if(selfCollisionVisualization_ != nullptr)
-    selfCollisionVisualization_->update(observation);
-
   // Publish the observation. Only needed for the command interface
-  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation));
+  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation_));
+
+  // Visualization
+  planner_->updateVisualization(observation_);
 }
 
 void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
    // Create the observation from the ROS message
-   callbackObservation_.time = msg->time;
-   callbackObservation_.mode = msg->mode;
-   for (size_t i = 0; i < leggedInterface_->getCentroidalModelInfo().stateDim; ++i)
-     callbackObservation_.state(i) = msg->state.value[i];
+   observation_.time = msg->time;
+   observation_.mode = msg->mode;
+   for (size_t i = 0; i < planner_->getLeggedInterface()->getCentroidalModelInfo().stateDim; ++i)
+     observation_.state(i) = msg->state.value[i];
 
   // Start/Stop the mpc
-  if(controllerRunning_ && !mpcRunning_)
-    starting();
-  else if (!controllerRunning_ && mpcRunning_)
-    stopping();
+  if(controllerRunning_ && !planner_->isRunning())
+  {
+    planner_->starting(observation_);
+  }
+  else if (!controllerRunning_ && planner_->isRunning())
+    planner_->stopping();
 
   // Update the current state of the system
-  if(mpcRunning_)
-  {
-#ifdef OPENLOOP
-    updatePolicyAndPublish(currentObservation_);
-#else
-    updatePolicyAndPublish(callbackObservation_);
-#endif
-  }
+  if(planner_->isRunning())
+    updatePolicyAndPublish();
 }
 
 void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
   if(msg->current_state == "ACTIVE")
-  {
-    //if(!mpcRunning_) starting();
     controllerRunning_ = true;
-  }
   else
-  {
     controllerRunning_ = false;
-    //if(mpcRunning_) stopping();
-  }
 }
 
 } // namespace wolf_planner

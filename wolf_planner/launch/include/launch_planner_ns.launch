@@ -30,9 +30,9 @@
     <node pkg="tf" type="static_transform_publisher" name="world_to_world" args="0 0 0 0 0 0 world wolf_planner/world 100"/>
 
     <!-- Planner nodes -->
-    <!--<node pkg="wolf_planner" type="wolf_gait_node"   name="wolf_gait_node"   output="screen"/>-->
+    <node pkg="wolf_planner" type="wolf_gait_node"   name="wolf_gait_node"   output="screen"/>
     <node pkg="wolf_planner" type="wolf_target_node" name="wolf_target_node" output="screen"/>
-    <node pkg="wolf_planner" type="wolf_mpc_node"    name="wolf_mpc_node"    output="screen" launch-prefix="gdb -ex run --args"/>
+    <node pkg="wolf_planner" type="wolf_mpc_node"    name="wolf_mpc_node"    output="screen"/>
 
     <!-- Elevation Mapping -->
     <include file="$(find wolf_planner)/launch/include/elevation_mapping.launch" if="$(eval planner_type == 'perceptive')">

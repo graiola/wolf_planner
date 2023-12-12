@@ -17,7 +17,6 @@ find_package(pinocchio REQUIRED)
 find_package(hpp-fcl REQUIRED)
 find_package(ocs2_legged_robot REQUIRED)
 find_package(ocs2_legged_robot_ros REQUIRED)
-find_package(ocs2_self_collision_visualization REQUIRED)
 
 find_package(wolf_planner_perceptive_interface QUIET)
 
@@ -59,7 +58,7 @@ include_directories(
 )
 
 link_directories(
-        ${pinocchio_LIBRARY_DIRS}
+    ${pinocchio_LIBRARY_DIRS}
 )
 
 # Target trajectories publish node

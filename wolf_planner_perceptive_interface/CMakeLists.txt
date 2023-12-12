@@ -77,7 +77,7 @@ add_library(${PROJECT_NAME}
         src/PerceptiveLeggedReferenceManager.cpp
         src/PerceptiveLeggedPrecomputation.cpp
         src/PerceptiveLeggedInterface.cpp
-        src/PerceptiveController.cpp
+        src/PerceptivePlanner.cpp
         )
 
 target_link_libraries(${PROJECT_NAME}
