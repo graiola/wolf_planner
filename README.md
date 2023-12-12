@@ -14,7 +14,7 @@ Install the required dependencies and clone the necessary repos in a catkin work
 
 ```
 # Install dependencies
-sudo apt install liburdfdom-dev liboctomap-dev libassimp-dev ros-${ROS_DISTRO}-pinocchio ros-${ROS_DISTRO}-hpp-fcl
+sudo apt install liburdfdom-dev liboctomap-dev libassimp-dev ros-${ROS_DISTRO}-pinocchio ros-${ROS_DISTRO}-hpp-fcl libmpfr-dev
 # Clone OCS2 
 git clone git@github.com:graiola/ocs2.git
 # Clone ocs2_robotic_assets
