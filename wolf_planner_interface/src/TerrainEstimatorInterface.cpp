@@ -157,7 +157,7 @@ void LeggedInterface::setupReferenceManager(const std::string& taskFile, const s
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   scalar_t comHeight = 0;
   loadData::loadCppDataType(referenceFile, "comHeight", comHeight);
-  referenceManagerPtr_ = std::make_shared<SwitchedModelReferenceManager>(centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
+  referenceManagerPtr_ = std::make_shared<LeggedReferenceManager>(centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
                                                                          std::move(terrainEstimator),comHeight);
 }
 

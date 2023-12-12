@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/constraint/StateInputConstraint.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -45,7 +45,7 @@ class ZeroForceConstraint final : public StateInputConstraint {
    * @param [in] contactPointIndex : The 3 DoF contact index.
    * @param [in] info : The centroidal model information.
    */
-  ZeroForceConstraint(const SwitchedModelReferenceManager& referenceManager, size_t contactPointIndex, CentroidalModelInfo info);
+  ZeroForceConstraint(const LeggedReferenceManager& referenceManager, size_t contactPointIndex, CentroidalModelInfo info);
 
   ~ZeroForceConstraint() override = default;
   ZeroForceConstraint* clone() const override { return new ZeroForceConstraint(*this); }
@@ -59,7 +59,7 @@ class ZeroForceConstraint final : public StateInputConstraint {
  private:
   ZeroForceConstraint(const ZeroForceConstraint& other) = default;
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   const size_t contactPointIndex_;
   const CentroidalModelInfo info_;
 };

@@ -5,7 +5,7 @@
 namespace ocs2 {
 namespace legged_robot {
 
-FootPlacementConstraint::FootPlacementConstraint(const SwitchedModelReferenceManager& referenceManager,
+FootPlacementConstraint::FootPlacementConstraint(const LeggedReferenceManager& referenceManager,
                                                  const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t contactPointIndex,
                                                  size_t numVertices)
     : StateConstraint(ConstraintOrder::Linear),

@@ -62,7 +62,7 @@ add_library(${PROJECT_NAME}
         src/synchronizer/TerrainEstimationReceiver.cpp
         src/TerrainEstimator.cpp
         src/SwingTrajectoryPlanner.cpp
-        src/SwitchedModelReferenceManager.cpp
+        src/LeggedReferenceManager.cpp
         src/LeggedRobotPreComputation.cpp
         src/LeggedInterface.cpp
         )
@@ -74,7 +74,7 @@ target_link_libraries(${PROJECT_NAME}
         ${ocs2_legged_robot_LIBRARIES}
         ${ocs2_self_collision_LIBRARIES}
         )
-target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
+#target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 
 #############
 ## Install ##

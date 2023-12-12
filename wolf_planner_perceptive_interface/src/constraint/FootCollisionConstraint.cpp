@@ -3,7 +3,7 @@
 namespace ocs2 {
 namespace legged_robot {
 
-FootCollisionConstraint::FootCollisionConstraint(const SwitchedModelReferenceManager& referenceManager,
+FootCollisionConstraint::FootCollisionConstraint(const LeggedReferenceManager& referenceManager,
                                                  const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                                  std::shared_ptr<grid_map::SignedDistanceField> sdfPtr, size_t contactPointIndex,
                                                  scalar_t clearance)

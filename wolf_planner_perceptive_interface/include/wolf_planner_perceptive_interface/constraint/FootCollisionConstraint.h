@@ -1,6 +1,6 @@
 #pragma once
 
-#include <wolf_planner_interface/SwitchedModelReferenceManager.h>
+#include <wolf_planner_interface/LeggedReferenceManager.h>
 #include <ocs2_core/constraint/StateConstraint.h>
 #include <ocs2_robotic_tools/end_effector/EndEffectorKinematics.h>
 #include <grid_map_sdf/SignedDistanceField.hpp>
@@ -10,7 +10,7 @@ namespace legged_robot {
 
 class FootCollisionConstraint final : public StateConstraint {
  public:
-  FootCollisionConstraint(const SwitchedModelReferenceManager& referenceManager,
+  FootCollisionConstraint(const LeggedReferenceManager& referenceManager,
                           const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                           std::shared_ptr<grid_map::SignedDistanceField> sdfPtr, size_t contactPointIndex, scalar_t clearance);
 
@@ -26,7 +26,7 @@ class FootCollisionConstraint final : public StateConstraint {
  private:
   FootCollisionConstraint(const FootCollisionConstraint& rhs);
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
   std::shared_ptr<grid_map::SignedDistanceField> sdfPtr_;
 

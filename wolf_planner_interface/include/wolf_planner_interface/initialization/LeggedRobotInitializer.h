@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 #include <ocs2_core/initialization/Initializer.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -45,7 +45,7 @@ class LeggedRobotInitializer final : public Initializer {
    * @param [in] referenceManager : Switched system reference manager.
    * @param [in] extendNormalizedMomentum: If true, it extrapolates the normalized momenta; otherwise sets them to zero.
    */
-  LeggedRobotInitializer(CentroidalModelInfo info, const SwitchedModelReferenceManager& referenceManager,
+  LeggedRobotInitializer(CentroidalModelInfo info, const LeggedReferenceManager& referenceManager,
                          bool extendNormalizedMomentum = false);
 
   ~LeggedRobotInitializer() override = default;
@@ -57,7 +57,7 @@ class LeggedRobotInitializer final : public Initializer {
   LeggedRobotInitializer(const LeggedRobotInitializer& other) = default;
 
   const CentroidalModelInfo info_;
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   const bool extendNormalizedMomentum_;
 };
 

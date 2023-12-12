@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_legged_robot/common/Types.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -88,7 +88,7 @@ class FrictionConeConstraint final : public StateInputConstraint {
    * @param [in] contactPointIndex : The 3 DoF contact index.
    * @param [in] info : The centroidal model information.
    */
-  FrictionConeConstraint(const SwitchedModelReferenceManager& referenceManager, Config config, size_t contactPointIndex,
+  FrictionConeConstraint(const LeggedReferenceManager& referenceManager, Config config, size_t contactPointIndex,
                          CentroidalModelInfo info);
 
   ~FrictionConeConstraint() override = default;
@@ -134,7 +134,7 @@ class FrictionConeConstraint final : public StateInputConstraint {
   matrix_t frictionConeSecondDerivativeInput(size_t inputDim, const ConeDerivatives& coneDerivatives) const;
   matrix_t frictionConeSecondDerivativeState(size_t stateDim, const ConeDerivatives& coneDerivatives) const;
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
 
   const Config config_;
   const size_t contactPointIndex_;

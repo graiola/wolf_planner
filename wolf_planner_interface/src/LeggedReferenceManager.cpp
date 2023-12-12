@@ -27,7 +27,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
@@ -37,7 +37,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-SwitchedModelReferenceManager::SwitchedModelReferenceManager(CentroidalModelInfo info,
+LeggedReferenceManager::LeggedReferenceManager(CentroidalModelInfo info,
                                                              std::shared_ptr<GaitSchedule> gaitSchedulePtr,
                                                              std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr)
     : ReferenceManager(TargetTrajectories(), ModeSchedule()),
@@ -49,7 +49,7 @@ SwitchedModelReferenceManager::SwitchedModelReferenceManager(CentroidalModelInfo
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-void SwitchedModelReferenceManager::setModeSchedule(const ModeSchedule& modeSchedule) {
+void LeggedReferenceManager::setModeSchedule(const ModeSchedule& modeSchedule) {
   ReferenceManager::setModeSchedule(modeSchedule);
   gaitSchedulePtr_->setModeSchedule(modeSchedule);
 }
@@ -57,14 +57,14 @@ void SwitchedModelReferenceManager::setModeSchedule(const ModeSchedule& modeSche
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-contact_flag_t SwitchedModelReferenceManager::getContactFlags(scalar_t time) const {
+contact_flag_t LeggedReferenceManager::getContactFlags(scalar_t time) const {
   return modeNumber2StanceLeg(this->getModeSchedule().modeAtTime(time));
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-void SwitchedModelReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
+void LeggedReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
                                                      TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
   const auto timeHorizon = finalTime - initTime;
   modeSchedule = gaitSchedulePtr_->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);

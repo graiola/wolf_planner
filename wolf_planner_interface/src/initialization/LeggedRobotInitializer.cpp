@@ -38,7 +38,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotInitializer::LeggedRobotInitializer(CentroidalModelInfo info, const SwitchedModelReferenceManager& referenceManager,
+LeggedRobotInitializer::LeggedRobotInitializer(CentroidalModelInfo info, const LeggedReferenceManager& referenceManager,
                                                bool extendNormalizedMomentum)
     : info_(std::move(info)), referenceManagerPtr_(&referenceManager), extendNormalizedMomentum_(extendNormalizedMomentum) {}
 

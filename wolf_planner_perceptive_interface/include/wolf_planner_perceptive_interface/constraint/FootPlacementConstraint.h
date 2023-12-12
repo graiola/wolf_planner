@@ -1,6 +1,6 @@
 #pragma once
 
-#include <wolf_planner_interface/SwitchedModelReferenceManager.h>
+#include <wolf_planner_interface/LeggedReferenceManager.h>
 #include <ocs2_core/constraint/StateConstraint.h>
 #include <ocs2_robotic_tools/end_effector/EndEffectorKinematics.h>
 
@@ -14,7 +14,7 @@ class FootPlacementConstraint final : public StateConstraint {
     vector_t b;
   };
 
-  FootPlacementConstraint(const SwitchedModelReferenceManager& referenceManager,
+  FootPlacementConstraint(const LeggedReferenceManager& referenceManager,
                           const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t contactPointIndex, size_t numVertices);
 
   ~FootPlacementConstraint() override = default;
@@ -29,7 +29,7 @@ class FootPlacementConstraint final : public StateConstraint {
  private:
   FootPlacementConstraint(const FootPlacementConstraint& rhs);
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
 
   const size_t contactPointIndex_;

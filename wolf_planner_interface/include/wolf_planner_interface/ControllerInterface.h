@@ -6,6 +6,7 @@
 #include <ocs2_oc/synchronized_module/ReferenceManager.h>
 
 #include "wolf_planner_interface/LeggedInterface.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace wolf_planner {
 using namespace ocs2;

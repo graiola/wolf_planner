@@ -13,21 +13,21 @@ using namespace legged_robot;
 void PerceptiveController::setup(ros::NodeHandle &nodeHandle, const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose, bool visualization)
 {
   setupLeggedInterface(taskFile,urdfFile,referenceFile,verbose);
-  setupSynchronizedModules(nodeHandle);
-  if(visualization)
-    setupVisualization(nodeHandle);
+  //setupSynchronizedModules(nodeHandle);
+  //if(visualization)
+  //  setupVisualization(nodeHandle);
 }
 
 void PerceptiveController::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
-  leggedInterfacePtr_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, verbose);
+  leggedInterfacePtr_ = std::make_shared<PerceptiveLeggedInterface>(taskFile, urdfFile, referenceFile, verbose);
 
   // Optimal control problem
   leggedInterfacePtr_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 
   // MPC
-  mpcPtr_ = std::make_shared<SqpMpc>(leggedInterfacePtr_->mpcSettings(), leggedInterfacePtr_->sqpSettings(),
-                                     leggedInterfacePtr_->getOptimalControlProblem(), leggedInterfacePtr_->getInitializer());
+  //mpcPtr_ = std::make_shared<SqpMpc>(leggedInterfacePtr_->mpcSettings(), leggedInterfacePtr_->sqpSettings(),
+  //                                   leggedInterfacePtr_->getOptimalControlProblem(), leggedInterfacePtr_->getInitializer());
 }
 
 void PerceptiveController::setupSynchronizedModules(ros::NodeHandle& nodeHandle)

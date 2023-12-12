@@ -89,7 +89,7 @@ bool WolfMpc::init()
   // Initialize the controller
   setupController(nodeHandle, taskFile, urdfFile, referenceFile, verbose);
   leggedInterface_ = controller_->getLeggedInterfacePtr();
-  mpc_ = controller_->getMpcPtr();
+  //mpc_ = controller_->getMpcPtr();
   //leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, true);
   //leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 
@@ -101,13 +101,13 @@ bool WolfMpc::init()
   currentObservation_.mode = ModeNumber::STANCE;
   callbackObservation_ = currentObservation_;
 
-  //mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
-  //                                leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
+  mpc_ = std::make_shared<SqpMpc>(leggedInterface_->mpcSettings(), leggedInterface_->sqpSettings(),
+                                  leggedInterface_->getOptimalControlProblem(), leggedInterface_->getInitializer());
 
 
 
   // FIXME move in default controller setupSynchModules
- auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
+ auto gaitReceiverPtr = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
   //auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);

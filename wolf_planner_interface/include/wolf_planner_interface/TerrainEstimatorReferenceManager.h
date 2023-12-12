@@ -46,15 +46,15 @@ namespace legged_robot {
 /**
  * Manages the ModeSchedule and the TargetTrajectories for switched model.
  */
-class SwitchedModelReferenceManager : public ReferenceManager {
+class LeggedReferenceManager : public ReferenceManager {
  public:
-  SwitchedModelReferenceManager(CentroidalModelInfo info,
+  LeggedReferenceManager(CentroidalModelInfo info,
                                 std::shared_ptr<GaitSchedule> gaitSchedulePtr,
                                 std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
                                 std::shared_ptr<TerrainEstimator> terrainEstimator,
                                 scalar_t comHeight);
 
-  ~SwitchedModelReferenceManager() override = default;
+  ~LeggedReferenceManager() override = default;
 
   void setModeSchedule(const ModeSchedule& modeSchedule) override;
 

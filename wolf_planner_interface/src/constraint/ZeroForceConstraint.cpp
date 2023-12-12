@@ -37,7 +37,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-ZeroForceConstraint::ZeroForceConstraint(const SwitchedModelReferenceManager& referenceManager, size_t contactPointIndex,
+ZeroForceConstraint::ZeroForceConstraint(const LeggedReferenceManager& referenceManager, size_t contactPointIndex,
                                          CentroidalModelInfo info)
     : StateInputConstraint(ConstraintOrder::Linear),
       referenceManagerPtr_(&referenceManager),

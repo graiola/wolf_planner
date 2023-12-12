@@ -37,7 +37,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-FrictionConeConstraint::FrictionConeConstraint(const SwitchedModelReferenceManager& referenceManager, Config config,
+FrictionConeConstraint::FrictionConeConstraint(const LeggedReferenceManager& referenceManager, Config config,
                                                size_t contactPointIndex, CentroidalModelInfo info)
     : StateInputConstraint(ConstraintOrder::Quadratic),
       referenceManagerPtr_(&referenceManager),

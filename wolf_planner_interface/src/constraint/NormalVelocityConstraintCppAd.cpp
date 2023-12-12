@@ -36,7 +36,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-NormalVelocityConstraintCppAd::NormalVelocityConstraintCppAd(const SwitchedModelReferenceManager& referenceManager,
+NormalVelocityConstraintCppAd::NormalVelocityConstraintCppAd(const LeggedReferenceManager& referenceManager,
                                                              const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                                              size_t contactPointIndex)
     : StateInputConstraint(ConstraintOrder::Linear),
