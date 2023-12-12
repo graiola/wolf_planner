@@ -43,7 +43,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
 
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
-#include "wolf_planner_interface/TerrainEstimator.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -74,7 +73,6 @@ class LeggedRobotPreComputation : public PreComputation {
   PinocchioInterface pinocchioInterface_;
   CentroidalModelInfo info_;
   const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;
-  const TerrainEstimator* terrainEstimatorPtr_;
   std::unique_ptr<CentroidalModelPinocchioMapping> mappingPtr_;
   const ModelSettings settings_;
 

@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(wolf_planner_interface)
+project(wolf_planner_adaptive)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         wolf_msgs
-        wolf_controller_utils
+        wolf_planner_interface
         )
 
 find_package(Boost REQUIRED COMPONENTS
@@ -20,8 +20,6 @@ find_package(pinocchio REQUIRED)
 find_package(hpp-fcl REQUIRED)
 find_package(ocs2_legged_robot REQUIRED)
 find_package(ocs2_legged_robot_ros REQUIRED)
-find_package(ocs2_self_collision REQUIRED)
-find_package(ocs2_self_collision_visualization REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
@@ -31,14 +29,12 @@ catkin_package(
         CATKIN_DEPENDS
             roscpp
             wolf_msgs
-            wolf_controller_utils
+            wolf_planner_interface
         DEPENDS
             pinocchio
             hpp-fcl
             ocs2_legged_robot
             ocs2_legged_robot_ros
-            ocs2_self_collision
-            ocs2_self_collision_visualization
 )
 
 ###########
@@ -53,8 +49,6 @@ include_directories(
         ${hpp-fcl_INCLUDE_DIRS}
         ${ocs2_legged_robot_INCLUDE_DIRS}
         ${ocs2_legged_robot_ros_INCLUDE_DIRS}
-        ${ocs2_self_collision_INCLUDE_DIRS}
-        ${ocs2_self_collision_visualization_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -62,17 +56,13 @@ link_directories(
 )
 
 add_library(${PROJECT_NAME}
-        src/constraint/EndEffectorLinearConstraint.cpp
         src/constraint/FrictionConeConstraint.cpp
-        src/constraint/ZeroForceConstraint.cpp
-        src/constraint/NormalVelocityConstraintCppAd.cpp
-        src/constraint/ZeroVelocityConstraintCppAd.cpp
-        src/initialization/LeggedRobotInitializer.cpp
-        src/PlannerInterface.cpp
-        src/SwingTrajectoryPlanner.cpp
-        src/LeggedReferenceManager.cpp
-        src/LeggedRobotPreComputation.cpp
-        src/LeggedInterface.cpp
+        src/synchronizer/TerrainEstimationReceiver.cpp
+        src/AdaptivePlanner.cpp
+        src/TerrainEstimator.cpp
+        src/AdaptivePlannerReferenceManager.cpp
+        src/AdaptivePlannerRobotInterface.cpp
+        src/AdaptivePlannerPreComputation.cpp
         )
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
@@ -80,8 +70,6 @@ target_link_libraries(${PROJECT_NAME}
         ${hpp-fcl_LIBRARIES}
         ${ocs2_legged_robot_LIBRARIES}
         ${ocs2_legged_robot_ros_LIBRARIES}
-        ${ocs2_self_collision_LIBRARIES}
-        ${ocs2_self_collision_visualization_LIBRARIES}
         )
 target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 

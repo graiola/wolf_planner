@@ -8,7 +8,6 @@
 
 #include <ocs2_centroidal_model/CentroidalModelInfo.h>
 
-#include "wolf_planner_interface/TerrainEstimator.h"
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
 
 namespace ocs2 {
@@ -20,8 +19,8 @@ namespace legged_robot {
 class LeggedReferenceManager : public ReferenceManager {
  public:
   LeggedReferenceManager(CentroidalModelInfo info,
-                                std::shared_ptr<GaitSchedule> gaitSchedulePtr,
-                                std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr);
+                         std::shared_ptr<GaitSchedule> gaitSchedulePtr,
+                         std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr);
 
   ~LeggedReferenceManager() override = default;
 
