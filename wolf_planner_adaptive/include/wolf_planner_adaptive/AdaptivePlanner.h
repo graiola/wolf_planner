@@ -15,7 +15,7 @@ public:
 
   AdaptivePlanner(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true);
 
-  virtual ~AdaptivePlanner();
+  virtual ~AdaptivePlanner() {};
 
   virtual void setupSynchronizedModules(ros::NodeHandle& nodeHandle, const std::string topicPrefix = "");
 
