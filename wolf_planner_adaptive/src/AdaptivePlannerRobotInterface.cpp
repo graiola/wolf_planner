@@ -1,5 +1,9 @@
 #include "wolf_planner_adaptive/AdaptivePlannerRobotInterface.h"
 
+#include "wolf_planner_adaptive/AdaptivePlannerPreComputation.h"
+#include "wolf_planner_adaptive/AdaptivePlannerReferenceManager.h"
+#include "wolf_planner_adaptive/TerrainEstimator.h"
+
 namespace wolf_planner {
 
 /******************************************************************************************************/
@@ -11,8 +15,8 @@ void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& tas
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   scalar_t comHeight = 0;
   loadData::loadCppDataType(referenceFile, "comHeight", comHeight);
-  referenceManagerPtr_ = std::make_shared<LeggedReferenceManager>(centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
-                                                                         std::move(terrainEstimator),comHeight);
+  referenceManagerPtr_ = std::make_shared<AdaptivePlannerReferenceManager>(centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
+                                                                           std::move(terrainEstimator),comHeight);
 }
 
 /******************************************************************************************************/
@@ -20,8 +24,10 @@ void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& tas
 /******************************************************************************************************/
 void AdaptivePlannerRobotInterface::setupPreComputation(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                           bool verbose) {
-  problemPtr_->preComputationPtr = std::make_unique<LeggedRobotPreComputation>(
-      *pinocchioInterfacePtr_, centroidalModelInfo_, *referenceManagerPtr_->getSwingTrajectoryPlanner(), *referenceManagerPtr_->getTerrainEstimator(), modelSettings_);
+  problemPtr_->preComputationPtr = std::make_unique<AdaptivePlannerPreComputation>(
+      *pinocchioInterfacePtr_, centroidalModelInfo_,
+        *referenceManagerPtr_->getSwingTrajectoryPlanner(),
+        *dynamic_cast<AdaptivePlannerReferenceManager&>(*referenceManagerPtr_).getTerrainEstimator(), modelSettings_);
 }
 
 }  // namespace wolf_planner

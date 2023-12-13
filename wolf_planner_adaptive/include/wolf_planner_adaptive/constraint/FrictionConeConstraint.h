@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_legged_robot/common/Types.h>
 
-#include "wolf_planner_interface/LeggedReferenceManager.h"
+#include "wolf_planner_adaptive/AdaptivePlannerReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -65,20 +65,24 @@ class FrictionConeConstraint final : public StateInputConstraint {
    */
   struct Config {
     explicit Config(scalar_t frictionCoefficientParam = 0.7, scalar_t regularizationParam = 25.0, scalar_t gripperForceParam = 0.0,
-                    scalar_t hessianDiagonalShiftParam = 1e-6)
+                    scalar_t hessianDiagonalShiftParam = 1e-6, vector3_t terrainNormalParam = {0.0,0.0,1.0})
         : frictionCoefficient(frictionCoefficientParam),
           regularization(regularizationParam),
           gripperForce(gripperForceParam),
-          hessianDiagonalShift(hessianDiagonalShiftParam) {
+          hessianDiagonalShift(hessianDiagonalShiftParam),
+          terrainNormal(terrainNormalParam)
+          {
       assert(frictionCoefficient > 0.0);
       assert(regularization > 0.0);
       assert(hessianDiagonalShift >= 0.0);
+      assert(terrainNormal.norm() <= 1.0);
     }
 
     scalar_t frictionCoefficient;
     scalar_t regularization;
     scalar_t gripperForce;
     scalar_t hessianDiagonalShift;
+    vector3_t terrainNormal;
   };
 
   /**
@@ -88,7 +92,7 @@ class FrictionConeConstraint final : public StateInputConstraint {
    * @param [in] contactPointIndex : The 3 DoF contact index.
    * @param [in] info : The centroidal model information.
    */
-  FrictionConeConstraint(const LeggedReferenceManager& referenceManager, Config config, size_t contactPointIndex,
+  FrictionConeConstraint(const AdaptivePlannerReferenceManager& referenceManager, Config config, size_t contactPointIndex,
                          CentroidalModelInfo info);
 
   ~FrictionConeConstraint() override = default;
@@ -101,9 +105,6 @@ class FrictionConeConstraint final : public StateInputConstraint {
                                                            const PreComputation& preComp) const override;
   VectorFunctionQuadraticApproximation getQuadraticApproximation(scalar_t time, const vector_t& state, const vector_t& input,
                                                                  const PreComputation& preComp) const override;
-
-  /** Sets the estimated terrain normal expressed in the world frame. */
-  void setSurfaceNormalInWorld(const vector3_t& surfaceNormalInWorld);
 
  private:
   struct LocalForceDerivatives {
@@ -125,7 +126,7 @@ class FrictionConeConstraint final : public StateInputConstraint {
 
   FrictionConeConstraint(const FrictionConeConstraint& other) = default;
   vector_t coneConstraint(const vector3_t& localForces) const;
-  LocalForceDerivatives computeLocalForceDerivatives(const vector3_t& forcesInBodyFrame) const;
+  LocalForceDerivatives computeLocalForceDerivatives(const vector3_t& forcesInBodyFrame, const matrix3_t& t_R_w) const;
   ConeLocalDerivatives computeConeLocalDerivatives(const vector3_t& localForces) const;
   ConeDerivatives computeConeConstraintDerivatives(const ConeLocalDerivatives& coneLocalDerivatives,
                                                    const LocalForceDerivatives& localForceDerivatives) const;
@@ -134,14 +135,13 @@ class FrictionConeConstraint final : public StateInputConstraint {
   matrix_t frictionConeSecondDerivativeInput(size_t inputDim, const ConeDerivatives& coneDerivatives) const;
   matrix_t frictionConeSecondDerivativeState(size_t stateDim, const ConeDerivatives& coneDerivatives) const;
 
-  const LeggedReferenceManager* referenceManagerPtr_;
+  matrix3_t computeTerrainRotation(const vector3_t& terrainNormal) const;
 
-  const Config config_;
+  const AdaptivePlannerReferenceManager* referenceManagerPtr_;
+
+  Config config_;
   const size_t contactPointIndex_;
   const CentroidalModelInfo info_;
-
-  // rotation world to terrain
-  matrix3_t t_R_w = matrix3_t::Identity();
 };
 
 }  // namespace legged_robot

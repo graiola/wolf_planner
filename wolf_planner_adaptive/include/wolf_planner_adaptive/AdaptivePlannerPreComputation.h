@@ -1,52 +1,57 @@
 #pragma once
 
-#include <ocs2_core/thread_support/Synchronized.h>
-#include <ocs2_oc/synchronized_module/ReferenceManager.h>
+#include <memory>
+#include <string>
 
-#include <ocs2_legged_robot/gait/GaitSchedule.h>
-#include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
+#include <ocs2_core/PreComputation.h>
+#include <ocs2_pinocchio_interface/PinocchioInterface.h>
+#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
+#include <ocs2_legged_robot/common/ModelSettings.h>
 
-#include <ocs2_centroidal_model/CentroidalModelInfo.h>
-
-#include "wolf_planner_interface/TerrainEstimator.h"
+#include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
+
+#include "wolf_planner_adaptive/constraint/FrictionConeConstraint.h"
+#include "wolf_planner_adaptive/TerrainEstimator.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-/**
- * Manages the ModeSchedule and the TargetTrajectories for switched model.
- */
-class LeggedReferenceManager : public ReferenceManager {
+/** Callback for caching and reference update */
+class AdaptivePlannerPreComputation : public PreComputation {
  public:
-  LeggedReferenceManager(CentroidalModelInfo info,
-                                std::shared_ptr<GaitSchedule> gaitSchedulePtr,
-                                std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
-                                std::shared_ptr<TerrainEstimator> terrainEstimator,
-                                scalar_t comHeight);
+  AdaptivePlannerPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
+                            const SwingTrajectoryPlanner& swingTrajectoryPlanner,
+                            const TerrainEstimator& terrainEstimator,
+                            ModelSettings settings);
+  ~AdaptivePlannerPreComputation() override = default;
 
-  ~LeggedReferenceManager() override = default;
+  AdaptivePlannerPreComputation* clone() const override { return new AdaptivePlannerPreComputation(*this); }
 
-  void setModeSchedule(const ModeSchedule& modeSchedule) override;
+  void request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) override;
 
-  contact_flag_t getContactFlags(scalar_t time) const;
+  std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() { return eeNormalVelConConfigs_; }
+  const std::vector<EndEffectorLinearConstraint::Config>& getEeNormalVelocityConstraintConfigs() const { return eeNormalVelConConfigs_; }
 
-  const std::shared_ptr<GaitSchedule>& getGaitSchedule() { return gaitSchedulePtr_; }
+  std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() { return frictionConeConConfigs_; }
+  const std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() const { return frictionConeConConfigs_; }
 
-  const std::shared_ptr<SwingTrajectoryPlanner>& getSwingTrajectoryPlanner() { return swingTrajectoryPtr_; }
-
-  const std::shared_ptr<TerrainEstimator>& getTerrainEstimator() { return terrainEstimatorPtr_; }
+  PinocchioInterface& getPinocchioInterface() { return pinocchioInterface_; }
+  const PinocchioInterface& getPinocchioInterface() const { return pinocchioInterface_; }
 
  protected:
-  void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
-                        ModeSchedule& modeSchedule) override;
+  AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& other);
 
+ private:
+  PinocchioInterface pinocchioInterface_;
+  CentroidalModelInfo info_;
+  const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;
+  const TerrainEstimator* terrainEstimatorPtr_;
+  std::unique_ptr<CentroidalModelPinocchioMapping> mappingPtr_;
+  const ModelSettings settings_;
 
-  const CentroidalModelInfo info_;
-  std::shared_ptr<GaitSchedule> gaitSchedulePtr_;
-  std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr_;
-  std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
-  scalar_t comHeight_;
+  std::vector<EndEffectorLinearConstraint::Config> eeNormalVelConConfigs_;
+  std::vector<FrictionConeConstraint::Config> frictionConeConConfigs_;
 };
 
 }  // namespace legged_robot

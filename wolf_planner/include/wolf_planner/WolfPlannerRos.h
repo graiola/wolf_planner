@@ -8,7 +8,7 @@
 #include <wolf_msgs/ControllerState.h>
 #include <wolf_msgs/TerrainEstimation.h>
 
-// WoLF planner
+// WoLF planner interface
 #include <wolf_planner_interface/PlannerInterface.h>
 
 // ROS
@@ -19,12 +19,12 @@ namespace wolf_planner
 
 using namespace ocs2;
 
-class WolfMpc
+class WolfPlannerRos
 {
 
  public:
 
-  WolfMpc() = default;
+  WolfPlannerRos() = default;
   bool init();
 
  protected:
@@ -59,7 +59,6 @@ class WolfMpc
   // Controller state
   ros::Subscriber controllerState_;
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
-
 
   std::atomic_bool controllerRunning_{false};
 

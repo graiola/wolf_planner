@@ -9,7 +9,7 @@
 
 #include <wolf_msgs/TerrainEstimation.h>
 
-#include "wolf_planner_interface/TerrainEstimator.h"
+#include "wolf_planner_adaptive/TerrainEstimator.h"
 
 namespace wolf_planner {
 using namespace ocs2;

@@ -1,15 +1,19 @@
-#include "wolf_planner/WolfMpc.h"
+#include "wolf_planner/WolfPlannerRos.h"
 
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
 
-#ifdef PERCEPTIVE_INTERFACE
-  #include <wolf_planner_perceptive_interface/PerceptivePlanner.h>
+#ifdef ADAPTIVE_PLANNER
+  #include <wolf_planner_adaptive/AdaptivePlanner.h>
+#endif
+
+#ifdef PERCEPTIVE_PLANNER
+  #include <wolf_planner_perceptive/PerceptivePlanner.h>
 #endif
 
 namespace wolf_planner
 {
 
-bool WolfMpc::init()
+bool WolfPlannerRos::init()
 {
   ros::NodeHandle nodeHandle; // robotNamespace
   std::string urdfFile;
@@ -18,11 +22,13 @@ bool WolfMpc::init()
   std::string robotName;
   std::string robotModel;
   std::string topicPrefix = "wolf_planner";
+  std::string plannerType;
   std::vector<std::string> robotFootNames;
   std::string robotBaseName;
 
-  nodeHandle.getParam(topicPrefix+"/robotName",  robotName);
-  nodeHandle.getParam(topicPrefix+"/robotModel", robotModel);
+  nodeHandle.getParam(topicPrefix+"/robotName",   robotName);
+  nodeHandle.getParam(topicPrefix+"/robotModel",  robotModel);
+  nodeHandle.getParam(topicPrefix+"/plannerType", plannerType);
   nodeHandle.getParam(topicPrefix+"/urdfFile", urdfFile);
   nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
   nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
@@ -30,13 +36,13 @@ bool WolfMpc::init()
   loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
 
   // Wait for the controller to start
-  ROS_INFO("[WoLFMpc] waiting for WoLF controller to start...");
+  ROS_INFO("[WolfPlannerRos] waiting for WoLF controller to start...");
   while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_foot_names") && ros::ok())
     ros::Rate(1).sleep();
   nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_foot_names", robotFootNames);
   if(robotFootNames.empty())
   {
-    ROS_ERROR("[WolfMpc] robot foot names is empty!");
+    ROS_ERROR("[WolfPlannerRos] robot foot names is empty!");
     return false;
   }
   while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_base_name") && ros::ok())
@@ -44,25 +50,39 @@ bool WolfMpc::init()
   nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_base_name", robotBaseName);
   if(robotBaseName.empty())
   {
-    ROS_ERROR("[WolfMpc] robot base name is empty!");
+    ROS_ERROR("[WolfPlannerRos] robot base name is empty!");
     return false;
   }
 
   // Initialize the planner
-  // FIXME create a factory
-  planner_ = std::make_shared<PlannerInterface>(taskFile,urdfFile,referenceFile,verbose);
+  if(plannerType == "default")
+    planner_ = std::make_shared<PlannerInterface>(taskFile,urdfFile,referenceFile,verbose);
+#ifdef ADAPTIVE_PLANNER
+  else if (plannerType == "adaptive")
+    planner_ = std::make_shared<AdaptivePlanner>(taskFile,urdfFile,referenceFile,verbose);
+#endif
+#ifdef PERCEPTIVE_PLANNER
+  else if (plannerType == "perceptive")
+    planner_ = std::make_shared<PerceptivePlanner>(taskFile,urdfFile,referenceFile,verbose);
+#endif
+  else
+  {
+    ROS_ERROR("[WolfPlannerRos] please choose a correct planner type [default|adaptive|perceptive]!");
+    return false;
+  }
+
 
   planner_->setupMrt();
 
   planner_->setupPinocchioKinematics();
 
-  ROS_INFO_STREAM("[WolfMpc] Robot model is: "<< robotModel);
-  ROS_INFO_STREAM("[WolfMpc] Robot name is: "<< robotName);
-  ROS_INFO_STREAM("[WolfMpc] Robot base name is: "<< robotBaseName);
+  ROS_INFO_STREAM("[WolfPlannerRos] Robot model is: "<< robotModel);
+  ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName);
+  ROS_INFO_STREAM("[WolfPlannerRos] Robot base name is: "<< robotBaseName);
   auto jointNames = planner_->getJointNames();
   for(unsigned int i=0;i<jointNames.size();i++)
-    ROS_INFO_STREAM("[WolfMpc] Loading joint["<<i<<"]: "<<jointNames[i]);
-  ROS_INFO_STREAM("[WolfMpc] WoLF planner period is: "<< 1.0/planner_->getLeggedInterface()->mpcSettings().mpcDesiredFrequency_);
+    ROS_INFO_STREAM("[WolfPlannerRos] Loading joint["<<i<<"]: "<<jointNames[i]);
+  ROS_INFO_STREAM("[WolfPlannerRos] WoLF planner period is: "<< 1.0/planner_->getLeggedInterface()->mpcSettings().mpcDesiredFrequency_);
 
   ros::NodeHandle mpcNodeHandle(topicPrefix);
   planner_->setupVisualization(mpcNodeHandle,robotBaseName,topicPrefix);
@@ -96,13 +116,13 @@ bool WolfMpc::init()
   mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> ("/"+robotName+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded, export to a config file)
-  mpcObservation_         = nodeHandle.subscribe("/"+robotName+"/wolf_controller/mpc_observation",   1, &WolfMpc::observationCallback, this);
-  controllerState_        = nodeHandle.subscribe("/"+robotName+"/wolf_controller/controller_state",  1, &WolfMpc::controllerStateCallback, this);
+  mpcObservation_         = nodeHandle.subscribe("/"+robotName+"/wolf_controller/mpc_observation",   1, &WolfPlannerRos::observationCallback, this);
+  controllerState_        = nodeHandle.subscribe("/"+robotName+"/wolf_controller/controller_state",  1, &WolfPlannerRos::controllerStateCallback, this);
 
   return true;
 }
 
-void WolfMpc::updatePolicyAndPublish()
+void WolfPlannerRos::updatePolicyAndPublish()
 {
 
   // Update the current state of the system
@@ -208,7 +228,7 @@ void WolfMpc::updatePolicyAndPublish()
   planner_->updateVisualization(observation_);
 }
 
-void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
+void WolfPlannerRos::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
 {
    // Create the observation from the ROS message
    observation_.time = msg->time;
@@ -229,7 +249,7 @@ void WolfMpc::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
     updatePolicyAndPublish();
 }
 
-void WolfMpc::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
+void WolfPlannerRos::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
 {
   if(msg->current_state == "ACTIVE")
     controllerRunning_ = true;

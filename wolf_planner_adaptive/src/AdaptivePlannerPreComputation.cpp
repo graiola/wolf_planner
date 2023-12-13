@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 #include <ocs2_core/misc/Numerics.h>
 
-#include "wolf_planner_interface/LeggedRobotPreComputation.h"
+#include "wolf_planner_adaptive/AdaptivePlannerPreComputation.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -44,7 +44,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
+AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
                                                      const SwingTrajectoryPlanner& swingTrajectoryPlanner, const TerrainEstimator& terrainEstimator,
                                                      ModelSettings settings)
     : pinocchioInterface_(std::move(pinocchioInterface)),
@@ -61,7 +61,7 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchi
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotPreComputation::LeggedRobotPreComputation(const LeggedRobotPreComputation& rhs)
+AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& rhs)
     : pinocchioInterface_(rhs.pinocchioInterface_),
       info_(rhs.info_),
       swingTrajectoryPlannerPtr_(rhs.swingTrajectoryPlannerPtr_),
@@ -76,7 +76,7 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(const LeggedRobotPreComputa
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
+void AdaptivePlannerPreComputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
   if (!request.containsAny(Request::Cost + Request::Constraint + Request::SoftConstraint)) {
     return;
   }

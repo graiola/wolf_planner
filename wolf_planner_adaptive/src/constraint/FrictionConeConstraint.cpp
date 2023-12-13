@@ -27,7 +27,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
+#include "wolf_planner_adaptive/constraint/FrictionConeConstraint.h"
+#include "wolf_planner_adaptive/AdaptivePlannerPreComputation.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
@@ -37,21 +38,13 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-FrictionConeConstraint::FrictionConeConstraint(const LeggedReferenceManager& referenceManager, Config config,
+FrictionConeConstraint::FrictionConeConstraint(const AdaptivePlannerReferenceManager& referenceManager, Config config,
                                                size_t contactPointIndex, CentroidalModelInfo info)
     : StateInputConstraint(ConstraintOrder::Quadratic),
       referenceManagerPtr_(&referenceManager),
       config_(std::move(config)),
       contactPointIndex_(contactPointIndex),
       info_(std::move(info)) {}
-
-/******************************************************************************************************/
-/******************************************************************************************************/
-/******************************************************************************************************/
-void FrictionConeConstraint::setSurfaceNormalInWorld(const vector3_t& surfaceNormalInWorld) {
-  t_R_w.setIdentity();
-  throw std::runtime_error("[FrictionConeConstraint] setSurfaceNormalInWorld() is not implemented!");
-}
 
 /******************************************************************************************************/
 /******************************************************************************************************/
@@ -65,6 +58,11 @@ bool FrictionConeConstraint::isActive(scalar_t time) const {
 /******************************************************************************************************/
 vector_t FrictionConeConstraint::getValue(scalar_t time, const vector_t& state, const vector_t& input,
                                           const PreComputation& preComp) const {
+
+  const auto& preCompLegged = cast<AdaptivePlannerPreComputation>(preComp);
+  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
   const auto forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
   return coneConstraint(localForce);
@@ -76,10 +74,14 @@ vector_t FrictionConeConstraint::getValue(scalar_t time, const vector_t& state, 
 VectorFunctionLinearApproximation FrictionConeConstraint::getLinearApproximation(scalar_t time, const vector_t& state,
                                                                                  const vector_t& input,
                                                                                  const PreComputation& preComp) const {
+  const auto& preCompLegged = cast<AdaptivePlannerPreComputation>(preComp);
+  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
 
-  const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame);
+  const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame,t_R_w);
   const auto coneLocalDerivatives = computeConeLocalDerivatives(localForce);
   const auto coneDerivatives = computeConeConstraintDerivatives(coneLocalDerivatives, localForceDerivatives);
 
@@ -96,10 +98,15 @@ VectorFunctionLinearApproximation FrictionConeConstraint::getLinearApproximation
 VectorFunctionQuadraticApproximation FrictionConeConstraint::getQuadraticApproximation(scalar_t time, const vector_t& state,
                                                                                        const vector_t& input,
                                                                                        const PreComputation& preComp) const {
+
+  const auto& preCompLegged = cast<AdaptivePlannerPreComputation>(preComp);
+  const auto& surfaceNormalInWorld = preCompLegged.getFrictionConeConstraintConfigs()[contactPointIndex_].terrainNormal;
+  auto t_R_w = Eigen::Quaterniond().setFromTwoVectors(Eigen::Vector3d(0, 0, 1),surfaceNormalInWorld).toRotationMatrix();
+
   const vector3_t forcesInWorldFrame = centroidal_model::getContactForces(input, contactPointIndex_, info_);
   const vector3_t localForce = t_R_w * forcesInWorldFrame;
 
-  const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame);
+  const auto localForceDerivatives = computeLocalForceDerivatives(forcesInWorldFrame,t_R_w);
   const auto coneLocalDerivatives = computeConeLocalDerivatives(localForce);
   const auto coneDerivatives = computeConeConstraintDerivatives(coneLocalDerivatives, localForceDerivatives);
 
@@ -117,7 +124,7 @@ VectorFunctionQuadraticApproximation FrictionConeConstraint::getQuadraticApproxi
 /******************************************************************************************************/
 /******************************************************************************************************/
 FrictionConeConstraint::LocalForceDerivatives FrictionConeConstraint::computeLocalForceDerivatives(
-    const vector3_t& forcesInWorldFrame) const {
+    const vector3_t& forcesInWorldFrame, const matrix3_t& t_R_w) const {
   LocalForceDerivatives localForceDerivatives{};
   localForceDerivatives.dF_du = t_R_w;
   return localForceDerivatives;

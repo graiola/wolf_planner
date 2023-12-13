@@ -1,4 +1,4 @@
-#include "wolf_planner_interface/TerrainEstimator.h"
+#include "wolf_planner_adaptive/TerrainEstimator.h"
 
 #include <iostream>
 
