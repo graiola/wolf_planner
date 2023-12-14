@@ -21,4 +21,8 @@
     <depend>ocs2_legged_robot</depend>
     <depend>ocs2_legged_robot_ros</depend>
 
+    <export>
+      <wolf_planner_interface plugin="${prefix}/wolf_planner_adaptive_plugins.xml" />
+    </export>
+
 </package>

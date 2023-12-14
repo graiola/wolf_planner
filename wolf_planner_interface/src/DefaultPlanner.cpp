@@ -22,12 +22,6 @@
 namespace wolf_planner
 {
 
-DefaultPlanner::DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string& robotName, const std::string &robotBaseName)
-  :PlannerInterface(nodeHandle,topicPrefix,robotName,robotBaseName)
-{
-
-}
-
 DefaultPlanner::~DefaultPlanner()
 {
   threadRunning_ = false;
@@ -41,8 +35,10 @@ DefaultPlanner::~DefaultPlanner()
   std::cerr << "########################################################################";
 }
 
-bool DefaultPlanner::setup(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
+bool DefaultPlanner::setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
+  nodeHandle_ = nodeHandle;
+
   // Resize and initialize
   mpcDesFootPositions_.resize(4,vector3_t::Zero());
   mpcDesFootVelocities_.resize(4,vector3_t::Zero());
@@ -61,12 +57,9 @@ bool DefaultPlanner::setup(const std::string& taskFile, const std::string& urdfF
 
   setupPinocchioKinematics();
 
-  // FIXME
-  ros::NodeHandle topicPrefixNodeHandle(topicPrefix_);
-  setupVisualization(topicPrefixNodeHandle,robotBaseName_,topicPrefix_);
+  setupVisualization();
 
-  ros::NodeHandle nodeHandle; // FIXME
-  setupSynchronizedModules(nodeHandle,topicPrefix_);
+  setupSynchronizedModules();
 
   return true;
 }
@@ -120,33 +113,31 @@ void DefaultPlanner::setupLeggedInterface(const std::string &taskFile, const std
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void DefaultPlanner::setupSynchronizedModules(ros::NodeHandle &nodeHandle, const std::string topicPrefix)
+void DefaultPlanner::setupSynchronizedModules()
 {
 
-  auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
-
-  // Terrain estimation receiver
-  //auto terrainEstimationReceiverPtr = std::make_shared<TerrainEstimationReceiver>(nodeHandle, leggedInterface_->getSwitchedModelReferenceManagerPtr()->getTerrainEstimator(), robotName);
+  auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle_, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix_);
 
   // ROS ReferenceManager
-  auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
+  auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix_, leggedInterface_->getReferenceManagerPtr());
 
-  rosReferenceManager->subscribe(nodeHandle);
+  rosReferenceManager->subscribe(nodeHandle_);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiver);
-  //mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiverPtr);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);
 }
 
-void DefaultPlanner::setupVisualization(ros::NodeHandle &nodeHandle, const std::string robotBaseName, const std::string& topicPrefix)
+void DefaultPlanner::setupVisualization()
 {
+  ros::NodeHandle mpcNodeHandle(topicPrefix_);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                             leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, nodeHandle, topicPrefix);
-  robotVisualizer_->frameId_ =  topicPrefix+"/"+WORLD_FRAME_NAME;
-  robotVisualizer_->baseName_ = robotBaseName;
+                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, mpcNodeHandle, topicPrefix_);
+
+  robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
+  robotVisualizer_->baseName_ = robotBaseName_;
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, nodeHandle, topicPrefix);
+                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, mpcNodeHandle, topicPrefix_);
 }
 
 void DefaultPlanner::starting(SystemObservation &observation)

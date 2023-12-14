@@ -104,5 +104,5 @@ install(DIRECTORY include/${PROJECT_NAME}/
         FILES_MATCHING PATTERN "*.h"
         )
 
-install(FILES wolf_planner_default_plugins.xml
+install(FILES wolf_planner_interface_plugins.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

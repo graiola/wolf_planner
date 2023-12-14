@@ -28,11 +28,9 @@ public:
 
   DefaultPlanner() {};
 
-  DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotName, const std::string& robotBaseName);
-
   virtual ~DefaultPlanner();
 
-  virtual bool setup(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true) override;
+  virtual bool setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true) override;
 
   virtual void starting(SystemObservation& observation) override;
 
@@ -50,13 +48,9 @@ protected:
 
   virtual void setupPinocchioKinematics();
 
-  virtual void setupSynchronizedModules(ros::NodeHandle& nodeHandle, const std::string topicPrefix = "");
+  virtual void setupSynchronizedModules();
 
-  virtual void setupVisualization(ros::NodeHandle& nodeHandle, const std::string robotBaseName = "base_link", const std::string& topicPrefix = "");
-
-  std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
-
-private:
+  virtual void setupVisualization();
 
   // Pinocchio
   std::shared_ptr<CentroidalModelPinocchioMapping> pinocchioMapping_;
@@ -69,9 +63,13 @@ private:
   // Observation time offset
   double timeOffset_;
 
-  std::thread mpcThread_;
-  std::atomic_bool threadRunning_{false};
   benchmark::RepeatedTimer mpcTimer_;
+
+  std::thread mpcThread_;
+
+  std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
+
+  std::atomic_bool threadRunning_{false};
 
   std::shared_ptr<SafetyChecker> safetyChecker_;
 };

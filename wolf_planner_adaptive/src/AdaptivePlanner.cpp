@@ -13,12 +13,6 @@
 namespace wolf_planner
 {
 
-AdaptivePlanner::AdaptivePlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string& robotName, const std::string &robotBaseName)
-  :DefaultPlanner(nodeHandle,topicPrefix,robotName,robotBaseName)
-{
-
-}
-
 void AdaptivePlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
@@ -28,20 +22,20 @@ void AdaptivePlanner::setupLeggedInterface(const std::string &taskFile, const st
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void AdaptivePlanner::setupSynchronizedModules(ros::NodeHandle &nodeHandle, const std::string topicPrefix)
+void AdaptivePlanner::setupSynchronizedModules()
 {
 
-  auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
+  auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle_, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix_);
 
   // Terrain estimation receiver
-  auto terrainEstimationReceiver = std::make_shared<TerrainEstimationReceiver>(nodeHandle,
+  auto terrainEstimationReceiver = std::make_shared<TerrainEstimationReceiver>(nodeHandle_,
                                                                                std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getTerrainEstimator(),
                                                                                robotName_);
 
   // ROS ReferenceManager
-  auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());
+  auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix_, leggedInterface_->getReferenceManagerPtr());
 
-  rosReferenceManager->subscribe(nodeHandle);
+  rosReferenceManager->subscribe(nodeHandle_);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiver);
   mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiver);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);

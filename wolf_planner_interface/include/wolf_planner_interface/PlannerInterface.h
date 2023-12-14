@@ -21,14 +21,9 @@ public:
 
   PlannerInterface() {};
 
-  PlannerInterface(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotName, const std::string& robotBaseName)
-    :nodeHandle_(nodeHandle), topicPrefix_(topicPrefix), robotName_(robotName), robotBaseName_(robotBaseName)
-  {
-  };
-
   virtual ~PlannerInterface() {};
 
-  virtual bool setup(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true) = 0;
+  virtual bool setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true) = 0;
 
   virtual void starting(SystemObservation& observation) = 0;
 
@@ -61,6 +56,12 @@ public:
   const vector_t& getDesiredJointPositions() const { return mpcDesJointPositions_; }
 
   const std::vector<std::string>& getJointNames() const { return jointNames_; }
+
+  void setTopicPrefix(const std::string& topicPrefix) { topicPrefix_ = topicPrefix; }
+
+  void setRobotName(const std::string& robotName) { robotName_ = robotName; }
+
+  void setRobotBaseName(const std::string& robotBaseName) { robotBaseName_ = robotBaseName; }
 
 protected:
 

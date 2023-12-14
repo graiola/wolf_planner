@@ -49,7 +49,7 @@ bool WolfPlannerRos::init()
   // Initialize the planner
   try
   {
-    planner_loader_ = std::make_shared<pluginlib::ClassLoader<PlannerInterface>>("wolf_planner", "wolf_planner::PlannerInterface");
+    planner_loader_ = std::make_shared<pluginlib::ClassLoader<PlannerInterface>>("wolf_planner_interface", "wolf_planner::PlannerInterface");
     if(plannerType == "default")
     {
       planner_ = planner_loader_->createInstance("wolf_planner::DefaultPlanner");
@@ -74,7 +74,12 @@ bool WolfPlannerRos::init()
     return false;
   }
 
-  if(!planner_->setup(taskFile,urdfFile,referenceFile,verbose))
+  // Set some variables
+  planner_->setRobotName(robotName);
+  planner_->setTopicPrefix(topicPrefix);
+  planner_->setRobotBaseName(robotBaseName);
+
+  if(!planner_->setup(nodeHandle,taskFile,urdfFile,referenceFile,verbose))
   {
     ROS_ERROR("[WolfPlannerRos] Error in planner setup");
     return false;
