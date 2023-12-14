@@ -19,7 +19,7 @@ AdaptivePlanner::AdaptivePlanner(const std::string& taskFile, const std::string&
 
 }
 
-void AdaptivePlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
+void AdaptivePlanner::setupRobotInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
   leggedInterface_ = std::make_shared<AdaptivePlannerRobotInterface>(taskFile, urdfFile, referenceFile, verbose);

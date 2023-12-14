@@ -5,6 +5,8 @@
 
 #include <wolf_planner_interface/PlannerInterface.h>
 
+#include <pluginlib/class_list_macros.h>
+
 namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;
@@ -12,6 +14,8 @@ using namespace legged_robot;
 class AdaptivePlanner : public PlannerInterface {
 
 public:
+
+  AdaptivePlanner() {}
 
   AdaptivePlanner(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true);
 
@@ -21,8 +25,10 @@ public:
 
 protected:
 
-  virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose);
+  virtual void setupRobotInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose);
 
 };
 
 }  // namespace wolf_planner
+
+PLUGINLIB_EXPORT_CLASS(wolf_planner::AdaptivePlanner, wolf_planner::PlannerInterface)

@@ -1,0 +1,5 @@
+<library path="lib/wolf_planner_adaptive">
+  <class type="wolf_planner::AdaptivePlanner" base_class_type="wolf_planner::PlannerInterface">
+    <description>Adaptive planner plugin for wolf_planner.</description>
+  </class>
+</library>
