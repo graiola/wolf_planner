@@ -18,25 +18,6 @@ find_package(hpp-fcl REQUIRED)
 find_package(ocs2_legged_robot REQUIRED)
 find_package(ocs2_legged_robot_ros REQUIRED)
 
-# Optional planners
-
-find_package(wolf_planner_adaptive QUIET)
-if(${wolf_planner_adaptive_FOUND})
-    message(STATUS "Found wolf_planner_adaptive.")
-    add_definitions(-DADAPTIVE_PLANNER)
-else()
-    message(STATUS "wolf_planner_adaptive not found.")
-endif()
-
-find_package(wolf_planner_perceptive QUIET)
-if(${wolf_planner_perceptive_FOUND})
-    message(STATUS "Found wolf_planner_perceptive.")
-    add_definitions(-DPERCEPTIVE_PLANNER)
-    find_package(ocs2_sphere_approximation REQUIRED)
-else()
-    message(STATUS "wolf_planner_perceptive not found.")
-endif()
-
 catkin_package(
         INCLUDE_DIRS
             include
@@ -63,8 +44,6 @@ include_directories(
     ${ocs2_legged_robot_ros_INCLUDE_DIRS}
     ${ocs2_self_collision_visualization_INCLUDE_DIRS}
     ${ocs2_sphere_approximation_INCLUDE_DIRS}
-    ${wolf_planner_adaptive_INCLUDE_DIRS}
-    ${wolf_planner_perceptive_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -101,9 +80,7 @@ target_link_libraries(wolf_planner
     ${ocs2_legged_robot_LIBRARIES}
     ${ocs2_legged_robot_ros_LIBRARIES}
     ${ocs2_self_collision_visualization_LIBRARIES}
-    ${ocs2_sphere_approximation_INCLUDE_LIBRARIES}
-    ${wolf_planner_perceptive_LIBRARIES}
-    ${wolf_planner_adaptive_LIBRARIES})
+    ${ocs2_sphere_approximation_INCLUDE_LIBRARIES})
 
 # MPC node
 add_executable(wolf_planner_node src/WolfPlannerNode.cpp)

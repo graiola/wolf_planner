@@ -31,6 +31,12 @@ class WolfPlannerRos
 
   void updatePolicyAndPublish();
 
+  // WoLF msgs
+  wolf_msgs::Wrench forceMsg_lf_, forceMsg_lh_, forceMsg_rf_, forceMsg_rh_;
+  wolf_msgs::Cartesian footMsg_lf_, footMsg_lh_, footMsg_rf_, footMsg_rh_;
+  wolf_msgs::Cartesian baseMsg_;
+  wolf_msgs::Postural posturalMsg_;
+
   // Interface
   std::shared_ptr<PlannerInterface> planner_;
 

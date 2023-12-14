@@ -1,14 +1,7 @@
 #include "wolf_planner/WolfPlannerRos.h"
 
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
-
-#ifdef ADAPTIVE_PLANNER
-  #include <wolf_planner_adaptive/AdaptivePlanner.h>
-#endif
-
-#ifdef PERCEPTIVE_PLANNER
-  #include <wolf_planner_perceptive/PerceptivePlanner.h>
-#endif
+#include <wolf_planner_interface/DefaultPlanner.h>
 
 namespace wolf_planner
 {
@@ -56,25 +49,14 @@ bool WolfPlannerRos::init()
 
   // Initialize the planner
   if(plannerType == "default")
-    planner_ = std::make_shared<PlannerInterface>(taskFile,urdfFile,referenceFile,verbose);
-#ifdef ADAPTIVE_PLANNER
-  else if (plannerType == "adaptive")
-    planner_ = std::make_shared<AdaptivePlanner>(taskFile,urdfFile,referenceFile,verbose);
-#endif
-#ifdef PERCEPTIVE_PLANNER
-  else if (plannerType == "perceptive")
-    planner_ = std::make_shared<PerceptivePlanner>(taskFile,urdfFile,referenceFile,verbose);
-#endif
+    planner_ = std::make_shared<DefaultPlanner>(nodeHandle,topicPrefix,robotBaseName);
   else
   {
     ROS_ERROR("[WolfPlannerRos] please choose a correct planner type [default|adaptive|perceptive]!");
     return false;
   }
 
-
-  planner_->setupMrt();
-
-  planner_->setupPinocchioKinematics();
+  planner_->setup(taskFile,urdfFile,referenceFile,verbose);
 
   ROS_INFO_STREAM("[WolfPlannerRos] Robot model is: "<< robotModel);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName);
@@ -83,11 +65,6 @@ bool WolfPlannerRos::init()
   for(unsigned int i=0;i<jointNames.size();i++)
     ROS_INFO_STREAM("[WolfPlannerRos] Loading joint["<<i<<"]: "<<jointNames[i]);
   ROS_INFO_STREAM("[WolfPlannerRos] WoLF planner period is: "<< 1.0/planner_->getLeggedInterface()->mpcSettings().mpcDesiredFrequency_);
-
-  ros::NodeHandle mpcNodeHandle(topicPrefix);
-  planner_->setupVisualization(mpcNodeHandle,robotBaseName,topicPrefix);
-
-  planner_->setupSynchronizedModules(nodeHandle,topicPrefix);
 
   // Initialize the observation data structure
   observation_.state.setZero(planner_->getLeggedInterface()->getCentroidalModelInfo().stateDim);
@@ -143,83 +120,79 @@ void WolfPlannerRos::updatePolicyAndPublish()
   const auto& desiredJointVelocities = planner_->getDesiredJointVelocities();
 
   // Pack messages
-  wolf_msgs::Wrench force_msg_lf, force_msg_lh, force_msg_rf, force_msg_rh;
-  force_msg_lf.header.frame_id = force_msg_lh.header.frame_id = force_msg_rf.header.frame_id = force_msg_rh.header.frame_id = WORLD_FRAME_NAME;
-  force_msg_lf.wrench.force.x = desiredContactForces[0](0); // LF
-  force_msg_lf.wrench.force.y = desiredContactForces[0](1); // LF
-  force_msg_lf.wrench.force.z = desiredContactForces[0](2); // LF
-  force_msg_lh.wrench.force.x = desiredContactForces[1](0); // LH
-  force_msg_lh.wrench.force.y = desiredContactForces[1](1); // LH
-  force_msg_lh.wrench.force.z = desiredContactForces[1](2); // LH
-  force_msg_rf.wrench.force.x = desiredContactForces[2](0); // RF
-  force_msg_rf.wrench.force.y = desiredContactForces[2](1); // RF
-  force_msg_rf.wrench.force.z = desiredContactForces[2](2); // RF
-  force_msg_rh.wrench.force.x = desiredContactForces[3](0); // RH
-  force_msg_rh.wrench.force.y = desiredContactForces[3](1); // RH
-  force_msg_rh.wrench.force.z = desiredContactForces[3](2); // RH
+  forceMsg_lf_.header.frame_id = forceMsg_lh_.header.frame_id = forceMsg_rf_.header.frame_id = forceMsg_rh_.header.frame_id = WORLD_FRAME_NAME;
+  forceMsg_lf_.wrench.force.x = desiredContactForces[0](0); // LF
+  forceMsg_lf_.wrench.force.y = desiredContactForces[0](1); // LF
+  forceMsg_lf_.wrench.force.z = desiredContactForces[0](2); // LF
+  forceMsg_lh_.wrench.force.x = desiredContactForces[1](0); // LH
+  forceMsg_lh_.wrench.force.y = desiredContactForces[1](1); // LH
+  forceMsg_lh_.wrench.force.z = desiredContactForces[1](2); // LH
+  forceMsg_rf_.wrench.force.x = desiredContactForces[2](0); // RF
+  forceMsg_rf_.wrench.force.y = desiredContactForces[2](1); // RF
+  forceMsg_rf_.wrench.force.z = desiredContactForces[2](2); // RF
+  forceMsg_rh_.wrench.force.x = desiredContactForces[3](0); // RH
+  forceMsg_rh_.wrench.force.y = desiredContactForces[3](1); // RH
+  forceMsg_rh_.wrench.force.z = desiredContactForces[3](2); // RH
 
-  wolf_msgs::Cartesian foot_msg_lf, foot_msg_lh, foot_msg_rf, foot_msg_rh;
-  foot_msg_lf.header.frame_id = foot_msg_lh.header.frame_id = foot_msg_rf.header.frame_id = foot_msg_rh.header.frame_id = WORLD_FRAME_NAME;
-  foot_msg_lf.pose.position.x = desiredFootPositions[0](0);
-  foot_msg_lf.pose.position.y = desiredFootPositions[0](1);
-  foot_msg_lf.pose.position.z = desiredFootPositions[0](2);
-  foot_msg_lf.twist.linear.x = desiredFootVelocities[0](0);
-  foot_msg_lf.twist.linear.y = desiredFootVelocities[0](1);
-  foot_msg_lf.twist.linear.z = desiredFootVelocities[0](2);
-  foot_msg_lh.pose.position.x = desiredFootPositions[1](0);
-  foot_msg_lh.pose.position.y = desiredFootPositions[1](1);
-  foot_msg_lh.pose.position.z = desiredFootPositions[1](2);
-  foot_msg_lh.twist.linear.x = desiredFootVelocities[1](0);
-  foot_msg_lh.twist.linear.y = desiredFootVelocities[1](1);
-  foot_msg_lh.twist.linear.z = desiredFootVelocities[1](2);
-  foot_msg_rf.pose.position.x = desiredFootPositions[2](0);
-  foot_msg_rf.pose.position.y = desiredFootPositions[2](1);
-  foot_msg_rf.pose.position.z = desiredFootPositions[2](2);
-  foot_msg_rf.twist.linear.x = desiredFootVelocities[2](0);
-  foot_msg_rf.twist.linear.y = desiredFootVelocities[2](1);
-  foot_msg_rf.twist.linear.z = desiredFootVelocities[2](2);
-  foot_msg_rh.pose.position.x = desiredFootPositions[3](0);
-  foot_msg_rh.pose.position.y = desiredFootPositions[3](1);
-  foot_msg_rh.pose.position.z = desiredFootPositions[3](2);
-  foot_msg_rh.twist.linear.x = desiredFootVelocities[3](0);
-  foot_msg_rh.twist.linear.y = desiredFootVelocities[3](1);
-  foot_msg_rh.twist.linear.z = desiredFootVelocities[3](2);
+  footMsg_lf_.header.frame_id = footMsg_lh_.header.frame_id = footMsg_rf_.header.frame_id = footMsg_rh_.header.frame_id = WORLD_FRAME_NAME;
+  footMsg_lf_.pose.position.x = desiredFootPositions[0](0);
+  footMsg_lf_.pose.position.y = desiredFootPositions[0](1);
+  footMsg_lf_.pose.position.z = desiredFootPositions[0](2);
+  footMsg_lf_.twist.linear.x = desiredFootVelocities[0](0);
+  footMsg_lf_.twist.linear.y = desiredFootVelocities[0](1);
+  footMsg_lf_.twist.linear.z = desiredFootVelocities[0](2);
+  footMsg_lh_.pose.position.x = desiredFootPositions[1](0);
+  footMsg_lh_.pose.position.y = desiredFootPositions[1](1);
+  footMsg_lh_.pose.position.z = desiredFootPositions[1](2);
+  footMsg_lh_.twist.linear.x = desiredFootVelocities[1](0);
+  footMsg_lh_.twist.linear.y = desiredFootVelocities[1](1);
+  footMsg_lh_.twist.linear.z = desiredFootVelocities[1](2);
+  footMsg_rf_.pose.position.x = desiredFootPositions[2](0);
+  footMsg_rf_.pose.position.y = desiredFootPositions[2](1);
+  footMsg_rf_.pose.position.z = desiredFootPositions[2](2);
+  footMsg_rf_.twist.linear.x = desiredFootVelocities[2](0);
+  footMsg_rf_.twist.linear.y = desiredFootVelocities[2](1);
+  footMsg_rf_.twist.linear.z = desiredFootVelocities[2](2);
+  footMsg_rh_.pose.position.x = desiredFootPositions[3](0);
+  footMsg_rh_.pose.position.y = desiredFootPositions[3](1);
+  footMsg_rh_.pose.position.z = desiredFootPositions[3](2);
+  footMsg_rh_.twist.linear.x = desiredFootVelocities[3](0);
+  footMsg_rh_.twist.linear.y = desiredFootVelocities[3](1);
+  footMsg_rh_.twist.linear.z = desiredFootVelocities[3](2);
 
-  wolf_msgs::Cartesian base_msg;
-  base_msg.header.frame_id = WORLD_FRAME_NAME;
-  base_msg.pose.position.x = desiredBasePosition(0);
-  base_msg.pose.position.y = desiredBasePosition(1);
-  base_msg.pose.position.z = desiredBasePosition(2);
-  base_msg.pose.orientation.w = desiredBaseQuaternion.w();
-  base_msg.pose.orientation.x = desiredBaseQuaternion.x();
-  base_msg.pose.orientation.y = desiredBaseQuaternion.y();
-  base_msg.pose.orientation.z = desiredBaseQuaternion.z();
-  base_msg.twist.linear.x =  desiredBaseVelocity(0);
-  base_msg.twist.linear.y =  desiredBaseVelocity(1);
-  base_msg.twist.linear.z =  desiredBaseVelocity(2);
+  baseMsg_.header.frame_id = WORLD_FRAME_NAME;
+  baseMsg_.pose.position.x = desiredBasePosition(0);
+  baseMsg_.pose.position.y = desiredBasePosition(1);
+  baseMsg_.pose.position.z = desiredBasePosition(2);
+  baseMsg_.pose.orientation.w = desiredBaseQuaternion.w();
+  baseMsg_.pose.orientation.x = desiredBaseQuaternion.x();
+  baseMsg_.pose.orientation.y = desiredBaseQuaternion.y();
+  baseMsg_.pose.orientation.z = desiredBaseQuaternion.z();
+  baseMsg_.twist.linear.x =  desiredBaseVelocity(0);
+  baseMsg_.twist.linear.y =  desiredBaseVelocity(1);
+  baseMsg_.twist.linear.z =  desiredBaseVelocity(2);
   // FIXME the angular velocities are coupled once the robot rotates more than 180
-  //base_msg.twist.angular.z = vDesired(3);
-  //base_msg.twist.angular.y = vDesired(4);
-  //base_msg.twist.angular.x = vDesired(5);
+  //baseMsg_.twist.angular.z = vDesired(3);
+  //baseMsg_.twist.angular.y = vDesired(4);
+  //baseMsg_.twist.angular.x = vDesired(5);
 
-  wolf_msgs::Postural postural_msg;
   for (size_t i = 0; i < planner_->getLeggedInterface()->getCentroidalModelInfo().actuatedDofNum; ++i)
   {
-    postural_msg.positions.push_back(desiredJointPositions(i));
-    postural_msg.velocities.push_back(desiredJointVelocities(i));
+    posturalMsg_.positions.push_back(desiredJointPositions(i));
+    posturalMsg_.velocities.push_back(desiredJointVelocities(i));
   }
 
   // Publish the MPC output
-  mpcWrenchPublisher_lf_.publish(force_msg_lf);
-  mpcFootPublisher_lf_.publish(foot_msg_lf);
-  mpcWrenchPublisher_lh_.publish(force_msg_lh);
-  mpcFootPublisher_lh_.publish(foot_msg_lh);
-  mpcWrenchPublisher_rf_.publish(force_msg_rf);
-  mpcFootPublisher_rf_.publish(foot_msg_rf);
-  mpcWrenchPublisher_rh_.publish(force_msg_rh);
-  mpcFootPublisher_rh_.publish(foot_msg_rh);
-  mpcBasePublisher_.publish(base_msg);
-  mpcPosturalPublisher_.publish(postural_msg);
+  mpcWrenchPublisher_lf_.publish(forceMsg_lf_);
+  mpcFootPublisher_lf_.publish(footMsg_lf_);
+  mpcWrenchPublisher_lh_.publish(forceMsg_lh_);
+  mpcFootPublisher_lh_.publish(footMsg_lh_);
+  mpcWrenchPublisher_rf_.publish(forceMsg_rf_);
+  mpcFootPublisher_rf_.publish(footMsg_rf_);
+  mpcWrenchPublisher_rh_.publish(forceMsg_rh_);
+  mpcFootPublisher_rh_.publish(footMsg_rh_);
+  mpcBasePublisher_.publish(baseMsg_);
+  mpcPosturalPublisher_.publish(posturalMsg_);
 
   // Publish the observation. Only needed for the command interface
   observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation_));

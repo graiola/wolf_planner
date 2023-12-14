@@ -11,7 +11,7 @@ namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;
 
-class AdaptivePlanner : public PlannerInterface {
+class AdaptivePlanner : public DefaultPlanner {
 
 public:
 

@@ -2,7 +2,7 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 
-#include "wolf_planner_interface/PlannerInterface.h"
+#include "wolf_planner_interface/DefaultPlanner.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
@@ -22,7 +22,13 @@
 namespace wolf_planner
 {
 
-PlannerInterface::~PlannerInterface()
+DefaultPlanner::DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string &robotBaseName)
+  :PlannerInterface(nodeHandle,topicPrefix,robotBaseName)
+{
+
+}
+
+DefaultPlanner::~DefaultPlanner()
 {
   threadRunning_ = false;
   if (mpcThread_.joinable()) {
@@ -35,7 +41,7 @@ PlannerInterface::~PlannerInterface()
   std::cerr << "########################################################################";
 }
 
-PlannerInterface::PlannerInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
+bool DefaultPlanner::setup(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
 {
   // Resize and initialize
   mpcDesFootPositions_.resize(4,vector3_t::Zero());
@@ -50,9 +56,22 @@ PlannerInterface::PlannerInterface(const std::string& taskFile, const std::strin
 
   // Safety Checker
   safetyChecker_ = std::make_shared<SafetyChecker>(leggedInterface_->getCentroidalModelInfo());
+
+  setupMrt();
+
+  setupPinocchioKinematics();
+
+  // FIXME
+  ros::NodeHandle topicPrefixNodeHandle(topicPrefix_);
+  setupVisualization(topicPrefixNodeHandle,robotBaseName_,topicPrefix_);
+
+  ros::NodeHandle nodeHandle; // FIXME
+  setupSynchronizedModules(nodeHandle,topicPrefix_);
+
+  return true;
 }
 
-void PlannerInterface::setupMrt()
+void DefaultPlanner::setupMrt()
 {
   mpcMrtInterface_ = std::make_shared<MPC_MRT_Interface>(*mpc_);
   mpcMrtInterface_->initRollout(&leggedInterface_->getRollout());
@@ -73,14 +92,14 @@ void PlannerInterface::setupMrt()
         leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
         threadRunning_ = false;
-        ROS_ERROR_STREAM("[PlannerInterface] MPC error: " << e.what());
+        ROS_ERROR_STREAM("[DefaultPlanner] MPC error: " << e.what());
       }
     }
   });
   setThreadPriority(leggedInterface_->sqpSettings().threadPriority, mpcThread_);
 }
 
-void PlannerInterface::setupPinocchioKinematics()
+void DefaultPlanner::setupPinocchioKinematics()
 {
   // Pinocchio EE Kinematics
   pinocchioMapping_ = std::make_shared<CentroidalModelPinocchioMapping>(leggedInterface_->getCentroidalModelInfo());
@@ -92,7 +111,7 @@ void PlannerInterface::setupPinocchioKinematics()
   jointNames_ = leggedInterface_->getPinocchioInterface().getModel().names;
 }
 
-void PlannerInterface::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
+void DefaultPlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
   leggedInterface_ = std::make_shared<LeggedInterface>(taskFile, urdfFile, referenceFile, verbose);
@@ -101,7 +120,7 @@ void PlannerInterface::setupLeggedInterface(const std::string &taskFile, const s
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
 }
 
-void PlannerInterface::setupSynchronizedModules(ros::NodeHandle &nodeHandle, const std::string topicPrefix)
+void DefaultPlanner::setupSynchronizedModules(ros::NodeHandle &nodeHandle, const std::string topicPrefix)
 {
 
   auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
@@ -118,7 +137,7 @@ void PlannerInterface::setupSynchronizedModules(ros::NodeHandle &nodeHandle, con
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);
 }
 
-void PlannerInterface::setupVisualization(ros::NodeHandle &nodeHandle, const std::string robotBaseName, const std::string& topicPrefix)
+void DefaultPlanner::setupVisualization(ros::NodeHandle &nodeHandle, const std::string robotBaseName, const std::string& topicPrefix)
 {
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
                                                              leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, nodeHandle, topicPrefix);
@@ -130,7 +149,7 @@ void PlannerInterface::setupVisualization(ros::NodeHandle &nodeHandle, const std
                                                                                    leggedInterface_->getGeometryInterface(), *pinocchioMapping_, nodeHandle, topicPrefix);
 }
 
-void PlannerInterface::starting(SystemObservation &observation)
+void DefaultPlanner::starting(SystemObservation &observation)
 {
 
   timeOffset_ = observation.time;
@@ -140,31 +159,26 @@ void PlannerInterface::starting(SystemObservation &observation)
   // Set the first observation and command and wait for optimization to finish
   mpcMrtInterface_->setCurrentObservation(observation);
   mpcMrtInterface_->getReferenceManager().setTargetTrajectories(targetTrajectories);
-  ROS_INFO_STREAM("[PlannerInterface] Waiting for the initial policy ...");
+  ROS_INFO_STREAM("[DefaultPlanner] Waiting for the initial policy ...");
   while (!mpcMrtInterface_->initialPolicyReceived() && ros::ok()) {
     mpcMrtInterface_->advanceMpc();
     ros::WallRate(leggedInterface_->mpcSettings().mrtDesiredFrequency_).sleep();
   }
-  ROS_INFO_STREAM("[PlannerInterface] Initial policy has been received.");
+  ROS_INFO_STREAM("[DefaultPlanner] Initial policy has been received.");
 
-  ROS_INFO_STREAM("[PlannerInterface] Starting the planner");
+  ROS_INFO_STREAM("[DefaultPlanner] Starting the planner");
 
   plannerRunning_ = true;
 }
 
-void PlannerInterface::stopping()
+void DefaultPlanner::stopping()
 {
-  ROS_INFO_STREAM("[PlannerInterface] Stopping the planner");
+  ROS_INFO_STREAM("[DefaultPlanner] Stopping the planner");
 
   plannerRunning_ = false;
 }
 
-bool PlannerInterface::isRunning()
-{
-  return plannerRunning_;
-}
-
-bool PlannerInterface::updatePolicy(SystemObservation &observation)
+bool DefaultPlanner::updatePolicy(SystemObservation &observation)
 {
   // Remove time offset
   observation.time = observation.time - timeOffset_;
@@ -186,7 +200,7 @@ bool PlannerInterface::updatePolicy(SystemObservation &observation)
   // Safety check, if failed, stop the planner
   if (!safetyChecker_->check(observation, optimizedState, optimizedInput))
   {
-    ROS_ERROR_STREAM("[PlannerInterface] Safety check failed, stopping the planner.");
+    ROS_ERROR_STREAM("[DefaultPlanner] Safety check failed, stopping the planner.");
     threadRunning_ = false;
     return false;
   }
@@ -236,7 +250,7 @@ bool PlannerInterface::updatePolicy(SystemObservation &observation)
   return true;
 }
 
-void PlannerInterface::updateVisualization(const SystemObservation &observation)
+void DefaultPlanner::updateVisualization(const SystemObservation &observation)
 {
   // Visualization
   if(robotVisualizer_ != nullptr)
