@@ -52,11 +52,15 @@ bool WolfPlannerRos::init()
     planner_ = std::make_shared<DefaultPlanner>(nodeHandle,topicPrefix,robotBaseName);
   else
   {
-    ROS_ERROR("[WolfPlannerRos] please choose a correct planner type [default|adaptive|perceptive]!");
+    ROS_ERROR("[WolfPlannerRos] please choose a correct planner type: [default|adaptive|perceptive]");
     return false;
   }
 
-  planner_->setup(taskFile,urdfFile,referenceFile,verbose);
+  if(!planner_->setup(taskFile,urdfFile,referenceFile,verbose))
+  {
+    ROS_ERROR("[WolfPlannerRos] Error in planner setup");
+    return false;
+  }
 
   ROS_INFO_STREAM("[WolfPlannerRos] Robot model is: "<< robotModel);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName);
@@ -209,7 +213,7 @@ void WolfPlannerRos::observationCallback(const ocs2_msgs::mpc_observationConstPt
    for (size_t i = 0; i < planner_->getLeggedInterface()->getCentroidalModelInfo().stateDim; ++i)
      observation_.state(i) = msg->state.value[i];
 
-  // Start/Stop the mpc
+  // Start/Stop the planner
   if(controllerRunning_ && !planner_->isRunning())
   {
     planner_->starting(observation_);
