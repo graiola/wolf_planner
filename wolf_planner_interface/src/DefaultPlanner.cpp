@@ -22,8 +22,8 @@
 namespace wolf_planner
 {
 
-DefaultPlanner::DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string &robotBaseName)
-  :PlannerInterface(nodeHandle,topicPrefix,robotBaseName)
+DefaultPlanner::DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string& robotName, const std::string &robotBaseName)
+  :PlannerInterface(nodeHandle,topicPrefix,robotName,robotBaseName)
 {
 
 }

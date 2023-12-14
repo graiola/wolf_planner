@@ -19,8 +19,10 @@ class PlannerInterface {
 
 public:
 
-  PlannerInterface(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotBaseName)
-    :nodeHandle_(nodeHandle), topicPrefix_(topicPrefix), robotBaseName_(robotBaseName)
+  PlannerInterface() {};
+
+  PlannerInterface(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotName, const std::string& robotBaseName)
+    :nodeHandle_(nodeHandle), topicPrefix_(topicPrefix), robotName_(robotName), robotBaseName_(robotBaseName)
   {
   };
 
@@ -65,6 +67,8 @@ protected:
   ros::NodeHandle nodeHandle_;
 
   std::string topicPrefix_;
+
+  std::string robotName_;
 
   std::string robotBaseName_;
 

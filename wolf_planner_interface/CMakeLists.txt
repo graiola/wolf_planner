@@ -5,6 +5,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp
+        pluginlib
         wolf_msgs
         wolf_controller_utils
         )
@@ -30,6 +31,7 @@ catkin_package(
             ${PROJECT_NAME}
         CATKIN_DEPENDS
             roscpp
+            pluginlib
             wolf_msgs
             wolf_controller_utils
         DEPENDS
@@ -101,3 +103,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         FILES_MATCHING PATTERN "*.h"
         )
+
+install(FILES wolf_planner_default_plugins.xml
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

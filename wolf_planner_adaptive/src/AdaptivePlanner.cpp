@@ -13,13 +13,13 @@
 namespace wolf_planner
 {
 
-AdaptivePlanner::AdaptivePlanner(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose)
-  :PlannerInterface(taskFile,urdfFile,referenceFile,verbose)
+AdaptivePlanner::AdaptivePlanner(ros::NodeHandle& nodeHandle, const std::string &topicPrefix, const std::string& robotName, const std::string &robotBaseName)
+  :DefaultPlanner(nodeHandle,topicPrefix,robotName,robotBaseName)
 {
 
 }
 
-void AdaptivePlanner::setupRobotInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
+void AdaptivePlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
   leggedInterface_ = std::make_shared<AdaptivePlannerRobotInterface>(taskFile, urdfFile, referenceFile, verbose);
@@ -34,10 +34,9 @@ void AdaptivePlanner::setupSynchronizedModules(ros::NodeHandle &nodeHandle, cons
   auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix);
 
   // Terrain estimation receiver
-  std::string robotName; // FIXME
   auto terrainEstimationReceiver = std::make_shared<TerrainEstimationReceiver>(nodeHandle,
                                                                                std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getTerrainEstimator(),
-                                                                               robotName);
+                                                                               robotName_);
 
   // ROS ReferenceManager
   auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix, leggedInterface_->getReferenceManagerPtr());

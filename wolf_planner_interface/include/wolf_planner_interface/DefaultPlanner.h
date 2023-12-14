@@ -2,6 +2,7 @@
 
 // ROS
 #include <ros/ros.h>
+#include <pluginlib/class_list_macros.h>
 
 // OCS2
 #include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
@@ -25,7 +26,9 @@ class DefaultPlanner : public PlannerInterface {
 
 public:
 
-  DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotBaseName);
+  DefaultPlanner() {};
+
+  DefaultPlanner(ros::NodeHandle& nodeHandle, const std::string& topicPrefix, const std::string& robotName, const std::string& robotBaseName);
 
   virtual ~DefaultPlanner();
 
@@ -74,3 +77,6 @@ private:
 };
 
 }  // namespace wolf_planner
+
+PLUGINLIB_EXPORT_CLASS(wolf_planner::DefaultPlanner, wolf_planner::PlannerInterface)
+

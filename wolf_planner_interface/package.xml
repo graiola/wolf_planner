@@ -11,6 +11,7 @@
     <buildtool_depend>catkin</buildtool_depend>
 
     <depend>roscpp</depend>
+    <depend>pluginlib</depend>
     <depend>wolf_msgs</depend>
     <depend>wolf_controller_utils</depend>
 
@@ -21,5 +22,10 @@
     <depend>ocs2_legged_robot_ros</depend>
     <depend>ocs2_self_collision</depend>
     <depend>ocs2_self_collision_visualization</depend>
+
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+      <controller_interface plugin="${prefix}/wolf_planner_default_plugins.xml"/>
+    </export>
 
 </package>

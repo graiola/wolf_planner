@@ -13,6 +13,7 @@
 
 // ROS
 #include <ros/ros.h>
+#include <pluginlib/class_loader.h>
 
 namespace wolf_planner
 {
@@ -38,7 +39,8 @@ class WolfPlannerRos
   wolf_msgs::Postural posturalMsg_;
 
   // Interface
-  std::shared_ptr<PlannerInterface> planner_;
+  std::shared_ptr<pluginlib::ClassLoader<PlannerInterface> > planner_loader_;
+  boost::shared_ptr<PlannerInterface> planner_;
 
   // Observation publisher
   ros::Publisher observationPublisher_;

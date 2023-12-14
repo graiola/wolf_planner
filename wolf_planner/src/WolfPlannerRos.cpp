@@ -1,7 +1,6 @@
 #include "wolf_planner/WolfPlannerRos.h"
 
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
-#include <wolf_planner_interface/DefaultPlanner.h>
 
 namespace wolf_planner
 {
@@ -48,11 +47,30 @@ bool WolfPlannerRos::init()
   }
 
   // Initialize the planner
-  if(plannerType == "default")
-    planner_ = std::make_shared<DefaultPlanner>(nodeHandle,topicPrefix,robotBaseName);
-  else
+  try
   {
-    ROS_ERROR("[WolfPlannerRos] please choose a correct planner type: [default|adaptive|perceptive]");
+    planner_loader_ = std::make_shared<pluginlib::ClassLoader<PlannerInterface>>("wolf_planner", "wolf_planner::PlannerInterface");
+    if(plannerType == "default")
+    {
+      planner_ = planner_loader_->createInstance("wolf_planner::DefaultPlanner");
+    }
+    else if (plannerType == "adaptive")
+    {
+      planner_ = planner_loader_->createInstance("wolf_planner::AdaptivePlanner");
+    }
+    else if (plannerType == "perceptive")
+    {
+      planner_ = planner_loader_->createInstance("wolf_planner::PerceptivePlanner");
+    }
+    else
+    {
+      ROS_ERROR("[WolfPlannerRos] please choose a correct planner type: [default|adaptive|perceptive]");
+      return false;
+    }
+  }
+  catch (const std::exception& e)
+  {
+    ROS_ERROR_STREAM("[WolfPlannerRos] Can not load the plugin, reason: " << e.what());
     return false;
   }
 
