@@ -1,3 +1,5 @@
+#pragma once
+
 // OCS2
 #include <ocs2_msgs/mpc_observation.h>
 
@@ -8,12 +10,12 @@
 #include <wolf_msgs/ControllerState.h>
 #include <wolf_msgs/TerrainEstimation.h>
 
-// WoLF planner interface
-#include <wolf_planner_interface/PlannerInterface.h>
-
 // ROS
 #include <ros/ros.h>
 #include <pluginlib/class_loader.h>
+
+// WoLF planner interface
+#include <wolf_planner_interface/PlannerInterface.h>
 
 namespace wolf_planner
 {

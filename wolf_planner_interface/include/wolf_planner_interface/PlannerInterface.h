@@ -6,7 +6,13 @@
 // OCS2
 #include <ocs2_mpc/MPC_MRT_Interface.h>
 #include <ocs2_msgs/mpc_observation.h>
+#include <ocs2_core/thread_support/ExecuteAndSleep.h>
+#include <ocs2_core/thread_support/SetThreadPriority.h>
+#include <ocs2_pinocchio_interface/PinocchioInterface.h>
+#include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematics.h>
+#include <ocs2_centroidal_model/CentroidalModelRbdConversions.h>
 
+#include "wolf_planner_interface/SafetyChecker.h"
 #include "wolf_planner_interface/LeggedInterface.h"
 
 #define WORLD_FRAME_NAME "world"
@@ -21,17 +27,19 @@ public:
 
   PlannerInterface() {};
 
-  virtual ~PlannerInterface() {};
+  virtual ~PlannerInterface();
 
-  virtual bool setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true) = 0;
+  bool setup(ros::NodeHandle& nodeHandle, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose = true);
 
-  virtual void starting(SystemObservation& observation) = 0;
+  void setupMrt();
 
-  virtual void stopping() = 0;
+  void starting(SystemObservation& observation);
+
+  void stopping();
 
   bool isRunning() { return plannerRunning_; };
 
-  virtual bool updatePolicy(SystemObservation& observation) = 0;
+  bool updatePolicy(SystemObservation& observation);
 
   virtual void updateVisualization(const SystemObservation& observation) = 0;
 
@@ -63,7 +71,23 @@ public:
 
   void setRobotBaseName(const std::string& robotBaseName) { robotBaseName_ = robotBaseName; }
 
+  benchmark::RepeatedTimer mpcTimer_;
+
+  std::atomic_bool threadRunning_{false};
+
+  std::thread mpcThread_;
+
+  std::shared_ptr<MPC_MRT_Interface> mpcMrtInterface_;
+
 protected:
+
+  void setupPinocchioKinematics();
+
+  virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose) = 0;
+
+  virtual void setupSynchronizedModules() = 0;
+
+  virtual void setupVisualization() = 0;
 
   ros::NodeHandle nodeHandle_;
 
@@ -72,6 +96,13 @@ protected:
   std::string robotName_;
 
   std::string robotBaseName_;
+
+  // Pinocchio
+  std::shared_ptr<CentroidalModelPinocchioMapping> pinocchioMapping_;
+  std::shared_ptr<PinocchioEndEffectorKinematics> eeKinematics_;
+
+  // Safety checker
+  std::shared_ptr<SafetyChecker> safetyChecker_;
 
   // MPC BASE
   std::shared_ptr<MPC_BASE> mpc_;
@@ -106,6 +137,9 @@ protected:
 
   // Running planner flag
   std::atomic_bool plannerRunning_{false};
+
+  // Observation time offset
+  double timeOffset_;
 };
 
 }  // namespace wolf_planner

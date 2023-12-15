@@ -70,6 +70,7 @@ add_library(${PROJECT_NAME}
         src/constraint/NormalVelocityConstraintCppAd.cpp
         src/constraint/ZeroVelocityConstraintCppAd.cpp
         src/initialization/LeggedRobotInitializer.cpp
+        src/PlannerInterface.cpp
         src/DefaultPlanner.cpp
         src/SwingTrajectoryPlanner.cpp
         src/LeggedReferenceManager.cpp
