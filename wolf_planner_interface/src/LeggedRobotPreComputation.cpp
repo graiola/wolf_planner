@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "wolf_planner_interface/LeggedRobotPreComputation.h"
 
+
 namespace ocs2 {
 namespace legged_robot {
 

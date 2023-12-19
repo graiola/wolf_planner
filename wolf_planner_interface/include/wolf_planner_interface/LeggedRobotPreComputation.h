@@ -34,14 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_core/PreComputation.h>
 #include <ocs2_pinocchio_interface/PinocchioInterface.h>
-
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
-
 #include <ocs2_legged_robot/common/ModelSettings.h>
 
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
-#include "wolf_planner_interface/constraint/FrictionConeConstraint.h"
-
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
 
 namespace ocs2 {
@@ -69,7 +65,6 @@ class LeggedRobotPreComputation : public PreComputation {
  protected:
   LeggedRobotPreComputation(const LeggedRobotPreComputation& other);
 
- private:
   PinocchioInterface pinocchioInterface_;
   CentroidalModelInfo info_;
   const SwingTrajectoryPlanner* swingTrajectoryPlannerPtr_;

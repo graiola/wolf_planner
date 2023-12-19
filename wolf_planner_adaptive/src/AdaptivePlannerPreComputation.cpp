@@ -47,30 +47,20 @@ namespace legged_robot {
 AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
                                                      const SwingTrajectoryPlanner& swingTrajectoryPlanner, const TerrainEstimator& terrainEstimator,
                                                      ModelSettings settings)
-    : pinocchioInterface_(std::move(pinocchioInterface)),
-      info_(std::move(info)),
-      swingTrajectoryPlannerPtr_(&swingTrajectoryPlanner),
-      terrainEstimatorPtr_(&terrainEstimator),
-      mappingPtr_(new CentroidalModelPinocchioMapping(info_)),
-      settings_(std::move(settings)) {
-  eeNormalVelConConfigs_.resize(info_.numThreeDofContacts);
+    : LeggedRobotPreComputation(pinocchioInterface,info,swingTrajectoryPlanner,settings),
+      terrainEstimatorPtr_(&terrainEstimator)
+{
   frictionConeConConfigs_.resize(info_.numThreeDofContacts);
-  mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
 AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& rhs)
-    : pinocchioInterface_(rhs.pinocchioInterface_),
-      info_(rhs.info_),
-      swingTrajectoryPlannerPtr_(rhs.swingTrajectoryPlannerPtr_),
-      terrainEstimatorPtr_(rhs.terrainEstimatorPtr_),
-      mappingPtr_(rhs.mappingPtr_->clone()),
-      settings_(rhs.settings_) {
-  eeNormalVelConConfigs_.resize(rhs.eeNormalVelConConfigs_.size());
+    : LeggedRobotPreComputation(rhs),
+      terrainEstimatorPtr_(rhs.terrainEstimatorPtr_)
+{
   frictionConeConConfigs_.resize(rhs.frictionConeConConfigs_.size());
-  mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
 /******************************************************************************************************/
@@ -85,7 +75,7 @@ void AdaptivePlannerPreComputation::request(RequestSet request, scalar_t t, cons
   auto eeNormalVelConConfig = [&](size_t footIndex) {
     EndEffectorLinearConstraint::Config config;
     config.b = (vector_t(1) << -swingTrajectoryPlannerPtr_->getZvelocityConstraint(footIndex, t)).finished();
-    config.Av = (matrix_t(1, 3) << terrainEstimatorPtr_->getTerrainNormal()).finished();
+    config.Av = (matrix_t(1, 3) << terrainEstimatorPtr_->getTerrainNormal().transpose()).finished();
     if (!numerics::almost_eq(settings_.positionErrorGain, 0.0)) {
       config.b(0) -= settings_.positionErrorGain * swingTrajectoryPlannerPtr_->getZpositionConstraint(footIndex, t);
       config.Ax = settings_.positionErrorGain * (matrix_t(1, 3) << terrainEstimatorPtr_->getTerrainNormal()).finished();
