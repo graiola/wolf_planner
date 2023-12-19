@@ -3,7 +3,7 @@
 #include <pinocchio/algorithm/kinematics.hpp>
 #include <utility>
 
-#include "wolf_planner_perceptive_interface/visualization/SphereVisualization.h"
+#include "wolf_planner_perceptive/visualization/SphereVisualization.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_ros_interfaces/common/RosMsgHelpers.h>

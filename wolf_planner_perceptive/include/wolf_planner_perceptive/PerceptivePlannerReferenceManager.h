@@ -2,16 +2,16 @@
 
 #include <memory>
 
-#include "wolf_planner_perceptive_interface/ConvexRegionSelector.h"
+#include "wolf_planner_perceptive/ConvexRegionSelector.h"
 
 #include <wolf_planner_interface/LeggedReferenceManager.h>
 
 namespace ocs2 {
 namespace legged_robot {
 
-class PerceptiveLeggedReferenceManager : public LeggedReferenceManager {
+class PerceptivePlannerReferenceManager : public LeggedReferenceManager {
  public:
-  PerceptiveLeggedReferenceManager(CentroidalModelInfo info, std::shared_ptr<GaitSchedule> gaitSchedulePtr,
+  PerceptivePlannerReferenceManager(CentroidalModelInfo info, std::shared_ptr<GaitSchedule> gaitSchedulePtr,
                                    std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
                                    std::shared_ptr<ConvexRegionSelector> convexRegionSelectorPtr,
                                    const EndEffectorKinematics<scalar_t>& endEffectorKinematics, scalar_t comHeight);

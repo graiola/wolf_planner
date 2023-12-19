@@ -55,16 +55,16 @@ void AdaptivePlanner::setupSynchronizedModules()
 
 void AdaptivePlanner::setupVisualization()
 {
-  ros::NodeHandle mpcNodeHandle(topicPrefix_);
+  ros::NodeHandle visualizationNodeHandle(topicPrefix_);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, mpcNodeHandle, topicPrefix_);
+                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, topicPrefix_);
 
   robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
   robotVisualizer_->baseName_ = robotBaseName_;
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, mpcNodeHandle, topicPrefix_);
+                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, topicPrefix_);
 }
 
 void AdaptivePlanner::updateVisualization(const SystemObservation &observation)

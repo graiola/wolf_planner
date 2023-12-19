@@ -9,7 +9,7 @@ namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;
 
-class PerceptiveLeggedInterface : public LeggedInterface {
+class PerceptivePlannerRobotInterface : public LeggedInterface {
  public:
   using LeggedInterface::LeggedInterface;
 

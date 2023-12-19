@@ -36,6 +36,7 @@
 
     <!-- Elevation Mapping -->
     <include file="$(find wolf_planner)/launch/include/elevation_mapping.launch" if="$(eval planner_type == 'perceptive')">
+        <arg name="robot_name" value="$(arg robot_name)"/>
     </include>
 
     <!-- rviz -->

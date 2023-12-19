@@ -1,5 +1,5 @@
-#include "wolf_planner_perceptive_interface/constraint/SphereSdfConstraint.h"
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedPrecomputation.h"
+#include "wolf_planner_perceptive/constraint/SphereSdfConstraint.h"
+#include "wolf_planner_perceptive/PerceptivePlannerPreComputation.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -14,7 +14,7 @@ SphereSdfConstraint::SphereSdfConstraint(const PinocchioSphereKinematics& sphere
 vector_t SphereSdfConstraint::getValue(scalar_t /*time*/, const vector_t& state, const PreComputation& preComp) const {
   vector_t value(numConstraints_);
 
-  sphereKinematicsPtr_->setPinocchioInterface(cast<PerceptiveLeggedPrecomputation>(preComp).getPinocchioInterface());
+  sphereKinematicsPtr_->setPinocchioInterface(cast<PerceptivePlannerPreComputation>(preComp).getPinocchioInterface());
   auto position = sphereKinematicsPtr_->getPosition(state);
   auto radius = sphereKinematicsPtr_->getPinocchioSphereInterface().getSphereRadii();
   for (int i = 0; i < numConstraints_; ++i) {

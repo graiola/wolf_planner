@@ -1,4 +1,4 @@
-#include "wolf_planner_perceptive_interface/ConvexRegionSelector.h"
+#include "wolf_planner_perceptive/ConvexRegionSelector.h"
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_core/misc/Lookup.h>

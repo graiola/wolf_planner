@@ -1,10 +1,10 @@
-#include "wolf_planner_perceptive_interface/constraint/FootCollisionConstraint.h"
-#include "wolf_planner_perceptive_interface/constraint/SphereSdfConstraint.h"
+#include "wolf_planner_perceptive/constraint/FootCollisionConstraint.h"
+#include "wolf_planner_perceptive/constraint/SphereSdfConstraint.h"
 
-#include "wolf_planner_perceptive_interface/ConvexRegionSelector.h"
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedInterface.h"
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedPrecomputation.h"
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedReferenceManager.h"
+#include "wolf_planner_perceptive/ConvexRegionSelector.h"
+#include "wolf_planner_perceptive/PerceptivePlannerRobotInterface.h"
+#include "wolf_planner_perceptive/PerceptivePlannerPreComputation.h"
+#include "wolf_planner_perceptive/PerceptivePlannerReferenceManager.h"
 
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
 #include <ocs2_core/soft_constraint/StateSoftConstraint.h>
@@ -14,7 +14,7 @@
 
 namespace wolf_planner {
 
-void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& taskFile, const std::string& urdfFile,
+void PerceptivePlannerRobotInterface::setupOptimalControlProblem(const std::string& taskFile, const std::string& urdfFile,
                                                            const std::string& referenceFile, bool verbose) {
   planarTerrainPtr_ = std::make_shared<convex_plane_decomposition::PlanarTerrain>();
 
@@ -85,7 +85,7 @@ void PerceptiveLeggedInterface::setupOptimalControlProblem(const std::string& ta
   //      "sdfConstraint", std::unique_ptr<StateCost>(new StateSoftConstraint(std::move(sphereSdfConstraint), std::move(penalty))));
 }
 
-void PerceptiveLeggedInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/,
+void PerceptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/,
                                                       const std::string& referenceFile, bool verbose) {
   auto swingTrajectoryPlanner =
       std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
@@ -96,16 +96,16 @@ void PerceptiveLeggedInterface::setupReferenceManager(const std::string& taskFil
 
   scalar_t comHeight = 0;
   loadData::loadCppDataType(referenceFile, "comHeight", comHeight);
-  referenceManagerPtr_.reset(new PerceptiveLeggedReferenceManager(centroidalModelInfo_, loadGaitSchedule(referenceFile, verbose),
+  referenceManagerPtr_.reset(new PerceptivePlannerReferenceManager(centroidalModelInfo_, loadGaitSchedule(referenceFile, verbose),
                                                                   std::move(swingTrajectoryPlanner), std::move(convexRegionSelector),
                                                                   *eeKinematicsPtr, comHeight));
 }
 
-void PerceptiveLeggedInterface::setupPreComputation(const std::string& /*taskFile*/, const std::string& /*urdfFile*/,
+void PerceptivePlannerRobotInterface::setupPreComputation(const std::string& /*taskFile*/, const std::string& /*urdfFile*/,
                                                     const std::string& /*referenceFile*/, bool /*verbose*/) {
-  problemPtr_->preComputationPtr = std::make_unique<PerceptiveLeggedPrecomputation>(
+  problemPtr_->preComputationPtr = std::make_unique<PerceptivePlannerPreComputation>(
       *pinocchioInterfacePtr_, centroidalModelInfo_, *referenceManagerPtr_->getSwingTrajectoryPlanner(), modelSettings_,
-      *dynamic_cast<PerceptiveLeggedReferenceManager&>(*referenceManagerPtr_).getConvexRegionSelectorPtr());
+      *dynamic_cast<PerceptivePlannerReferenceManager&>(*referenceManagerPtr_).getConvexRegionSelectorPtr());
 }
 
 }  // namespace wolf_planner

@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(wolf_planner_perceptive_interface)
+project(wolf_planner_perceptive)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(catkin REQUIRED
         COMPONENTS
         roscpp
+        pluginlib
         wolf_planner_interface
         convex_plane_decomposition_msgs
         convex_plane_decomposition_ros
@@ -23,17 +24,22 @@ find_package(ocs2_ros_interfaces REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
-        include
+            include
         LIBRARIES
-        ${PROJECT_NAME}
+            ${PROJECT_NAME}
         CATKIN_DEPENDS
-        roscpp
-        wolf_planner_interface
-        convex_plane_decomposition_msgs
-        convex_plane_decomposition_ros
-        grid_map_sdf
+            roscpp
+            wolf_planner_interface
+            convex_plane_decomposition_msgs
+            convex_plane_decomposition_ros
+            grid_map_sdf
         DEPENDS
-        pinocchio
+            pinocchio
+            ocs2_legged_robot
+            ocs2_sphere_approximation
+            ocs2_centroidal_model
+            ocs2_self_collision
+            ocs2_ros_interfaces
 )
 
 ###########
@@ -74,9 +80,9 @@ add_library(${PROJECT_NAME}
         src/visualization/SphereVisualization.cpp
         src/synchronized_module/PlanarTerrainReceiver.cpp
         src/ConvexRegionSelector.cpp
-        src/PerceptiveLeggedReferenceManager.cpp
-        src/PerceptiveLeggedPrecomputation.cpp
-        src/PerceptiveLeggedInterface.cpp
+        src/PerceptivePlannerReferenceManager.cpp
+        src/PerceptivePlannerPreComputation.cpp
+        src/PerceptivePlannerRobotInterface.cpp
         src/PerceptivePlanner.cpp
         )
 
@@ -108,3 +114,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         FILES_MATCHING PATTERN "*.h"
         )
+
+install(FILES wolf_planner_perceptive_plugins.xml
+DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

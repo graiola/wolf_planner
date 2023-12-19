@@ -1,0 +1,44 @@
+#pragma once
+
+// ROS
+#include <ros/ros.h>
+#include <pluginlib/class_list_macros.h>
+
+#include <wolf_planner_interface/PlannerInterface.h>
+
+#include "wolf_planner_perceptive/visualization/FootPlacementVisualization.h"
+#include "wolf_planner_perceptive/visualization/SphereVisualization.h"
+
+namespace wolf_planner {
+using namespace ocs2;
+using namespace legged_robot;
+
+class PerceptivePlanner : public PlannerInterface {
+
+public:
+
+  PerceptivePlanner() {};
+
+  virtual ~PerceptivePlanner();
+
+  virtual void updateVisualization(const SystemObservation& observation) override;
+
+protected:
+
+  virtual void setupLeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose) override;
+
+  virtual void setupSynchronizedModules() override;
+
+  virtual void setupVisualization() override;
+
+private:
+
+  std::shared_ptr<FootPlacementVisualization> footPlacementVisualization_;
+  std::shared_ptr<SphereVisualization> sphereVisualization_;
+
+};
+
+}  // namespace wolf_planner
+
+PLUGINLIB_EXPORT_CLASS(wolf_planner::PerceptivePlanner, wolf_planner::PlannerInterface)
+

@@ -1,4 +1,4 @@
-#include "wolf_planner_perceptive_interface/visualization/FootPlacementVisualization.h"
+#include "wolf_planner_perceptive/visualization/FootPlacementVisualization.h"
 
 #include <visualization_msgs/MarkerArray.h>
 

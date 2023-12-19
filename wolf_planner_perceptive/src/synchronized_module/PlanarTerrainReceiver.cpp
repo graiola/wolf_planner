@@ -1,4 +1,4 @@
-#include "wolf_planner_perceptive_interface/synchronized_module/PlanarTerrainReceiver.h"
+#include "wolf_planner_perceptive/synchronized_module/PlanarTerrainReceiver.h"
 
 #include <convex_plane_decomposition_ros/MessageConversion.h>
 #include <grid_map_ros/GridMapRosConverter.hpp>

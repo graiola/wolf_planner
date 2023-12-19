@@ -2,12 +2,12 @@
 
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedReferenceManager.h"
+#include "wolf_planner_perceptive/PerceptivePlannerReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-PerceptiveLeggedReferenceManager::PerceptiveLeggedReferenceManager(CentroidalModelInfo info,
+PerceptivePlannerReferenceManager::PerceptivePlannerReferenceManager(CentroidalModelInfo info,
                                                                    std::shared_ptr<GaitSchedule> gaitSchedulePtr,
                                                                    std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
                                                                    std::shared_ptr<ConvexRegionSelector> convexRegionSelectorPtr,
@@ -19,7 +19,7 @@ PerceptiveLeggedReferenceManager::PerceptiveLeggedReferenceManager(CentroidalMod
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()),
       comHeight_(comHeight) {}
 
-void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
+void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
                                                         TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
   const auto timeHorizon = finalTime - initTime;
   modeSchedule = getGaitSchedule()->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
@@ -74,7 +74,7 @@ void PerceptiveLeggedReferenceManager::modifyReferences(scalar_t initTime, scala
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
 }
 
-void PerceptiveLeggedReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
+void PerceptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
                                                                     ModeSchedule& modeSchedule) {
   const auto contactFlagStocks = convexRegionSelectorPtr_->extractContactFlags(modeSchedule.modeSequence);
   feet_array_t<scalar_array_t> liftOffHeightSequence, touchDownHeightSequence;
@@ -93,7 +93,7 @@ void PerceptiveLeggedReferenceManager::updateSwingTrajectoryPlanner(scalar_t ini
   swingTrajectoryPtr_->update(modeSchedule, liftOffHeightSequence, touchDownHeightSequence);
 }
 
-void PerceptiveLeggedReferenceManager::modifyProjections(scalar_t initTime, const vector_t& initState, size_t leg, size_t initIndex,
+void PerceptivePlannerReferenceManager::modifyProjections(scalar_t initTime, const vector_t& initState, size_t leg, size_t initIndex,
                                                          const std::vector<bool>& contactFlagStocks,
                                                          std::vector<convex_plane_decomposition::PlanarTerrainProjection>& projections) {
   if (contactFlagStocks[initIndex]) {
@@ -128,7 +128,7 @@ void PerceptiveLeggedReferenceManager::modifyProjections(scalar_t initTime, cons
   //    std::cerr << std::endl;
 }
 
-std::pair<scalar_array_t, scalar_array_t> PerceptiveLeggedReferenceManager::getHeights(
+std::pair<scalar_array_t, scalar_array_t> PerceptivePlannerReferenceManager::getHeights(
     const std::vector<bool>& contactFlagStocks, const std::vector<convex_plane_decomposition::PlanarTerrainProjection>& projections) {
   scalar_array_t liftOffHeights, touchDownHeights;
   const size_t numPhases = projections.size();
@@ -161,7 +161,7 @@ std::pair<scalar_array_t, scalar_array_t> PerceptiveLeggedReferenceManager::getH
   return {liftOffHeights, touchDownHeights};
 }
 
-contact_flag_t PerceptiveLeggedReferenceManager::getFootPlacementFlags(scalar_t time) const {
+contact_flag_t PerceptivePlannerReferenceManager::getFootPlacementFlags(scalar_t time) const {
   contact_flag_t flag;
   const auto finalTime = convexRegionSelectorPtr_->getInitStandFinalTimes();
   for (int i = 0; i < flag.size(); ++i) {

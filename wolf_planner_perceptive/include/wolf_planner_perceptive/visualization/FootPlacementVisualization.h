@@ -2,8 +2,8 @@
 
 #include <ros/ros.h>
 
-#include "wolf_planner_perceptive_interface/ConvexRegionSelector.h"
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedPrecomputation.h"
+#include "wolf_planner_perceptive/ConvexRegionSelector.h"
+#include "wolf_planner_perceptive/PerceptivePlannerPreComputation.h"
 
 #include <visualization_msgs/Marker.h>
 

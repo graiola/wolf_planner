@@ -1,4 +1,4 @@
-#include "wolf_planner_perceptive_interface/PerceptiveLeggedPrecomputation.h"
+#include "wolf_planner_perceptive/PerceptivePlannerPreComputation.h"
 
 #include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
 
@@ -6,7 +6,7 @@
 namespace ocs2 {
 namespace legged_robot {
 
-PerceptiveLeggedPrecomputation::PerceptiveLeggedPrecomputation(PinocchioInterface pinocchioInterface, const CentroidalModelInfo& info,
+PerceptivePlannerPreComputation::PerceptivePlannerPreComputation(PinocchioInterface pinocchioInterface, const CentroidalModelInfo& info,
                                                                const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings,
                                                                const ConvexRegionSelector& convexRegionSelector)
     : LeggedRobotPreComputation(std::move(pinocchioInterface), info, swingTrajectoryPlanner, std::move(settings)),
@@ -14,12 +14,12 @@ PerceptiveLeggedPrecomputation::PerceptiveLeggedPrecomputation(PinocchioInterfac
   footPlacementConParameters_.resize(info.numThreeDofContacts);
 }
 
-PerceptiveLeggedPrecomputation::PerceptiveLeggedPrecomputation(const PerceptiveLeggedPrecomputation& rhs)
+PerceptivePlannerPreComputation::PerceptivePlannerPreComputation(const PerceptivePlannerPreComputation& rhs)
     : LeggedRobotPreComputation(rhs), convexRegionSelectorPtr_(rhs.convexRegionSelectorPtr_) {
   footPlacementConParameters_.resize(rhs.footPlacementConParameters_.size());
 }
 
-void PerceptiveLeggedPrecomputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
+void PerceptivePlannerPreComputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
   if (!request.containsAny(Request::Cost + Request::Constraint + Request::SoftConstraint)) {
     return;
   }
@@ -48,7 +48,7 @@ void PerceptiveLeggedPrecomputation::request(RequestSet request, scalar_t t, con
   }
 }
 
-std::pair<matrix_t, vector_t> PerceptiveLeggedPrecomputation::getPolygonConstraint(
+std::pair<matrix_t, vector_t> PerceptivePlannerPreComputation::getPolygonConstraint(
     const convex_plane_decomposition::CgalPolygon2d& polygon) const {
   size_t numVertices = polygon.size();
   matrix_t polytopeA = matrix_t::Zero(numVertices, 2);

@@ -5,27 +5,27 @@
 #include <convex_plane_decomposition/PlanarRegion.h>
 #include <convex_plane_decomposition/PolygonTypes.h>
 
-#include "wolf_planner_perceptive_interface/ConvexRegionSelector.h"
-#include "wolf_planner_perceptive_interface/constraint/FootPlacementConstraint.h"
+#include "wolf_planner_perceptive/ConvexRegionSelector.h"
+#include "wolf_planner_perceptive/constraint/FootPlacementConstraint.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
 /** Callback for caching and reference update */
-class PerceptiveLeggedPrecomputation : public LeggedRobotPreComputation {
+class PerceptivePlannerPreComputation : public LeggedRobotPreComputation {
  public:
-  PerceptiveLeggedPrecomputation(PinocchioInterface pinocchioInterface, const CentroidalModelInfo& info,
+  PerceptivePlannerPreComputation(PinocchioInterface pinocchioInterface, const CentroidalModelInfo& info,
                                  const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings,
                                  const ConvexRegionSelector& convexRegionSelector);
-  ~PerceptiveLeggedPrecomputation() override = default;
+  ~PerceptivePlannerPreComputation() override = default;
 
-  PerceptiveLeggedPrecomputation* clone() const override { return new PerceptiveLeggedPrecomputation(*this); }
+  PerceptivePlannerPreComputation* clone() const override { return new PerceptivePlannerPreComputation(*this); }
 
   void request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) override;
 
   const std::vector<FootPlacementConstraint::Parameter>& getFootPlacementConParameters() const { return footPlacementConParameters_; }
 
-  PerceptiveLeggedPrecomputation(const PerceptiveLeggedPrecomputation& rhs);
+  PerceptivePlannerPreComputation(const PerceptivePlannerPreComputation& rhs);
 
  private:
   std::pair<matrix_t, vector_t> getPolygonConstraint(const convex_plane_decomposition::CgalPolygon2d& polygon) const;

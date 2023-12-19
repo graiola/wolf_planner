@@ -1,4 +1,4 @@
-#include "wolf_planner_perceptive_interface/constraint/FootCollisionConstraint.h"
+#include "wolf_planner_perceptive/constraint/FootCollisionConstraint.h"
 
 namespace ocs2 {
 namespace legged_robot {
