@@ -35,8 +35,6 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
   void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState, TargetTrajectories& targetTrajectories,
                         ModeSchedule& modeSchedule) override;
 
-
-  const CentroidalModelInfo info_;
   std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
   scalar_t comHeight_;
 };

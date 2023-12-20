@@ -14,7 +14,6 @@ AdaptivePlannerReferenceManager::AdaptivePlannerReferenceManager(CentroidalModel
                                                              std::shared_ptr<TerrainEstimator> terrainEstimatorPtr,
                                                              scalar_t comHeight)
     : LeggedReferenceManager(info,gaitSchedulePtr,swingTrajectoryPtr),
-      info_(std::move(info)),
       terrainEstimatorPtr_(std::move(terrainEstimatorPtr)),
       comHeight_(comHeight)
 {}

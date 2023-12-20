@@ -14,7 +14,7 @@ AdaptivePlannerRobotInterface::AdaptivePlannerRobotInterface(const std::string &
 {
 }
 
-void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose) {
+void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/, const std::string& referenceFile, bool verbose) {
   auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   scalar_t comHeight = 0;
@@ -26,7 +26,7 @@ void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& tas
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-void AdaptivePlannerRobotInterface::setupPreComputation(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile, bool verbose) {
+void AdaptivePlannerRobotInterface::setupPreComputation(const std::string& /*taskFile*/, const std::string& /*urdfFile*/, const std::string& /*referenceFile*/, bool /*verbose*/) {
   problemPtr_->preComputationPtr = std::make_unique<AdaptivePlannerPreComputation>(
       *pinocchioInterfacePtr_, centroidalModelInfo_,
         *referenceManagerPtr_->getSwingTrajectoryPlanner(),
