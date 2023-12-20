@@ -6,8 +6,12 @@
 
 #include <wolf_planner_interface/PlannerInterface.h>
 
+#include <ocs2_legged_robot_ros/visualization/LeggedRobotVisualizer.h>
+
 #include "wolf_planner_perceptive/visualization/FootPlacementVisualization.h"
 #include "wolf_planner_perceptive/visualization/SphereVisualization.h"
+
+#include "wolf_planner_interface/visualization/LeggedSelfCollisionVisualization.h"
 
 namespace wolf_planner {
 using namespace ocs2;
@@ -31,8 +35,9 @@ protected:
 
   virtual void setupVisualization() override;
 
-private:
-
+  // Visualization
+  std::shared_ptr<LeggedRobotVisualizer> robotVisualizer_;
+  std::shared_ptr<LeggedSelfCollisionVisualization> selfCollisionVisualization_;
   std::shared_ptr<FootPlacementVisualization> footPlacementVisualization_;
   std::shared_ptr<SphereVisualization> sphereVisualization_;
 

@@ -10,12 +10,14 @@ PerceptivePlannerPreComputation::PerceptivePlannerPreComputation(PinocchioInterf
                                                                const SwingTrajectoryPlanner& swingTrajectoryPlanner, ModelSettings settings,
                                                                const ConvexRegionSelector& convexRegionSelector)
     : LeggedRobotPreComputation(std::move(pinocchioInterface), info, swingTrajectoryPlanner, std::move(settings)),
-      convexRegionSelectorPtr_(&convexRegionSelector) {
+      convexRegionSelectorPtr_(&convexRegionSelector)
+{
   footPlacementConParameters_.resize(info.numThreeDofContacts);
 }
 
 PerceptivePlannerPreComputation::PerceptivePlannerPreComputation(const PerceptivePlannerPreComputation& rhs)
-    : LeggedRobotPreComputation(rhs), convexRegionSelectorPtr_(rhs.convexRegionSelectorPtr_) {
+    : LeggedRobotPreComputation(rhs), convexRegionSelectorPtr_(rhs.convexRegionSelectorPtr_)
+{
   footPlacementConParameters_.resize(rhs.footPlacementConParameters_.size());
 }
 
@@ -48,8 +50,7 @@ void PerceptivePlannerPreComputation::request(RequestSet request, scalar_t t, co
   }
 }
 
-std::pair<matrix_t, vector_t> PerceptivePlannerPreComputation::getPolygonConstraint(
-    const convex_plane_decomposition::CgalPolygon2d& polygon) const {
+std::pair<matrix_t, vector_t> PerceptivePlannerPreComputation::getPolygonConstraint(const convex_plane_decomposition::CgalPolygon2d& polygon) const {
   size_t numVertices = polygon.size();
   matrix_t polytopeA = matrix_t::Zero(numVertices, 2);
   vector_t polytopeB = vector_t::Zero(numVertices);

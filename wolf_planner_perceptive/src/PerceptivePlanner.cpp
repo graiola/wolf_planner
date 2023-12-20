@@ -15,9 +15,8 @@
 
 #include <ocs2_sqp/SqpMpc.h>
 
-using namespace wolf_planner;
-using namespace ocs2;
-using namespace legged_robot;
+namespace wolf_planner
+{
 
 PerceptivePlanner::~PerceptivePlanner()
 {
@@ -54,21 +53,22 @@ void PerceptivePlanner::setupSynchronizedModules()
   rosReferenceManager->subscribe(nodeHandle_);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiver);
   mpc_->getSolverPtr()->addSynchronizedModule(planarTerrainReceiver);
+  mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);
 }
 
 void PerceptivePlanner::setupVisualization()
 {
   ros::NodeHandle visualizationNodeHandle(topicPrefix_);
 
-  //robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-  //                                                    leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, topicPrefix_);
-  //
-  //robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
-  //robotVisualizer_->baseName_ = robotBaseName_;
-  //
-  //// Self collision visualizer
-  //selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
+  robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
+                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, topicPrefix_);
 
+  robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
+  robotVisualizer_->baseName_ = robotBaseName_;
+
+  // Self collision visualizer
+  selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
+                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, topicPrefix_);
   // Foot placement visualizer
   footPlacementVisualization_ = std::make_shared<FootPlacementVisualization>(
        *dynamic_cast<PerceptivePlannerReferenceManager&>(*leggedInterface_->getReferenceManagerPtr()).getConvexRegionSelectorPtr(),
@@ -80,10 +80,17 @@ void PerceptivePlanner::setupVisualization()
        *dynamic_cast<PerceptivePlannerRobotInterface&>(*leggedInterface_).getPinocchioSphereInterfacePtr(), visualizationNodeHandle);
 }
 
-void PerceptivePlanner::updateVisualization(const SystemObservation& currentObservation)
+void PerceptivePlanner::updateVisualization(const SystemObservation& observation)
 {
+  // Visualization
+  if(robotVisualizer_ != nullptr)
+    robotVisualizer_->update(observation, mpcMrtInterface_->getPolicy(), mpcMrtInterface_->getCommand());
+  if(selfCollisionVisualization_ != nullptr)
+    selfCollisionVisualization_->update(observation);
   if(footPlacementVisualization_ != nullptr)
-    footPlacementVisualization_->update(currentObservation);
+    footPlacementVisualization_->update(observation);
   if(sphereVisualization_ != nullptr)
-    sphereVisualization_->update(currentObservation);
+    sphereVisualization_->update(observation);
 }
+
+} // namespace wolf_planner

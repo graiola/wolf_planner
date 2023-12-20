@@ -22,7 +22,7 @@ class PlanarTerrainReceiver : public SolverSynchronizedModule {
   void preSolverRun(scalar_t initTime, scalar_t finalTime, const vector_t& currentState,
                     const ReferenceManagerInterface& referenceManager) override;
 
-  void postSolverRun(const PrimalSolution& primalSolution) override{};
+  void postSolverRun(const PrimalSolution& primalSolution) override {};
 
  private:
   void planarTerrainCallback(const convex_plane_decomposition_msgs::PlanarTerrain::ConstPtr& msg);

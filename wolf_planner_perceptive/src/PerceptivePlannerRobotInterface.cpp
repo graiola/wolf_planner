@@ -108,7 +108,8 @@ void PerceptivePlannerRobotInterface::setupReferenceManager(const std::string& t
 }
 
 void PerceptivePlannerRobotInterface::setupPreComputation(const std::string& /*taskFile*/, const std::string& /*urdfFile*/,
-                                                    const std::string& /*referenceFile*/, bool /*verbose*/) {
+                                                    const std::string& /*referenceFile*/, bool /*verbose*/)
+{
   problemPtr_->preComputationPtr = std::make_unique<PerceptivePlannerPreComputation>(
       *pinocchioInterfacePtr_, centroidalModelInfo_, *referenceManagerPtr_->getSwingTrajectoryPlanner(), modelSettings_,
       *dynamic_cast<PerceptivePlannerReferenceManager&>(*referenceManagerPtr_).getConvexRegionSelectorPtr());
