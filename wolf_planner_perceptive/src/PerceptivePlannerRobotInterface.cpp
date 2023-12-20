@@ -14,6 +14,11 @@
 
 namespace wolf_planner {
 
+PerceptivePlannerRobotInterface::PerceptivePlannerRobotInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool useHardFrictionConeConstraint)
+  : LeggedInterface(taskFile,urdfFile,referenceFile,useHardFrictionConeConstraint)
+{
+}
+
 void PerceptivePlannerRobotInterface::setupOptimalControlProblem(const std::string& taskFile, const std::string& urdfFile,
                                                            const std::string& referenceFile, bool verbose) {
   planarTerrainPtr_ = std::make_shared<convex_plane_decomposition::PlanarTerrain>();
@@ -87,6 +92,7 @@ void PerceptivePlannerRobotInterface::setupOptimalControlProblem(const std::stri
 
 void PerceptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/,
                                                       const std::string& referenceFile, bool verbose) {
+
   auto swingTrajectoryPlanner =
       std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
 
@@ -96,9 +102,9 @@ void PerceptivePlannerRobotInterface::setupReferenceManager(const std::string& t
 
   scalar_t comHeight = 0;
   loadData::loadCppDataType(referenceFile, "comHeight", comHeight);
-  referenceManagerPtr_.reset(new PerceptivePlannerReferenceManager(centroidalModelInfo_, loadGaitSchedule(referenceFile, verbose),
+  referenceManagerPtr_ = std::make_shared<PerceptivePlannerReferenceManager>(centroidalModelInfo_, loadGaitSchedule(referenceFile, verbose),
                                                                   std::move(swingTrajectoryPlanner), std::move(convexRegionSelector),
-                                                                  *eeKinematicsPtr, comHeight));
+                                                                  *eeKinematicsPtr, comHeight);
 }
 
 void PerceptivePlannerRobotInterface::setupPreComputation(const std::string& /*taskFile*/, const std::string& /*urdfFile*/,

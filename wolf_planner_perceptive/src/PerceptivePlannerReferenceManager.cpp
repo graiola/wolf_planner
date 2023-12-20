@@ -13,11 +13,11 @@ PerceptivePlannerReferenceManager::PerceptivePlannerReferenceManager(CentroidalM
                                                                    std::shared_ptr<ConvexRegionSelector> convexRegionSelectorPtr,
                                                                    const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                                                    scalar_t comHeight)
-    : info_(std::move(info)),
-      LeggedReferenceManager(info,std::move(gaitSchedulePtr),std::move(swingTrajectoryPtr)),
+    : LeggedReferenceManager(info,gaitSchedulePtr,swingTrajectoryPtr),
       convexRegionSelectorPtr_(std::move(convexRegionSelectorPtr)),
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()),
-      comHeight_(comHeight) {}
+      comHeight_(comHeight)
+{}
 
 void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
                                                         TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
@@ -37,29 +37,29 @@ void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scal
     // Base Orientation
     scalar_t step = 0.3;
     grid_map::Vector3 normalVector;
-    normalVector(0) = 0.0;
-    normalVector(1) = 0.0;
-    normalVector(2) = 1.0;
-    //normalVector(0) = (map.atPosition("smooth_planar", pos + grid_map::Position(-step, 0)) -
-    //                   map.atPosition("smooth_planar", pos + grid_map::Position(step, 0))) /
-    //                  (2 * step);
-    //normalVector(1) = (map.atPosition("smooth_planar", pos + grid_map::Position(0, -step)) -
-    //                   map.atPosition("smooth_planar", pos + grid_map::Position(0, step))) /
-    //                  (2 * step);
-    //normalVector(2) = 1;
-    //normalVector.normalize();
-    //matrix3_t R;
-    //scalar_t z = centroidal_model::getBasePose(state, info_)(3);
-    //R << cos(z), -sin(z), 0,  // clang-format off
-    //     sin(z), cos(z), 0,
-    //     0, 0, 1;  // clang-format on
-    //vector_t v = R.transpose() * normalVector;
-    //centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
-    //
-    //// Base Z Position
-    //centroidal_model::getBasePose(state, info_)(2) =
-    //    map.atPosition("smooth_planar", pos) + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
-    centroidal_model::getBasePose(state, info_)(2) = comHeight_;
+    //normalVector(0) = 0.0;
+    //normalVector(1) = 0.0;
+    //normalVector(2) = 1.0;
+    normalVector(0) = (map.atPosition("smooth_planar", pos + grid_map::Position(-step, 0)) -
+                       map.atPosition("smooth_planar", pos + grid_map::Position(step, 0))) /
+                      (2 * step);
+    normalVector(1) = (map.atPosition("smooth_planar", pos + grid_map::Position(0, -step)) -
+                       map.atPosition("smooth_planar", pos + grid_map::Position(0, step))) /
+                      (2 * step);
+    normalVector(2) = 1;
+    normalVector.normalize();
+    matrix3_t R;
+    scalar_t z = centroidal_model::getBasePose(state, info_)(3);
+    R << cos(z), -sin(z), 0,  // clang-format off
+         sin(z), cos(z), 0,
+         0, 0, 1;  // clang-format on
+    vector_t v = R.transpose() * normalVector;
+    centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
+
+    // Base Z Position
+    centroidal_model::getBasePose(state, info_)(2) =
+        map.atPosition("smooth_planar", pos) + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
+    //centroidal_model::getBasePose(state, info_)(2) = comHeight_;
 
     newTargetTrajectories.timeTrajectory.push_back(time);
     newTargetTrajectories.stateTrajectory.push_back(state);

@@ -33,12 +33,9 @@ class PerceptivePlannerReferenceManager : public LeggedReferenceManager {
   std::pair<scalar_array_t, scalar_array_t> getHeights(const std::vector<bool>& contactFlagStocks,
                                                        const std::vector<convex_plane_decomposition::PlanarTerrainProjection>& projections);
 
-  const CentroidalModelInfo info_;
   feet_array_t<vector3_t> lastLiftoffPos_;
-
   std::shared_ptr<ConvexRegionSelector> convexRegionSelectorPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
-
   scalar_t comHeight_;
 };
 

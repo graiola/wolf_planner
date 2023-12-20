@@ -11,16 +11,13 @@ using namespace legged_robot;
 
 class PerceptivePlannerRobotInterface : public LeggedInterface {
  public:
-  using LeggedInterface::LeggedInterface;
+  PerceptivePlannerRobotInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                  bool useHardFrictionConeConstraint = true);
 
-  void setupOptimalControlProblem(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+  ~PerceptivePlannerRobotInterface() override = default;
+
+  virtual void setupOptimalControlProblem(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                   bool verbose) override;
-
-  void setupReferenceManager(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                             bool verbose) override;
-
-  void setupPreComputation(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
-                           bool verbose) override;
 
   std::shared_ptr<grid_map::SignedDistanceField> getSignedDistanceFieldPtr() const { return signedDistanceFieldPtr_; }
 
@@ -31,6 +28,13 @@ class PerceptivePlannerRobotInterface : public LeggedInterface {
   size_t getNumVertices() const { return numVertices_; }
 
  protected:
+
+  virtual void setupReferenceManager(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                             bool verbose) override;
+
+  virtual void setupPreComputation(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+                           bool verbose) override;
+
   size_t numVertices_ = 16;
 
   std::shared_ptr<convex_plane_decomposition::PlanarTerrain> planarTerrainPtr_;
