@@ -30,8 +30,9 @@ class AdaptivePlannerPreComputation : public LeggedRobotPreComputation {
   std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() { return frictionConeConConfigs_; }
   const std::vector<FrictionConeConstraint::Config>& getFrictionConeConstraintConfigs() const { return frictionConeConConfigs_; }
 
- protected:
   AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& other);
+
+ protected:
 
   const TerrainEstimator* terrainEstimatorPtr_;
 
