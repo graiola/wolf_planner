@@ -64,8 +64,8 @@ contact_flag_t LeggedReferenceManager::getContactFlags(scalar_t time) const {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-void LeggedReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
-                                                     TargetTrajectories& targetTrajectories, ModeSchedule& modeSchedule) {
+void LeggedReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& /*initState*/,
+                                                     TargetTrajectories& /*targetTrajectories*/, ModeSchedule& modeSchedule) {
   const auto timeHorizon = finalTime - initTime;
   modeSchedule = gaitSchedulePtr_->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
 
