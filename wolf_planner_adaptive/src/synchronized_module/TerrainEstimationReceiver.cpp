@@ -1,4 +1,4 @@
-#include "wolf_planner_adaptive/synchronizer/TerrainEstimationReceiver.h"
+#include "wolf_planner_adaptive/synchronized_module/TerrainEstimationReceiver.h"
 
 namespace wolf_planner {
 
