@@ -94,3 +94,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(FILES wolf_planner_adaptive_plugins.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    PATTERN ".svn" EXCLUDE
+  )

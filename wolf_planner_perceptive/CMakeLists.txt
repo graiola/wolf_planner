@@ -117,3 +117,13 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(FILES wolf_planner_perceptive_plugins.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+
+install(DIRECTORY launch/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+    PATTERN ".svn" EXCLUDE
+  )
+
+install(DIRECTORY config/
+    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/config
+    PATTERN ".svn" EXCLUDE
+  )

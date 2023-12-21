@@ -87,6 +87,7 @@ bool WolfPlannerRos::init()
 
   planner_->setupMrt();
 
+  ROS_INFO_STREAM("[WolfPlannerRos] Planner type is: "<< plannerType);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot model is: "<< robotModel);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot base name is: "<< robotBaseName);

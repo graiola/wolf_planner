@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
-project(wolf_planner_default)
+project(wolf_planner_adaptive)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         pluginlib
+        wolf_msgs
         wolf_planner_interface
         )
 
@@ -29,6 +30,7 @@ catkin_package(
         CATKIN_DEPENDS
             roscpp
             pluginlib
+            wolf_msgs
             wolf_planner_interface
         DEPENDS
             pinocchio
@@ -56,7 +58,13 @@ link_directories(
 )
 
 add_library(${PROJECT_NAME}
-        src/DefaultPlanner.cpp
+        src/constraint/FrictionConeConstraint.cpp
+        src/synchronized_module/TerrainEstimationReceiver.cpp
+        src/AdaptivePlanner.cpp
+        src/TerrainEstimator.cpp
+        src/AdaptivePlannerReferenceManager.cpp
+        src/AdaptivePlannerRobotInterface.cpp
+        src/AdaptivePlannerPreComputation.cpp
         )
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
@@ -84,10 +92,5 @@ install(DIRECTORY include/${PROJECT_NAME}/
         FILES_MATCHING PATTERN "*.h"
         )
 
-install(FILES wolf_planner_default_plugins.xml
+install(FILES wolf_planner_adaptive_plugins.xml
 DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-
-install(DIRECTORY launch/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-    PATTERN ".svn" EXCLUDE
-  )

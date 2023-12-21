@@ -14,10 +14,10 @@
     <param name="wolf_planner/robotName"       value="$(arg robot_name)"/>
     <param name="wolf_planner/robotModel"      value="$(arg robot_model)"/>
     <param name="wolf_planner/plannerType"     value="$(arg planner_type)"/>
-    <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/$(arg robot_model)/$(arg robot_model).urdf"/>
-    <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/$(arg robot_model)/task.info"/>
-    <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/$(arg robot_model)/reference.info"/>
-    <param name="wolf_planner/gaitCommandFile" value="$(find wolf_planner)/config/$(arg robot_model)/gait.info"/>
+    <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/robots/$(arg robot_model)/$(arg robot_model).urdf"/>
+    <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/robots/$(arg robot_model)/task.info"/>
+    <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/robots/$(arg robot_model)/reference.info"/>
+    <param name="wolf_planner/gaitCommandFile" value="$(find wolf_planner)/config/robots/$(arg robot_model)/gait.info"/>
 
     <!-- Twist mux -->
     <include file="$(find twist_mux)/launch/twist_mux.launch">
@@ -34,8 +34,8 @@
     <node pkg="wolf_planner" type="wolf_target_node"  name="wolf_target_node"  output="screen"/>
     <node pkg="wolf_planner" type="wolf_planner_node" name="wolf_planner_node" output="screen"/>
 
-    <!-- Elevation Mapping -->
-    <include file="$(find wolf_planner)/launch/include/elevation_mapping.launch" if="$(eval planner_type == 'perceptive')">
+    <!-- Specific planner launch file -->
+    <include file="$(eval find('wolf_planner_'+arg('planner_type')) + '/launch/planner.launch')">
         <arg name="robot_name" value="$(arg robot_name)"/>
     </include>
 
