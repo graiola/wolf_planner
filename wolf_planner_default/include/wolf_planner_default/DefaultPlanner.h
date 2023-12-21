@@ -12,8 +12,6 @@
 #include "wolf_planner_interface/visualization/LeggedSelfCollisionVisualization.h"
 #include "wolf_planner_interface/LeggedReferenceManager.h"
 
-#define WORLD_FRAME_NAME "world"
-
 namespace wolf_planner {
 using namespace ocs2;
 using namespace legged_robot;

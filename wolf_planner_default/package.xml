@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-    <name>wolf_planner_interface</name>
+    <name>wolf_planner_default</name>
     <version>0.0.1</version>
-    <description>Legged interface base on OCS2</description>
+    <description>Default planner based on OCS2</description>
     <maintainer email="gennaro.raiola@gmail.com">Gennaro Raiola</maintainer>
 
     <license>BSD</license>
@@ -13,15 +13,17 @@
 
     <depend>roscpp</depend>
     <depend>pluginlib</depend>
-    <depend>wolf_msgs</depend>
-    <depend>wolf_controller_utils</depend>
+    <depend>wolf_planner_interface</depend>
 
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
 
     <depend>ocs2_legged_robot</depend>
     <depend>ocs2_legged_robot_ros</depend>
-    <depend>ocs2_self_collision</depend>
-    <depend>ocs2_self_collision_visualization</depend>
+
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+      <wolf_planner_interface plugin="${prefix}/wolf_planner_default_plugins.xml"/>
+    </export>
 
 </package>

@@ -2,20 +2,15 @@
 #include <pinocchio/algorithm/frames.hpp>
 #include <pinocchio/algorithm/kinematics.hpp>
 
-#include "wolf_planner_interface/DefaultPlanner.h"
-
 #include <ocs2_legged_robot_ros/gait/GaitReceiver.h>
+#include <ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h>
 #include <ocs2_core/thread_support/ExecuteAndSleep.h>
 #include <ocs2_core/thread_support/SetThreadPriority.h>
-#include <ocs2_msgs/mpc_observation.h>
-#include <ocs2_ros_interfaces/common/RosMsgConversions.h>
-#include <ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h>
 #include <ocs2_sqp/SqpMpc.h>
-#include <ocs2_centroidal_model/ModelHelperFunctions.h>
 
-#include <angles/angles.h>
+#include "wolf_planner_default/DefaultPlanner.h"
 
-#include <wolf_controller_utils/geometry.h>
+#include <ocs2_sqp/SqpMpc.h>
 
 namespace wolf_planner
 {
