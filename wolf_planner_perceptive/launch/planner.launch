@@ -7,6 +7,7 @@
         <param name="odom_topic"      value="/odometry/robot" />
         <param name="pose_topic"      value="/pose" />
         <param name="tf_prefix"       value="$(arg robot_name)" />
+        <param name="stamped"         value="true" />
     </node>
 
     <!-- Elevation mapping node -->
