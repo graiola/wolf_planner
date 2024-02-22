@@ -21,7 +21,7 @@
     args="-r $(arg robot_name) -d /tmp/wolf_planner"/> -->
 
     <group if="$(eval robot_name != '')">
-         <include file="$(find wolf_planner)/launch/include/launch_planner_ns.launch" ns="$(arg robot_name)">
+         <include file="$(find wolf_planner)/launch/include/launch_planner_ns.xml" ns="$(arg robot_name)">
              <arg name="robot_name"      value="$(arg robot_name)"/>
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
@@ -30,7 +30,7 @@
     </group>
 
     <group if="$(eval robot_name == '')">
-         <include file="$(find wolf_planner)/launch/include/launch_planner_ns.launch">
+         <include file="$(find wolf_planner)/launch/include/launch_planner_ns.xml">
              <arg name="robot_name"      value="$(arg robot_name)"/>
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
