@@ -39,7 +39,7 @@
     </plugin>
     <plugin filename="libgazebo_ros_p3d.so" name="ground_truth">
       <robotNamespace></robotNamespace>
-      <bodyName>trunk</bodyName>
+      <bodyName>base_link</bodyName>
       <topicName>ground_truth</topicName>
       <frameName>world</frameName>
       <xyzOffsets>0 0 0</xyzOffsets>
@@ -53,9 +53,9 @@
   <joint name="floating_base_joint" type="floating">
     <origin rpy="0 0 0" xyz="0 0 0"/>
     <parent link="world"/>
-    <child link="trunk"/>
+    <child link="base_link"/>
   </joint>
-  <link name="trunk">
+  <link name="base_link">
     <visual>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry>
@@ -82,7 +82,7 @@
     </inertial>
   </link>
   <joint name="imu_joint" type="fixed">
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="trunk_imu"/>
     <origin rpy="0 0 0" xyz="-0.01592 -0.06659 -0.00617"/>
   </joint>
@@ -107,7 +107,7 @@
     </collision>
   </link>
   <joint name="lidar_cage_to_lidar" type="fixed">
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="rslidar"/>
     <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.05"/>
   </joint>
@@ -120,7 +120,7 @@
   </link>
   <joint name="rf_haa_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0.1881 -0.04675 0"/>
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="rf_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
@@ -242,7 +242,7 @@
   </link>
   <joint name="lf_haa_joint" type="revolute">
     <origin rpy="0 0 0" xyz="0.1881 0.04675 0"/>
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="lf_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
@@ -364,7 +364,7 @@
   </link>
   <joint name="rh_haa_joint" type="revolute">
     <origin rpy="0 0 0" xyz="-0.1881 -0.04675 0"/>
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="rh_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
@@ -486,7 +486,7 @@
   </link>
   <joint name="lh_haa_joint" type="revolute">
     <origin rpy="0 0 0" xyz="-0.1881 0.04675 0"/>
-    <parent link="trunk"/>
+    <parent link="base_link"/>
     <child link="lh_hip"/>
     <axis xyz="1 0 0"/>
     <dynamics damping="0.01" friction="0.2"/>
