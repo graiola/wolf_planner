@@ -25,9 +25,10 @@ void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scal
   modeSchedule = getGaitSchedule()->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
 
   TargetTrajectories newTargetTrajectories;
-  int nodeNum = 11;
+
+  size_t nodeNum = targetTrajectories.timeTrajectory.size();
   for (size_t i = 0; i < nodeNum; ++i) {
-    scalar_t time = initTime + static_cast<double>(i) * timeHorizon / (nodeNum - 1);
+    scalar_t time  = targetTrajectories.timeTrajectory[i];
     vector_t state = targetTrajectories.getDesiredState(time);
     vector_t input = targetTrajectories.getDesiredState(time);
 
@@ -37,16 +38,28 @@ void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scal
     // Base Orientation
     scalar_t step = 0.3;
     grid_map::Vector3 normalVector;
-    //normalVector(0) = 0.0;
-    //normalVector(1) = 0.0;
-    //normalVector(2) = 1.0;
-    normalVector(0) = (map.atPosition("smooth_planar", pos + grid_map::Position(-step, 0)) -
-                       map.atPosition("smooth_planar", pos + grid_map::Position(step, 0))) /
-                      (2 * step);
-    normalVector(1) = (map.atPosition("smooth_planar", pos + grid_map::Position(0, -step)) -
-                       map.atPosition("smooth_planar", pos + grid_map::Position(0, step))) /
-                      (2 * step);
-    normalVector(2) = 1;
+    try
+    {
+      auto pos_min_x = pos + grid_map::Position(-step, 0);
+      auto pos_max_x = pos + grid_map::Position( step, 0);
+      auto pos_min_y = pos + grid_map::Position(0, -step);
+      auto pos_max_y = pos + grid_map::Position(0,  step);
+
+      normalVector(0) = (map.atPosition("smooth_planar", pos_min_x , grid_map::InterpolationMethods::INTER_CUBIC_CONVOLUTION) -
+                         map.atPosition("smooth_planar", pos_max_x , grid_map::InterpolationMethods::INTER_CUBIC_CONVOLUTION) /
+                        (2 * step));
+      normalVector(1) = (map.atPosition("smooth_planar", pos_min_y , grid_map::InterpolationMethods::INTER_CUBIC_CONVOLUTION) -
+                         map.atPosition("smooth_planar", pos_max_y , grid_map::InterpolationMethods::INTER_CUBIC_CONVOLUTION) /
+                        (2 * step));
+      normalVector(2) = 1;
+    }
+    catch(...)
+    {
+      normalVector(0) = 0.0;
+      normalVector(1) = 0.0;
+      normalVector(2) = 1.0;
+    }
+
     normalVector.normalize();
     matrix3_t R;
     scalar_t z = centroidal_model::getBasePose(state, info_)(3);
@@ -57,9 +70,14 @@ void PerceptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scal
     centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
 
     // Base Z Position
-    centroidal_model::getBasePose(state, info_)(2) =
-        map.atPosition("smooth_planar", pos) + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
-    //centroidal_model::getBasePose(state, info_)(2) = comHeight_;
+    try
+    {
+      centroidal_model::getBasePose(state, info_)(2) = map.atPosition("smooth_planar", pos, grid_map::InterpolationMethods::INTER_CUBIC_CONVOLUTION) + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
+    }
+    catch(...)
+    {
+      centroidal_model::getBasePose(state, info_)(2) = comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
+    }
 
     newTargetTrajectories.timeTrajectory.push_back(time);
     newTargetTrajectories.stateTrajectory.push_back(state);
@@ -98,7 +116,7 @@ void PerceptivePlannerReferenceManager::modifyProjections(scalar_t initTime, con
                                                          std::vector<convex_plane_decomposition::PlanarTerrainProjection>& projections) {
   if (contactFlagStocks[initIndex]) {
     lastLiftoffPos_[leg] = endEffectorKinematicsPtr_->getPosition(initState)[leg];
-    lastLiftoffPos_[leg].z() -= 0.02;
+    //lastLiftoffPos_[leg].z() -= 0.02;
     for (int i = initIndex; i < projections.size(); ++i) {
       if (!contactFlagStocks[i]) {
         break;

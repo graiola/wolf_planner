@@ -85,9 +85,9 @@ void PerceptivePlannerRobotInterface::setupOptimalControlProblem(const std::stri
 
   std::unique_ptr<SphereSdfConstraint> sphereSdfConstraint(new SphereSdfConstraint(*sphereKinematicsPtr, signedDistanceFieldPtr_));
 
-  //  std::unique_ptr<PenaltyBase> penalty(new RelaxedBarrierPenalty(RelaxedBarrierPenalty::Config(1e-3, 1e-3)));
-  //  problemPtr_->stateSoftConstraintPtr->add(
-  //      "sdfConstraint", std::unique_ptr<StateCost>(new StateSoftConstraint(std::move(sphereSdfConstraint), std::move(penalty))));
+  std::unique_ptr<PenaltyBase> penalty(new RelaxedBarrierPenalty(RelaxedBarrierPenalty::Config(1e-3, 1e-3)));
+  problemPtr_->stateSoftConstraintPtr->add(
+      "sdfConstraint", std::unique_ptr<StateCost>(new StateSoftConstraint(std::move(sphereSdfConstraint), std::move(penalty))));
 }
 
 void PerceptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/,

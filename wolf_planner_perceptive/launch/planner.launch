@@ -13,6 +13,7 @@
     <!-- Elevation mapping node -->
     <node pkg="elevation_mapping" type="elevation_mapping" name="elevation_mapping" output="screen">
         <rosparam command="load" file="$(find wolf_planner_perceptive)/config/elevation_mapping.yaml"/>
+        <rosparam command="load" file="$(find wolf_planner_perceptive)/config/postprocessor_pipeline.yaml" />
     </node>
 
     <include file="$(find convex_plane_decomposition_ros)/launch/convex_plane_decomposition.launch">

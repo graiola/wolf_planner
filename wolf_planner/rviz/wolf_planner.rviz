@@ -4,7 +4,8 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Status1
+        - /MarkerArray2/Namespaces1
+        - /TF1
       Splitter Ratio: 0.5
     Tree Height: 254
   - Class: rviz/Selection
@@ -330,6 +331,7 @@ Visualization Manager:
       Namespaces:
         CoM Trajectory: true
         EE Trajectories: true
+        Future footholds: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -395,6 +397,338 @@ Visualization Manager:
       Unreliable: false
       Use ColorMap: true
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /wolf_planner/foot_placement
+      Name: MarkerArray
+      Namespaces:
+        Convex Regions: true
+        Nominal Footholds: true
+        Projections: true
+      Queue Size: 100
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Filter (blacklist): ""
+      Filter (whitelist): ""
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        d435_bottom_screw_frame:
+          Value: false
+        d435_color_frame:
+          Value: false
+        d435_color_optical_frame:
+          Value: false
+        d435_depth_frame:
+          Value: false
+        d435_depth_optical_frame:
+          Value: false
+        d435_left_ir_frame:
+          Value: false
+        d435_left_ir_optical_frame:
+          Value: false
+        d435_link:
+          Value: false
+        d435_right_ir_frame:
+          Value: false
+        d435_right_ir_optical_frame:
+          Value: false
+        front_rail:
+          Value: false
+        lf_foot:
+          Value: false
+        lf_hip:
+          Value: false
+        lf_lowerleg:
+          Value: false
+        lf_upperleg:
+          Value: false
+        lh_foot:
+          Value: false
+        lh_hip:
+          Value: false
+        lh_lowerleg:
+          Value: false
+        lh_upperleg:
+          Value: false
+        lidar_mount:
+          Value: false
+        odom:
+          Value: true
+        pack_mount:
+          Value: false
+        rear_rail:
+          Value: false
+        rf_foot:
+          Value: false
+        rf_hip:
+          Value: false
+        rf_lowerleg:
+          Value: false
+        rf_upperleg:
+          Value: false
+        rh_foot:
+          Value: false
+        rh_hip:
+          Value: false
+        rh_lowerleg:
+          Value: false
+        rh_upperleg:
+          Value: false
+        t265_accel_frame:
+          Value: false
+        t265_fisheye1_frame:
+          Value: false
+        t265_fisheye1_optical_frame:
+          Value: false
+        t265_fisheye2_frame:
+          Value: false
+        t265_fisheye2_optical_frame:
+          Value: false
+        t265_gyro_frame:
+          Value: false
+        t265_link:
+          Value: false
+        t265_odom_frame:
+          Value: false
+        t265_pose_frame:
+          Value: false
+        trunk_imu:
+          Value: false
+        velodyne:
+          Value: false
+        velodyne_base_link:
+          Value: false
+        velodyne_mount:
+          Value: false
+        wolf_planner/base_link:
+          Value: false
+        wolf_planner/d435_bottom_screw_frame:
+          Value: false
+        wolf_planner/d435_color_frame:
+          Value: false
+        wolf_planner/d435_color_optical_frame:
+          Value: false
+        wolf_planner/d435_depth_frame:
+          Value: false
+        wolf_planner/d435_depth_optical_frame:
+          Value: false
+        wolf_planner/d435_left_ir_frame:
+          Value: false
+        wolf_planner/d435_left_ir_optical_frame:
+          Value: false
+        wolf_planner/d435_link:
+          Value: false
+        wolf_planner/d435_right_ir_frame:
+          Value: false
+        wolf_planner/d435_right_ir_optical_frame:
+          Value: false
+        wolf_planner/front_rail:
+          Value: false
+        wolf_planner/lf_foot:
+          Value: false
+        wolf_planner/lf_hip:
+          Value: false
+        wolf_planner/lf_lowerleg:
+          Value: false
+        wolf_planner/lf_upperleg:
+          Value: false
+        wolf_planner/lh_foot:
+          Value: false
+        wolf_planner/lh_hip:
+          Value: false
+        wolf_planner/lh_lowerleg:
+          Value: false
+        wolf_planner/lh_upperleg:
+          Value: false
+        wolf_planner/lidar_mount:
+          Value: false
+        wolf_planner/pack_mount:
+          Value: false
+        wolf_planner/rear_rail:
+          Value: false
+        wolf_planner/rf_foot:
+          Value: false
+        wolf_planner/rf_hip:
+          Value: false
+        wolf_planner/rf_lowerleg:
+          Value: false
+        wolf_planner/rf_upperleg:
+          Value: false
+        wolf_planner/rh_foot:
+          Value: false
+        wolf_planner/rh_hip:
+          Value: false
+        wolf_planner/rh_lowerleg:
+          Value: false
+        wolf_planner/rh_upperleg:
+          Value: false
+        wolf_planner/t265_accel_frame:
+          Value: false
+        wolf_planner/t265_fisheye1_frame:
+          Value: false
+        wolf_planner/t265_fisheye1_optical_frame:
+          Value: false
+        wolf_planner/t265_fisheye2_frame:
+          Value: false
+        wolf_planner/t265_fisheye2_optical_frame:
+          Value: false
+        wolf_planner/t265_gyro_frame:
+          Value: false
+        wolf_planner/t265_link:
+          Value: false
+        wolf_planner/t265_odom_frame:
+          Value: false
+        wolf_planner/t265_pose_frame:
+          Value: false
+        wolf_planner/trunk_imu:
+          Value: false
+        wolf_planner/velodyne:
+          Value: false
+        wolf_planner/velodyne_base_link:
+          Value: false
+        wolf_planner/velodyne_mount:
+          Value: false
+        wolf_planner/world:
+          Value: false
+        world:
+          Value: false
+      Marker Alpha: 1
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        odom:
+          base_footprint:
+            base_link:
+              front_rail:
+                d435_bottom_screw_frame:
+                  d435_link:
+                    d435_depth_frame:
+                      d435_color_frame:
+                        d435_color_optical_frame:
+                          {}
+                      d435_depth_optical_frame:
+                        {}
+                      d435_left_ir_frame:
+                        d435_left_ir_optical_frame:
+                          {}
+                      d435_right_ir_frame:
+                        d435_right_ir_optical_frame:
+                          {}
+                t265_odom_frame:
+                  t265_pose_frame:
+                    t265_link:
+                      t265_accel_frame:
+                        {}
+                      t265_fisheye1_frame:
+                        t265_fisheye1_optical_frame:
+                          {}
+                      t265_fisheye2_frame:
+                        t265_fisheye2_optical_frame:
+                          {}
+                      t265_gyro_frame:
+                        {}
+              lf_hip:
+                lf_upperleg:
+                  lf_lowerleg:
+                    lf_foot:
+                      {}
+              lh_hip:
+                lh_upperleg:
+                  lh_lowerleg:
+                    lh_foot:
+                      {}
+              pack_mount:
+                lidar_mount:
+                  velodyne_mount:
+                    velodyne_base_link:
+                      velodyne:
+                        {}
+              rear_rail:
+                {}
+              rf_hip:
+                rf_upperleg:
+                  rf_lowerleg:
+                    rf_foot:
+                      {}
+              rh_hip:
+                rh_upperleg:
+                  rh_lowerleg:
+                    rh_foot:
+                      {}
+              trunk_imu:
+                {}
+            world:
+              wolf_planner/world:
+                wolf_planner/base_link:
+                  wolf_planner/front_rail:
+                    wolf_planner/d435_bottom_screw_frame:
+                      wolf_planner/d435_link:
+                        wolf_planner/d435_depth_frame:
+                          wolf_planner/d435_color_frame:
+                            wolf_planner/d435_color_optical_frame:
+                              {}
+                          wolf_planner/d435_depth_optical_frame:
+                            {}
+                          wolf_planner/d435_left_ir_frame:
+                            wolf_planner/d435_left_ir_optical_frame:
+                              {}
+                          wolf_planner/d435_right_ir_frame:
+                            wolf_planner/d435_right_ir_optical_frame:
+                              {}
+                    wolf_planner/t265_odom_frame:
+                      wolf_planner/t265_pose_frame:
+                        wolf_planner/t265_link:
+                          wolf_planner/t265_accel_frame:
+                            {}
+                          wolf_planner/t265_fisheye1_frame:
+                            wolf_planner/t265_fisheye1_optical_frame:
+                              {}
+                          wolf_planner/t265_fisheye2_frame:
+                            wolf_planner/t265_fisheye2_optical_frame:
+                              {}
+                          wolf_planner/t265_gyro_frame:
+                            {}
+                  wolf_planner/lf_hip:
+                    wolf_planner/lf_upperleg:
+                      wolf_planner/lf_lowerleg:
+                        wolf_planner/lf_foot:
+                          {}
+                  wolf_planner/lh_hip:
+                    wolf_planner/lh_upperleg:
+                      wolf_planner/lh_lowerleg:
+                        wolf_planner/lh_foot:
+                          {}
+                  wolf_planner/pack_mount:
+                    wolf_planner/lidar_mount:
+                      wolf_planner/velodyne_mount:
+                        wolf_planner/velodyne_base_link:
+                          wolf_planner/velodyne:
+                            {}
+                  wolf_planner/rear_rail:
+                    {}
+                  wolf_planner/rf_hip:
+                    wolf_planner/rf_upperleg:
+                      wolf_planner/rf_lowerleg:
+                        wolf_planner/rf_foot:
+                          {}
+                  wolf_planner/rh_hip:
+                    wolf_planner/rh_upperleg:
+                      wolf_planner/rh_lowerleg:
+                        wolf_planner/rh_foot:
+                          {}
+                  wolf_planner/trunk_imu:
+                    {}
+      Update Interval: 0
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -423,7 +757,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 4.8765363693237305
+      Distance: 3.113318920135498
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -431,17 +765,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0.1437424123287201
-        Y: 0.07103270292282104
-        Z: -0.016817504540085793
+        X: 0.47854214906692505
+        Y: 0.33911755681037903
+        Z: -0.17352843284606934
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.43039828538894653
+      Pitch: 0.4053981304168701
       Target Frame: <Fixed Frame>
-      Yaw: 4.698580741882324
+      Yaw: 5.128598213195801
     Saved: ~
 Window Geometry:
   Displays:

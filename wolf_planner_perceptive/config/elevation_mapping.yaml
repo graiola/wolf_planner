@@ -1,7 +1,7 @@
 # Robot.
-map_frame_id:                               world
+map_frame_id:                               odom
 robot_base_frame_id:                        base_footprint
-robot_pose_with_covariance_topic:           /pose
+robot_pose_with_covariance_topic:           "/pose"
 robot_pose_cache_size:                      200
 input_sources:
   front: # A name to identify the input source
@@ -10,7 +10,15 @@ input_sources:
     queue_size: 1
     publish_on_update: true # Wheter to publish the elevation map after a callback from this source.
     sensor_processor:
-      type: perfect
+      type: structured_light
+      cutoff_min_depth: 0.2
+      cutoff_max_depth: 3.25
+      normal_factor_a: 0.000611
+      normal_factor_b: 0.003587
+      normal_factor_c: 0.3515
+      normal_factor_d: 0
+      normal_factor_e: 1
+      lateral_factor: 0.01576
 track_point_frame_id:                       base_footprint
 track_point_x:                              0.0
 track_point_y:                              0.0
@@ -44,4 +52,4 @@ length_in_x_init_submap:                    1.6
 length_in_y_init_submap:                    1.6
 init_submap_height_offset:                  0.01
 init_submap_variance:                       0.001
-target_frame_init_submap:                   base_footprint
+target_frame_init_submap:                   odom
