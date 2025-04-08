@@ -36,5 +36,13 @@ void TerrainEstimator::setTerrainCenter(const vector3_t& terrainCenter)
   terrainCenter_ = terrainCenter;
 }
 
+scalar_t TerrainEstimator::getTerrainHeightAt(scalar_t x, scalar_t y) const
+{
+  const auto normal = getTerrainNormal();
+  const auto center = getTerrainCenter();
+
+  return center.z() - (normal.x() * (x - center.x()) + normal.y() * (y - center.y())) / normal.z();
+}
+
 }  // namespace legged_robot
 }  // namespace ocs2

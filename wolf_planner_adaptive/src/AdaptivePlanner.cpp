@@ -12,6 +12,7 @@
 #include "wolf_planner_adaptive/AdaptivePlannerRobotInterface.h"
 #include "wolf_planner_adaptive/AdaptivePlannerReferenceManager.h"
 #include "wolf_planner_adaptive/synchronized_module/TerrainEstimationReceiver.h"
+#include "wolf_planner_adaptive/synchronized_module/ContactForcesReceiver.h"
 
 namespace wolf_planner
 {
@@ -44,12 +45,17 @@ void AdaptivePlanner::setupSynchronizedModules()
                                                                                std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getTerrainEstimator(),
                                                                                robotName_);
 
+  auto contactForcesReceiver = std::make_shared<ContactForcesReceiver>(nodeHandle_,
+                                                                       std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getContactForcesEstimator(),
+                                                                       robotName_);
+
   // ROS ReferenceManager
   auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix_, leggedInterface_->getReferenceManagerPtr());
 
   rosReferenceManager->subscribe(nodeHandle_);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiver);
   mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiver);
+  mpc_->getSolverPtr()->addSynchronizedModule(contactForcesReceiver);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);
 }
 

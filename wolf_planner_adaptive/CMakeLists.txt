@@ -60,8 +60,10 @@ link_directories(
 add_library(${PROJECT_NAME}
         src/constraint/FrictionConeConstraint.cpp
         src/synchronized_module/TerrainEstimationReceiver.cpp
+        src/synchronized_module/ContactForcesReceiver.cpp
         src/AdaptivePlanner.cpp
         src/TerrainEstimator.cpp
+        src/ContactForcesEstimator.cpp
         src/AdaptivePlannerReferenceManager.cpp
         src/AdaptivePlannerRobotInterface.cpp
         src/AdaptivePlannerPreComputation.cpp

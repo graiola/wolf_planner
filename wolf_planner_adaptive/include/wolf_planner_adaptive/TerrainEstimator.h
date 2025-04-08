@@ -20,6 +20,8 @@ class TerrainEstimator {
 
   const vector3_t& getTerrainCenter() const;
 
+  scalar_t getTerrainHeightAt(scalar_t x, scalar_t y) const;
+
 private:
 
   vector3_t terrainNormal_;
