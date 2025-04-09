@@ -22,12 +22,14 @@ void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& tas
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   auto contactForcesEstimator = std::make_unique<ContactForcesEstimator>();
   scalar_t comHeight = 0;
+  scalar_t stepReflexHeight = 0;
   loadData::loadCppDataType(referenceFile, "comHeight", comHeight);
+  loadData::loadCppDataType(referenceFile, "stepReflexHeight", stepReflexHeight);
 
   std::unique_ptr<EndEffectorKinematics<scalar_t>> eeKinematicsPtr = getEeKinematicsPtr({modelSettings_.contactNames3DoF}, "all_feet");
 
   referenceManagerPtr_ = std::make_shared<AdaptivePlannerReferenceManager>(*pinocchioInterfacePtr_,centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
-                                                                           std::move(terrainEstimator),std::move(contactForcesEstimator),*eeKinematicsPtr,comHeight,modelSettings_.contactNames3DoF);
+                                                                           std::move(terrainEstimator),std::move(contactForcesEstimator),*eeKinematicsPtr,comHeight,stepReflexHeight,modelSettings_.contactNames3DoF);
 }
 
 /******************************************************************************************************/

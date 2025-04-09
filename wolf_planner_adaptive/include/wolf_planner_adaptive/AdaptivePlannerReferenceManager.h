@@ -32,6 +32,7 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
                                   std::shared_ptr<ContactForcesEstimator> contactForcesEstimator,
                                   const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                   scalar_t comHeight,
+                                  scalar_t stepReflexHeight,
                                   const std::vector<std::string>& contactFrameNames);
 
   ~AdaptivePlannerReferenceManager() override = default;
@@ -50,8 +51,6 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
   void triggerStepReflex(size_t leg, scalar_t time);
 
   void resetStepReflex(size_t leg);
-
-  Eigen::Vector3d estimateContactForce(size_t leg, const vector_t& state, const vector_t& input) const;
 
   // Members
   PinocchioInterface pinocchioInterface_;

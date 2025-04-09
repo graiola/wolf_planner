@@ -18,6 +18,7 @@ AdaptivePlannerReferenceManager::AdaptivePlannerReferenceManager(PinocchioInterf
                                                                  std::shared_ptr<ContactForcesEstimator> contactForcesEstimatorPtr,
                                                                  const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                                                  scalar_t comHeight,
+                                                                 scalar_t stepReflexHeight,
                                                                  const std::vector<std::string>& contactFrameNames)
     : LeggedReferenceManager(info, gaitSchedulePtr, swingTrajectoryPtr),
       pinocchioInterface_(std::move(pinocchioInterface)),
@@ -25,8 +26,8 @@ AdaptivePlannerReferenceManager::AdaptivePlannerReferenceManager(PinocchioInterf
       contactForcesEstimatorPtr_(std::move(contactForcesEstimatorPtr)),
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()),
       comHeight_(comHeight),
-      contactFrameNames_(contactFrameNames),
-      stepReflexHeight_(0.2) { // FIXME hardcoded
+      stepReflexHeight_(stepReflexHeight),
+      contactFrameNames_(contactFrameNames) {
   stepReflexTriggered_.fill(false);
   stepReflexCount_.fill(0);
   reflexTriggerTime_.fill(0.0);
@@ -68,43 +69,21 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
     newTargetTrajectories.inputTrajectory.push_back(input);
 
     for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
-      if (!getContactFlags(time)[leg] && !stepReflexTriggered_[leg]) {
+      if (!getContactFlags(time)[leg]) {
         Eigen::Vector3d footForce;
         footForce <<  contactForcesEstimatorPtr_->getContactForces()[leg][0], 
                       contactForcesEstimatorPtr_->getContactForces()[leg][1], 
                       contactForcesEstimatorPtr_->getContactForces()[leg][2];
-        if (footForce.norm() > 25.0) { // FIXME hardcoded
+        if (footForce.norm() > 50.0) { // FIXME hardcoded
           triggerStepReflex(leg, time);
         }
+      } else {
+        resetStepReflex(leg);
       }
     }
   }
   targetTrajectories = newTargetTrajectories;
-  //swingTrajectoryPtr_->update(modeSchedule, terrainHeight);
-
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
-}
-
-Eigen::Vector3d AdaptivePlannerReferenceManager::estimateContactForce(size_t leg, const vector_t& state, const vector_t& input) const {
-  const auto& model = pinocchioInterface_.getModel();
-  pinocchio::Data data(model);  // Create a local non-const Data object
-
-  const vector_t& q = state.head(model.nq);
-  const vector_t& v = state.segment(model.nq, model.nv);
-
-  pinocchio::computeAllTerms(model, data, q, v);
-
-  const auto jointTorques = input;
-  const auto tau_without_contact = pinocchio::rnea(model, data, q, v, vector_t::Zero(model.nv));
-  const auto tau_contact = jointTorques - tau_without_contact;
-
-  pinocchio::FrameIndex frameId = model.getBodyId(contactFrameNames_[leg]);
-  Eigen::Matrix<double, 6, Eigen::Dynamic> J(6, model.nv);
-  
-  pinocchio::computeFrameJacobian(model, data, q, frameId, pinocchio::LOCAL_WORLD_ALIGNED, J);
-  
-  Eigen::VectorXd contactForce = (J.transpose()).completeOrthogonalDecomposition().solve(tau_contact);
-  return contactForce.head<3>();
 }
 
 void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
@@ -119,12 +98,13 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
     }
   }
 
-  feet_array_t<scalar_array_t> liftOffHeightSequence, touchDownHeightSequence;
+  feet_array_t<scalar_array_t> liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence;
 
   for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
-    scalar_array_t liftOffHeights, touchDownHeights;
+    scalar_array_t liftOffHeights, touchDownHeights, maxHeights;
     liftOffHeights.resize(modeSchedule.modeSequence.size());
     touchDownHeights.resize(modeSchedule.modeSequence.size());
+    maxHeights.resize(modeSchedule.modeSequence.size());
 
     for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
       const bool inSwing = !contactFlagStocks[leg][i];
@@ -132,38 +112,24 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
       const scalar_t terrainZ = terrainEstimatorPtr_->getTerrainHeightAt(footPos.x(), footPos.y());
       liftOffHeights[i] = inSwing ? terrainZ : 0.0;
       touchDownHeights[i] = inSwing ? terrainZ : 0.0;
-    }
+      maxHeights[i] = std::max(liftOffHeights[i], touchDownHeights[i]);
 
-    if (stepReflexTriggered_[leg] && !contactFlagStocks[leg].back()) {
-      double t_trigger = reflexTriggerTime_[leg];
-      double t_swing_end = modeSchedule.eventTimes.back();
-      double t_peak = 0.5 * (t_trigger + t_swing_end);
-
-      for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
-        double phaseTime = modeSchedule.eventTimes[i];
-        if (phaseTime >= t_trigger && phaseTime <= t_peak) {
-          double alpha = (phaseTime - t_trigger) / (t_peak - t_trigger);
-          liftOffHeights[i] += stepReflexCount_[leg] * stepReflexHeight_ * alpha;
-          touchDownHeights[i] += stepReflexCount_[leg] * stepReflexHeight_ * alpha;
-        } else if (phaseTime > t_peak && phaseTime <= t_swing_end) {
-          double beta = (t_swing_end - phaseTime) / (t_swing_end - t_peak);
-          liftOffHeights[i] += stepReflexCount_[leg] * stepReflexHeight_ * beta;
-          touchDownHeights[i] += stepReflexCount_[leg] * stepReflexHeight_ * beta;
-        }
+      if (stepReflexTriggered_[leg]) {
+        maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
       }
-      // Reset
-      resetStepReflex(leg);
     }
 
     liftOffHeightSequence[leg] = liftOffHeights;
     touchDownHeightSequence[leg] = touchDownHeights;
+    maxHeightSequence[leg] = maxHeights;
   }
-  swingTrajectoryPtr_->update(modeSchedule, liftOffHeightSequence, touchDownHeightSequence);
+
+  swingTrajectoryPtr_->update(modeSchedule, liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence);
 }
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = 1;
+  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 4);  // clamp to 4
   reflexTriggerTime_[leg] = time;
 }
 
