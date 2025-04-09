@@ -49,6 +49,8 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
 
   void triggerStepReflex(size_t leg, scalar_t time);
 
+  void resetStepReflex(size_t leg);
+
   Eigen::Vector3d estimateContactForce(size_t leg, const vector_t& state, const vector_t& input) const;
 
   // Members

@@ -26,7 +26,7 @@ AdaptivePlannerReferenceManager::AdaptivePlannerReferenceManager(PinocchioInterf
       endEffectorKinematicsPtr_(endEffectorKinematics.clone()),
       comHeight_(comHeight),
       contactFrameNames_(contactFrameNames),
-      stepReflexHeight_(0.05) {
+      stepReflexHeight_(0.2) { // FIXME hardcoded
   stepReflexTriggered_.fill(false);
   stepReflexCount_.fill(0);
   reflexTriggerTime_.fill(0.0);
@@ -73,14 +73,14 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
         footForce <<  contactForcesEstimatorPtr_->getContactForces()[leg][0], 
                       contactForcesEstimatorPtr_->getContactForces()[leg][1], 
                       contactForcesEstimatorPtr_->getContactForces()[leg][2];
-        if (footForce.norm() > 25.0) {
+        if (footForce.norm() > 25.0) { // FIXME hardcoded
           triggerStepReflex(leg, time);
         }
       }
     }
   }
   targetTrajectories = newTargetTrajectories;
-  swingTrajectoryPtr_->update(modeSchedule, terrainHeight);
+  //swingTrajectoryPtr_->update(modeSchedule, terrainHeight);
 
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
 }
@@ -151,6 +151,8 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
           touchDownHeights[i] += stepReflexCount_[leg] * stepReflexHeight_ * beta;
         }
       }
+      // Reset
+      resetStepReflex(leg);
     }
 
     liftOffHeightSequence[leg] = liftOffHeights;
@@ -161,10 +163,14 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] += 1;
+  stepReflexCount_[leg] = 1;
   reflexTriggerTime_[leg] = time;
+}
 
-  std::cout << "TRIGGER!!!" << std::endl;
+void AdaptivePlannerReferenceManager::resetStepReflex(size_t leg) {
+  stepReflexTriggered_[leg] = false;
+  stepReflexCount_[leg] = 0;
+  reflexTriggerTime_[leg] = 0.0;
 }
 
 }  // namespace legged_robot
