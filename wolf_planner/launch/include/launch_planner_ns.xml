@@ -26,8 +26,8 @@
         <arg name="config_locks"    value="$(find wolf_planner)/config/twist_mux/locks.yaml"/>
     </include>
 
-    <!-- World To World static transform -->
-    <node pkg="tf" type="static_transform_publisher" name="world_to_world" args="0 0 0 0 0 0 world wolf_planner/world 100"/>
+    <!-- Odom To Odom static transform -->
+    <node pkg="tf" type="static_transform_publisher" name="odom_to_odom" args="0 0 0 0 0 0 odom wolf_planner/odom 100"/>
 
     <!-- Planner nodes -->
     <node pkg="wolf_planner" type="wolf_gait_node"    name="wolf_gait_node"    output="screen"/>

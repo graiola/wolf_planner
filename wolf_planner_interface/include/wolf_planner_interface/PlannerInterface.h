@@ -15,7 +15,8 @@
 #include "wolf_planner_interface/SafetyChecker.h"
 #include "wolf_planner_interface/LeggedInterface.h"
 
-#define WORLD_FRAME_NAME "world"
+#define WORLD_FRAME_NAME "odom"
+#define RBDL_CONTROL_FRAME "world"
 
 namespace wolf_planner {
 using namespace ocs2;

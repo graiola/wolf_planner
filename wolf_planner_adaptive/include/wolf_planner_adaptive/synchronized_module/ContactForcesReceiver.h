@@ -35,7 +35,7 @@ class ContactForcesReceiver : public SolverSynchronizedModule {
   std::atomic_bool updated_;
 
   std::vector<vector3_t> contact_forces_;
-  std::vector<vector3_t> contact_states_;
+  std::vector<bool> contact_states_;
   std::vector<std::string> contact_names_;
 };
 

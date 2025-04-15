@@ -150,7 +150,7 @@ void WolfPlannerRos::updatePolicyAndPublish()
   const auto& desiredJointVelocities = planner_->getDesiredJointVelocities();
 
   // Pack messages
-  forceMsg_lf_.header.frame_id = forceMsg_lh_.header.frame_id = forceMsg_rf_.header.frame_id = forceMsg_rh_.header.frame_id = WORLD_FRAME_NAME;
+  forceMsg_lf_.header.frame_id = forceMsg_lh_.header.frame_id = forceMsg_rf_.header.frame_id = forceMsg_rh_.header.frame_id = RBDL_CONTROL_FRAME;
   forceMsg_lf_.wrench.force.x = desiredContactForces[0](0); // LF
   forceMsg_lf_.wrench.force.y = desiredContactForces[0](1); // LF
   forceMsg_lf_.wrench.force.z = desiredContactForces[0](2); // LF
@@ -164,7 +164,7 @@ void WolfPlannerRos::updatePolicyAndPublish()
   forceMsg_rh_.wrench.force.y = desiredContactForces[3](1); // RH
   forceMsg_rh_.wrench.force.z = desiredContactForces[3](2); // RH
 
-  footMsg_lf_.header.frame_id = footMsg_lh_.header.frame_id = footMsg_rf_.header.frame_id = footMsg_rh_.header.frame_id = WORLD_FRAME_NAME;
+  footMsg_lf_.header.frame_id = footMsg_lh_.header.frame_id = footMsg_rf_.header.frame_id = footMsg_rh_.header.frame_id = RBDL_CONTROL_FRAME;
   footMsg_lf_.pose.position.x = desiredFootPositions[0](0);
   footMsg_lf_.pose.position.y = desiredFootPositions[0](1);
   footMsg_lf_.pose.position.z = desiredFootPositions[0](2);
@@ -190,7 +190,7 @@ void WolfPlannerRos::updatePolicyAndPublish()
   footMsg_rh_.twist.linear.y = desiredFootVelocities[3](1);
   footMsg_rh_.twist.linear.z = desiredFootVelocities[3](2);
 
-  baseMsg_.header.frame_id = WORLD_FRAME_NAME;
+  baseMsg_.header.frame_id = RBDL_CONTROL_FRAME;
   baseMsg_.pose.position.x = desiredBasePosition(0);
   baseMsg_.pose.position.y = desiredBasePosition(1);
   baseMsg_.pose.position.z = desiredBasePosition(2);
