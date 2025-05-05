@@ -58,7 +58,9 @@ public:
 
   const vector3_t& getDesiredBasePosition() const { return mpcDesBasePosition_; }
 
-  const vector3_t& getDesiredBaseVelocity() const { return mpcDesBaseVelocity_; }
+  const vector3_t& getDesiredBaseLinearVelocity() const { return mpcDesBaseLinearVelocity_; }
+
+  const vector3_t& getDesiredBaseAngularVelocity() const { return mpcDesBaseAngularVelocity_; }
 
   const vector_t& getDesiredJointVelocities() const { return mpcDesJointVelocities_; }
 
@@ -130,8 +132,11 @@ protected:
   // Desired base position
   vector3_t mpcDesBasePosition_;
 
-  // Desired base velocity
-  vector3_t mpcDesBaseVelocity_;
+  // Desired base linear velocity
+  vector3_t mpcDesBaseLinearVelocity_;
+
+  // Desired base angular velocity
+  vector3_t mpcDesBaseAngularVelocity_;
 
   // Joint names
   std::vector<std::string> jointNames_;

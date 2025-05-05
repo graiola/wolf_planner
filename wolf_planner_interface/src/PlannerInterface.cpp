@@ -159,7 +159,9 @@ bool PlannerInterface::updatePolicy(SystemObservation &observation)
 
   mpcDesBasePosition_ << mpcDesJointPositions_(0), mpcDesJointPositions_(1), mpcDesJointPositions_(2);
 
-  mpcDesBaseVelocity_ << mpcDesJointVelocities_(0), mpcDesJointVelocities_(1), mpcDesJointVelocities_(2);
+  mpcDesBaseLinearVelocity_ << mpcDesJointVelocities_(0), mpcDesJointVelocities_(1), mpcDesJointVelocities_(2);
+
+  mpcDesBaseAngularVelocity_ << mpcDesJointVelocities_(3), mpcDesJointVelocities_(4), mpcDesJointVelocities_(5);
 
   // ZYX conversion to quat
   wolf_controller_utils::rpyToQuat(mpcDesJointPositions_(5),mpcDesJointPositions_(4),mpcDesJointPositions_(3),mpcDesBaseQuat_);

@@ -145,7 +145,8 @@ void WolfPlannerRos::updatePolicyAndPublish()
   const auto& desiredFootVelocities = planner_->getDesiredFootVelocities();
   const auto& desiredBaseQuaternion = planner_->getDesiredBaseQuaternion();
   const auto& desiredBasePosition = planner_->getDesiredBasePosition();
-  const auto& desiredBaseVelocity = planner_->getDesiredBaseVelocity();
+  const auto& desiredBaseLinearVelocity = planner_->getDesiredBaseLinearVelocity();
+  const auto& desiredBaseAngularVelocity = planner_->getDesiredBaseAngularVelocity();
   const auto& desiredJointPositions = planner_->getDesiredJointPositions();
   const auto& desiredJointVelocities = planner_->getDesiredJointVelocities();
 
@@ -198,13 +199,13 @@ void WolfPlannerRos::updatePolicyAndPublish()
   baseMsg_.pose.orientation.x = desiredBaseQuaternion.x();
   baseMsg_.pose.orientation.y = desiredBaseQuaternion.y();
   baseMsg_.pose.orientation.z = desiredBaseQuaternion.z();
-  baseMsg_.twist.linear.x =  desiredBaseVelocity(0);
-  baseMsg_.twist.linear.y =  desiredBaseVelocity(1);
-  baseMsg_.twist.linear.z =  desiredBaseVelocity(2);
-  // FIXME the angular velocities are coupled once the robot rotates more than 180
-  //baseMsg_.twist.angular.z = vDesired(3);
-  //baseMsg_.twist.angular.y = vDesired(4);
-  //baseMsg_.twist.angular.x = vDesired(5);
+  baseMsg_.twist.linear.x =  desiredBaseLinearVelocity(0);
+  baseMsg_.twist.linear.y =  desiredBaseLinearVelocity(1);
+  baseMsg_.twist.linear.z =  desiredBaseLinearVelocity(2);
+  const auto& desiredBaseAngularVelocityRotated = desiredBaseQuaternion.toRotationMatrix() * desiredBaseAngularVelocity;
+  baseMsg_.twist.angular.z = desiredBaseAngularVelocityRotated(0);
+  baseMsg_.twist.angular.y = desiredBaseAngularVelocityRotated(1);
+  baseMsg_.twist.angular.x = desiredBaseAngularVelocityRotated(2);
 
   for (size_t i = 0; i < planner_->getLeggedInterface()->getCentroidalModelInfo().actuatedDofNum; ++i)
   {
