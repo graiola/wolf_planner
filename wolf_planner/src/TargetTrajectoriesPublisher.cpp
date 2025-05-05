@@ -44,7 +44,7 @@ TargetTrajectories targetPoseToTargetTrajectories(const vector_t& targetPose, co
   return {timeTrajectory, stateTrajectory, inputTrajectory};
 }
 
-TargetTrajectories goalToTargetTrajectories(const vector_t& goal, const SystemObservation& observation) {
+TargetTrajectories goalToTargetTrajectories(const vector_t& goal, const SystemObservation& observation, bool normalized = false) {
   const vector_t currentPose = observation.state.segment<6>(6);
   const vector_t targetPose = [&]() {
     vector_t target(6);
@@ -60,18 +60,21 @@ TargetTrajectories goalToTargetTrajectories(const vector_t& goal, const SystemOb
   return targetPoseToTargetTrajectories(targetPose, observation, targetReachingTime);
 }
 
-TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const SystemObservation& observation) {
+TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const SystemObservation& observation, bool normalized = false) {
   const vector_t currentPose = observation.state.segment<6>(6);
   const Eigen::Matrix<scalar_t, 3, 1> zyx = currentPose.tail(3);
   vector_t cmdVelRot = getRotationMatrixFromZyxEulerAngles(zyx) * cmdVel.head(3);
 
+  const scalar_t linearScaling  = normalized ? TARGET_DISPLACEMENT_VELOCITY : 1.0;
+  const scalar_t angularScaling = normalized ? TARGET_ROTATION_VELOCITY : 1.0;
+
   const scalar_t timeToTarget = TIME_TO_TARGET;
   const vector_t targetPose = [&]() {
     vector_t target(6);
-    target(0) = currentPose(0) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(0) * timeToTarget;
-    target(1) = currentPose(1) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(1) * timeToTarget;
-    target(2) = currentPose(2) + TARGET_DISPLACEMENT_VELOCITY * cmdVelRot(2) * timeToTarget;
-    target(3) = currentPose(3) + TARGET_ROTATION_VELOCITY* cmdVel(3) * timeToTarget;
+    target(0) = currentPose(0) + linearScaling * cmdVelRot(0) * timeToTarget;
+    target(1) = currentPose(1) + linearScaling * cmdVelRot(1) * timeToTarget;
+    target(2) = currentPose(2) + linearScaling * cmdVelRot(2) * timeToTarget;
+    target(3) = currentPose(3) + angularScaling  * cmdVel(3)    * timeToTarget;
     target(4) = 0;
     target(5) = 0;
     return target;

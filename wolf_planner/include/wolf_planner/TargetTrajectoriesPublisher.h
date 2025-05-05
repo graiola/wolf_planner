@@ -18,7 +18,7 @@ class TargetTrajectoriesPublisher final
 {
 
  public:
-  using CmdToTargetTrajectories = std::function<TargetTrajectories(const vector_t& cmd, const SystemObservation& observation)>;
+  using CmdToTargetTrajectories = std::function<TargetTrajectories(const vector_t& cmd, const SystemObservation& observation, bool normalized)>;
 
   TargetTrajectoriesPublisher(::ros::NodeHandle& nh, const std::string& topicPrefix, const std::string& robotName,
                               CmdToTargetTrajectories goalToTargetTrajectories,
@@ -62,48 +62,47 @@ class TargetTrajectoriesPublisher final
       cmdGoal[4] = q.toRotationMatrix().eulerAngles(0, 1, 2).y();
       cmdGoal[5] = q.toRotationMatrix().eulerAngles(0, 1, 2).x();
 
-      const auto trajectories = goalToTargetTrajectories_(cmdGoal, latestObservation_);
-      targetTrajectoriesPublisher_->publishTargetTrajectories(trajectories);
-    };
-
-    // cmd_vel subscriber
-    auto cmdVelCallback = [this](const geometry_msgs::Twist::ConstPtr& msg) {
-
-      vector_t cmdVel = vector_t::Zero(4);
-
-      bool active = (std::abs(msg->linear.x)  > 0.0  || std::abs(msg->linear.y)   > 0.0 ||
-                     std::abs(msg->linear.z ) > 0.0  || std::abs(msg->angular.z)  > 0.0 );
-
-      if (!active)
-      {
-        if(!resetVelDone_ && latestObservation_.time != 0.0 )
-          resetVelDone_ = true;
-        else
-          return;
-      }
-      else
-      {
-        cmdVel[0] = msg->linear.x;
-        cmdVel[1] = msg->linear.y;
-        cmdVel[2] = msg->linear.z;
-        cmdVel[3] = msg->angular.z;
-        resetVelDone_ = false;
-      }
-
-      const auto trajectories = cmdVelToTargetTrajectories_(cmdVel, latestObservation_);
+      const auto trajectories = goalToTargetTrajectories_(cmdGoal, latestObservation_, false);
       targetTrajectoriesPublisher_->publishTargetTrajectories(trajectories);
     };
 
     goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
-    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/"+robotName+"/wolf_planner/twist", 1, cmdVelCallback);
+    cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/" + robotName + "/wolf_planner/twist", 1,
+      [this](const geometry_msgs::Twist::ConstPtr& msg) { processCmdVel(msg, false); });
+    cmdNormalizedVelSub_ = nh.subscribe<geometry_msgs::Twist>("/" + robotName + "/wolf_planner/normalized_twist", 1,
+      [this](const geometry_msgs::Twist::ConstPtr& msg) { processCmdVel(msg, true); });
   }
 
  private:
+
+  void processCmdVel(const geometry_msgs::Twist::ConstPtr& msg, bool normalized)
+  {
+    if (latestObservation_.time == 0.0) return;
+
+    vector_t cmdVel = vector_t::Zero(4);
+    bool active = (std::abs(msg->linear.x) > 0.0 || std::abs(msg->linear.y) > 0.0 ||
+                    std::abs(msg->linear.z) > 0.0 || std::abs(msg->angular.z) > 0.0);
+
+    if (!active)
+    {
+      if (!resetVelDone_) resetVelDone_ = true;
+      else return;
+    }
+    else
+    {
+      cmdVel << msg->linear.x, msg->linear.y, msg->linear.z, msg->angular.z;
+      resetVelDone_ = false;
+    }
+
+    const auto trajectories = cmdVelToTargetTrajectories_(cmdVel, latestObservation_, normalized);
+    targetTrajectoriesPublisher_->publishTargetTrajectories(trajectories);
+  }
+
   CmdToTargetTrajectories goalToTargetTrajectories_, cmdVelToTargetTrajectories_;
 
   std::unique_ptr<TargetTrajectoriesRosPublisher> targetTrajectoriesPublisher_;
 
-  ::ros::Subscriber observationSub_, goalSub_, cmdVelSub_;
+  ::ros::Subscriber observationSub_, goalSub_, cmdVelSub_, cmdNormalizedVelSub_;
   tf2_ros::Buffer buffer_;
   tf2_ros::TransformListener tf2_;
 
