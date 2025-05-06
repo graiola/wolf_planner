@@ -65,6 +65,7 @@ TargetTrajectories cmdVelToTargetTrajectories(const vector_t& cmdVel, const Syst
   const Eigen::Matrix<scalar_t, 3, 1> zyx = currentPose.tail(3);
   vector_t cmdVelRot = getRotationMatrixFromZyxEulerAngles(zyx) * cmdVel.head(3);
 
+  // FIXME if using a keyboard or joypad the twists are between -1.0 and 1.0. Instead with move base the velocities are actual values!
   const scalar_t timeToTarget = TIME_TO_TARGET;
   const vector_t targetPose = [&]() {
     vector_t target(6);

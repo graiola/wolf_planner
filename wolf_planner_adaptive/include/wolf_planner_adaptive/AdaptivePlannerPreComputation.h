@@ -5,7 +5,7 @@
 
 #include "wolf_planner_interface/LeggedRobotPreComputation.h"
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
-#include "wolf_planner_interface/SwingTrajectoryPlanner.h"
+#include "wolf_planner_interface/SwingTrajectoryPlannerXY.h"
 
 #include "wolf_planner_adaptive/TerrainEstimator.h"
 

@@ -1,11 +1,9 @@
 #include "wolf_planner_adaptive/AdaptivePlannerReferenceManager.h"
+#include "wolf_planner_interface/SwingTrajectoryPlannerXY.h"
 
-#include <ocs2_centroidal_model/AccessHelperFunctions.h>
-#include <ocs2_core/misc/Lookup.h>
-#include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
-#include <pinocchio/algorithm/compute-all-terms.hpp>
-#include <pinocchio/algorithm/rnea.hpp>
 #include <pinocchio/algorithm/frames.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
+#include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
 namespace ocs2 {
 namespace legged_robot {
@@ -28,9 +26,9 @@ AdaptivePlannerReferenceManager::AdaptivePlannerReferenceManager(PinocchioInterf
       comHeight_(comHeight),
       stepReflexHeight_(stepReflexHeight),
       contactFrameNames_(contactFrameNames) {
-  stepReflexTriggered_.fill(false);
-  stepReflexCount_.fill(0);
-  reflexTriggerTime_.fill(0.0);
+  for (auto& reflex : reflexControllers_) {
+    reflex.configure(1.0, stepReflexHeight);
+  }
 }
 
 void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
@@ -40,103 +38,113 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
 
   terrainEstimatorPtr_->update();
   contactForcesEstimatorPtr_->update();
-  const scalar_t terrainHeight = terrainEstimatorPtr_->getTerrainCenter().z();
 
   TargetTrajectories newTargetTrajectories;
-  size_t nodeNum = targetTrajectories.timeTrajectory.size();
+  const size_t nodeNum = targetTrajectories.timeTrajectory.size();
   for (size_t i = 0; i < nodeNum; ++i) {
-    scalar_t time = targetTrajectories.timeTrajectory[i];
-    vector_t state = targetTrajectories.getDesiredState(time);
-    vector_t input = targetTrajectories.getDesiredInput(time); 
+    const scalar_t time = targetTrajectories.timeTrajectory[i];
+    const vector_t& state = targetTrajectories.getDesiredState(time);
+    const vector_t& input = targetTrajectories.getDesiredInput(time);
 
-    vector_t pos = centroidal_model::getBasePose(state, info_).head(3);
-
-    auto normalVector = terrainEstimatorPtr_->getTerrainNormal();
-    normalVector.normalize();
-    matrix3_t R;
-    scalar_t z = centroidal_model::getBasePose(state, info_)(3);
-    R << cos(z), -sin(z), 0,
-         sin(z),  cos(z), 0,
-         0,       0,      1;
-    vector_t v = R.transpose() * normalVector;
-    centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
-
-    centroidal_model::getBasePose(state, info_)(2) =
-        terrainHeight + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
-
-    newTargetTrajectories.timeTrajectory.push_back(time);
-    newTargetTrajectories.stateTrajectory.push_back(state);
-    newTargetTrajectories.inputTrajectory.push_back(input);
+    pinocchio::forwardKinematics(pinocchioInterface_.getModel(), pinocchioInterface_.getData(), centroidal_model::getGeneralizedCoordinates(state, info_));
+    pinocchio::updateFramePlacements(pinocchioInterface_.getModel(), pinocchioInterface_.getData());
 
     for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
       if (!getContactFlags(time)[leg]) {
         Eigen::Vector3d footForce;
-        footForce <<  contactForcesEstimatorPtr_->getContactForces()[leg][0], 
-                      contactForcesEstimatorPtr_->getContactForces()[leg][1], 
-                      contactForcesEstimatorPtr_->getContactForces()[leg][2];
-        if (footForce.norm() > 50.0) { // FIXME hardcoded
-          triggerStepReflex(leg, time);
+        footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
+                     contactForcesEstimatorPtr_->getContactForces()[leg][1],
+                     contactForcesEstimatorPtr_->getContactForces()[leg][2];
+
+        const auto& footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactFrameNames_[leg])].rotation();
+        const Eigen::Matrix3d swingFrameRotation = footRotation.transpose();
+        const Eigen::Vector3d contactForceSwingFrame = swingFrameRotation * footForce;
+
+        const double angle = std::atan2(contactForceSwingFrame.z(), contactForceSwingFrame.x());
+        const double forceNormXZ = std::hypot(contactForceSwingFrame.x(), contactForceSwingFrame.z());
+
+        constexpr double angleMin = -120.0 * M_PI / 180.0;
+        constexpr double angleMax =  140.0 * M_PI / 180.0;
+        constexpr double forceThreshold = 10.0;
+
+        const bool frontalImpact = (angle < angleMin || angle > angleMax) && forceNormXZ > forceThreshold;
+
+        if (frontalImpact && !reflexControllers_[leg].isActive()) {
+          reflexControllers_[leg].trigger(endEffectorKinematicsPtr_->getPosition(state)[leg]);
+          std::cout << "[Reflex Triggered] leg: " << leg << ", time: " << time << std::endl;
         }
+
+        reflexControllers_[leg].update(1.0 / 250.0);
+
+        if (reflexControllers_[leg].isActive()) {
+          std::cout << "Displacement[" << leg << "] = " << reflexControllers_[leg].getDisplacement().transpose() << std::endl;
+        }
+
       } else {
-        resetStepReflex(leg);
+        std::cout << "[Reflex Reset] leg: " << leg << ", time: " << time << std::endl;
+        reflexControllers_[leg].reset();
       }
     }
+
+    newTargetTrajectories.timeTrajectory.push_back(time);
+    newTargetTrajectories.stateTrajectory.push_back(state);
+    newTargetTrajectories.inputTrajectory.push_back(input);
   }
+
   targetTrajectories = newTargetTrajectories;
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
 }
 
 void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
                                                                    ModeSchedule& modeSchedule) {
-  feet_array_t<std::vector<bool>> contactFlagStocks;
-  contactFlagStocks.fill(std::vector<bool>(modeSchedule.modeSequence.size()));
-
-  for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
-    const auto flags = getContactFlags(modeSchedule.eventTimes[i]);
-    for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
-      contactFlagStocks[leg][i] = flags[leg];
-    }
-  }
-
+  // Prepare swing foot trajectories (XYZ) with reflex displacement
   feet_array_t<scalar_array_t> liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence;
+  feet_array_t<scalar_array_t> liftOffXSequence, touchDownXSequence;
+  feet_array_t<scalar_array_t> liftOffYSequence, touchDownYSequence;
+
+  const auto footPosAll = endEffectorKinematicsPtr_->getPosition(initState);
 
   for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
     scalar_array_t liftOffHeights, touchDownHeights, maxHeights;
-    liftOffHeights.resize(modeSchedule.modeSequence.size());
-    touchDownHeights.resize(modeSchedule.modeSequence.size());
-    maxHeights.resize(modeSchedule.modeSequence.size());
+    scalar_array_t liftOffXs, touchDownXs, liftOffYs, touchDownYs;
+
+    const Eigen::Vector3d baseFoot = footPosAll[leg];
+    const Eigen::Vector3d reflex = reflexControllers_[leg].getDisplacement();
 
     for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
-      const bool inSwing = !contactFlagStocks[leg][i];
-      const auto footPos = endEffectorKinematicsPtr_->getPosition(initState)[leg];
-      const scalar_t terrainZ = terrainEstimatorPtr_->getTerrainHeightAt(footPos.x(), footPos.y());
-      liftOffHeights[i] = inSwing ? terrainZ : 0.0;
-      touchDownHeights[i] = inSwing ? terrainZ : 0.0;
-      maxHeights[i] = std::max(liftOffHeights[i], touchDownHeights[i]);
+      liftOffHeights.push_back(baseFoot.z() + reflex.z());
+      touchDownHeights.push_back(baseFoot.z());
+      maxHeights.push_back(std::max(baseFoot.z(), baseFoot.z() + reflex.z()));
 
-      if (stepReflexTriggered_[leg]) {
-        maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
-      }
+      liftOffXs.push_back(baseFoot.x() + reflex.x());
+      touchDownXs.push_back(baseFoot.x());
+      liftOffYs.push_back(baseFoot.y() + reflex.y());
+      touchDownYs.push_back(baseFoot.y());
     }
 
     liftOffHeightSequence[leg] = liftOffHeights;
     touchDownHeightSequence[leg] = touchDownHeights;
     maxHeightSequence[leg] = maxHeights;
+
+    liftOffXSequence[leg] = liftOffXs;
+    touchDownXSequence[leg] = touchDownXs;
+    liftOffYSequence[leg] = liftOffYs;
+    touchDownYSequence[leg] = touchDownYs;
   }
 
-  swingTrajectoryPtr_->update(modeSchedule, liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence);
-}
+  auto swingPlannerXY = std::dynamic_pointer_cast<SwingTrajectoryPlannerXY>(swingTrajectoryPtr_);
+  if (!swingPlannerXY) {
+    throw std::runtime_error("[AdaptivePlanner] Invalid swing trajectory planner: XY type required");
+  }
 
-void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
-  stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 4);  // clamp to 4
-  reflexTriggerTime_[leg] = time;
-}
-
-void AdaptivePlannerReferenceManager::resetStepReflex(size_t leg) {
-  stepReflexTriggered_[leg] = false;
-  stepReflexCount_[leg] = 0;
-  reflexTriggerTime_[leg] = 0.0;
+  swingPlannerXY->updateXY(modeSchedule,
+                           liftOffHeightSequence,
+                           touchDownHeightSequence,
+                           maxHeightSequence,
+                           liftOffXSequence,
+                           touchDownXSequence,
+                           liftOffYSequence,
+                           touchDownYSequence);
 }
 
 }  // namespace legged_robot

@@ -18,7 +18,8 @@ AdaptivePlannerRobotInterface::AdaptivePlannerRobotInterface(const std::string &
 }
 
 void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/, const std::string& referenceFile, bool verbose) {
-  auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
+  //auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
+  auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlannerXY>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   auto contactForcesEstimator = std::make_unique<ContactForcesEstimator>();
   scalar_t comHeight = 0;
