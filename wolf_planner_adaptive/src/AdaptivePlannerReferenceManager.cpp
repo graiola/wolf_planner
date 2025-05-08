@@ -109,7 +109,11 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
       }
       else
       {
-        resetStepReflex(leg);
+        if (getContactFlags(time)[leg]) {
+          if (reflexTriggerTime_[leg] + 0.5 < time) {
+              resetStepReflex(leg);
+          }
+      }
       }
     }
   }
