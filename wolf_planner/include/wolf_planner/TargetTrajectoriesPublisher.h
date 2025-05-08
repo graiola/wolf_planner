@@ -8,7 +8,7 @@
 #include <ocs2_mpc/SystemObservation.h>
 #include <ocs2_ros_interfaces/command/TargetTrajectoriesRosPublisher.h>
 
-#define WORLD_FRAME_NAME "world"
+#define WORLD_FRAME_NAME "odom"
 
 namespace wolf_planner
 {
