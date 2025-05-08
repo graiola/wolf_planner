@@ -40,6 +40,8 @@
     </include>
 
     <!-- rviz -->
-    <node name="wolf_planner_rviz" pkg="rviz" type="rviz" args="-d $(find wolf_planner)/rviz/wolf_planner.rviz" if="$(arg rviz_gui)"/>
+    <node name="wolf_planner_rviz" pkg="rviz" type="rviz" args="-d $(find wolf_planner)/rviz/wolf_planner.rviz" if="$(arg rviz_gui)">
+        <remap from="/move_base_simple/goal" to="/$(arg robot_name)/wolf_planner/goal"/>
+    </node>
 
 </launch>
