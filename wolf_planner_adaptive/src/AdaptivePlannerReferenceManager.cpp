@@ -98,7 +98,7 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
         const double forceNormXZ = std::hypot(contactForceSwingFrame.x(), contactForceSwingFrame.z());
 
         constexpr double backwardXThreshold = -5.0; // negative = pushing backward
-        constexpr double forceThreshold = 10.0;
+        constexpr double forceThreshold = 2.5;
 
         const bool rearOrFrontalImpact = (contactForceSwingFrame.x() < backwardXThreshold) && forceNormXZ > forceThreshold;
 
