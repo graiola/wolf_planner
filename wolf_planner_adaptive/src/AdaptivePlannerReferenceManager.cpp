@@ -167,7 +167,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 4);  // clamp to 4
+  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 10);  // clamp to 10
   reflexTriggerTime_[leg] = time;
 }
 
