@@ -20,10 +20,15 @@ class ContactForcesEstimator {
 
   const std::vector<bool>& getContactStates() const;
 
+  void setContactNames(const std::vector<std::string> &contact_names);
+
+  const std::vector<std::string>& getContactNames() const;
+
 private:
 
   std::vector<vector3_t> contactForces_;
   std::vector<bool> contactStates_;
+  std::vector<std::string> contactNames_;
 
 };
 

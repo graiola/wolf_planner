@@ -21,6 +21,8 @@ void ContactForcesReceiver::preSolverRun(scalar_t initTime, scalar_t finalTime, 
   if (updated_) {
     std::lock_guard<std::mutex> lock(mtx_);
     ptr_->setContactForces(contact_forces_);
+    ptr_->setContactStates(contact_states_);
+    ptr_->setContactNames(contact_names_);
     updated_ = false;
   }
 }
@@ -36,9 +38,9 @@ void ContactForcesReceiver::contactForcesCallback(const wolf_msgs::ContactForces
     contact_forces_[i][1] = msg->contact_forces[i].force.y;
     contact_forces_[i][2] = msg->contact_forces[i].force.z;
 
-    //contact_states_[i] = msg->contact[i];
+    contact_states_[i] = msg->contact[i];
 
-    //contact_names_[i][2] = msg->name[i];
+    contact_names_[i] = msg->name[i];
   }
   updated_ = true;
 }
