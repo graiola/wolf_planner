@@ -15,6 +15,7 @@
 
 #include "wolf_planner_adaptive/TerrainEstimator.h"
 #include "wolf_planner_adaptive/ContactForcesEstimator.h"
+#include "wolf_planner_adaptive/OdomEstimator.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -30,16 +31,19 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
                                   std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
                                   std::shared_ptr<TerrainEstimator> terrainEstimator,
                                   std::shared_ptr<ContactForcesEstimator> contactForcesEstimator,
+                                  std::shared_ptr<OdomEstimator> odomEstimatorPtr,
                                   const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                   scalar_t comHeight,
                                   scalar_t stepReflexHeight,
-                                  const std::vector<std::string>& contactFrameNames);
+                                  scalar_t forceThreshold);
 
   ~AdaptivePlannerReferenceManager() override = default;
 
   const std::shared_ptr<TerrainEstimator>& getTerrainEstimator() { return terrainEstimatorPtr_; }
 
   const std::shared_ptr<ContactForcesEstimator>& getContactForcesEstimator() { return contactForcesEstimatorPtr_; }
+
+  const std::shared_ptr<OdomEstimator>& getOdomEstimator() { return odomEstimatorPtr_; }
 
  protected:
   void modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t& initState,
@@ -56,10 +60,10 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
   PinocchioInterface pinocchioInterface_;
   std::shared_ptr<TerrainEstimator> terrainEstimatorPtr_;
   std::shared_ptr<ContactForcesEstimator> contactForcesEstimatorPtr_;
+  std::shared_ptr<OdomEstimator> odomEstimatorPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
   scalar_t comHeight_;
-
-  std::vector<std::string> contactFrameNames_; 
+  scalar_t forceThreshold_;
 
   double stepReflexHeight_;                 // fixed extra height to add (e.g. 0.05 m for 5 cm)
   std::array<bool, 4> stepReflexTriggered_; // whether reflex triggered in current swing for each foot

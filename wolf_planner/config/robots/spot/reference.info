@@ -3,6 +3,7 @@ targetRotationVelocity              1.57;
 
 comHeight                           0.53
 stepReflexHeight                    0.05
+forceThreshold                      10.0
 
 defaultJointState
 {

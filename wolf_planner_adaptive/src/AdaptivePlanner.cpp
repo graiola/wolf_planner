@@ -13,6 +13,7 @@
 #include "wolf_planner_adaptive/AdaptivePlannerReferenceManager.h"
 #include "wolf_planner_adaptive/synchronized_module/TerrainEstimationReceiver.h"
 #include "wolf_planner_adaptive/synchronized_module/ContactForcesReceiver.h"
+#include "wolf_planner_adaptive/synchronized_module/OdomReceiver.h"
 
 namespace wolf_planner
 {
@@ -40,7 +41,6 @@ void AdaptivePlanner::setupSynchronizedModules()
 
   auto gaitReceiver = std::make_shared<GaitReceiver>(nodeHandle_, leggedInterface_->getLeggedReferenceManagerPtr()->getGaitSchedule(), topicPrefix_);
 
-  // Terrain estimation receiver
   auto terrainEstimationReceiver = std::make_shared<TerrainEstimationReceiver>(nodeHandle_,
                                                                                std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getTerrainEstimator(),
                                                                                robotName_);
@@ -49,11 +49,16 @@ void AdaptivePlanner::setupSynchronizedModules()
                                                                        std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getContactForcesEstimator(),
                                                                        robotName_);
 
+  auto odomReceiver = std::make_shared<OdomReceiver>(nodeHandle_,
+                                                     std::dynamic_pointer_cast<AdaptivePlannerReferenceManager>(leggedInterface_->getLeggedReferenceManagerPtr())->getOdomEstimator(),
+                                                     robotName_);
+
   // ROS ReferenceManager
   auto rosReferenceManager = std::make_shared<RosReferenceManager>(topicPrefix_, leggedInterface_->getReferenceManagerPtr());
 
   rosReferenceManager->subscribe(nodeHandle_);
   mpc_->getSolverPtr()->addSynchronizedModule(gaitReceiver);
+  mpc_->getSolverPtr()->addSynchronizedModule(odomReceiver);
   mpc_->getSolverPtr()->addSynchronizedModule(terrainEstimationReceiver);
   mpc_->getSolverPtr()->addSynchronizedModule(contactForcesReceiver);
   mpc_->getSolverPtr()->setReferenceManager(rosReferenceManager);

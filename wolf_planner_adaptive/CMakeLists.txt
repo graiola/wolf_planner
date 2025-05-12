@@ -6,6 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         pluginlib
+        nav_msgs
         wolf_msgs
         wolf_planner_interface
         )
@@ -30,6 +31,7 @@ catkin_package(
         CATKIN_DEPENDS
             roscpp
             pluginlib
+            nav_msgs
             wolf_msgs
             wolf_planner_interface
         DEPENDS
@@ -61,9 +63,11 @@ add_library(${PROJECT_NAME}
         src/constraint/FrictionConeConstraint.cpp
         src/synchronized_module/TerrainEstimationReceiver.cpp
         src/synchronized_module/ContactForcesReceiver.cpp
+        src/synchronized_module/OdomReceiver.cpp
         src/AdaptivePlanner.cpp
         src/TerrainEstimator.cpp
         src/ContactForcesEstimator.cpp
+        src/OdomEstimator.cpp
         src/AdaptivePlannerReferenceManager.cpp
         src/AdaptivePlannerRobotInterface.cpp
         src/AdaptivePlannerPreComputation.cpp

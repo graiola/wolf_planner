@@ -20,18 +20,20 @@ namespace ocs2
                                                                      std::shared_ptr<SwingTrajectoryPlanner> swingTrajectoryPtr,
                                                                      std::shared_ptr<TerrainEstimator> terrainEstimatorPtr,
                                                                      std::shared_ptr<ContactForcesEstimator> contactForcesEstimatorPtr,
+                                                                     std::shared_ptr<OdomEstimator> odomEstimatorPtr,
                                                                      const EndEffectorKinematics<scalar_t> &endEffectorKinematics,
                                                                      scalar_t comHeight,
                                                                      scalar_t stepReflexHeight,
-                                                                     const std::vector<std::string> &contactFrameNames)
+                                                                     scalar_t forceThreshold)
         : LeggedReferenceManager(info, gaitSchedulePtr, swingTrajectoryPtr),
           pinocchioInterface_(std::move(pinocchioInterface)),
           terrainEstimatorPtr_(std::move(terrainEstimatorPtr)),
           contactForcesEstimatorPtr_(std::move(contactForcesEstimatorPtr)),
+          odomEstimatorPtr_(std::move(odomEstimatorPtr)),
           endEffectorKinematicsPtr_(endEffectorKinematics.clone()),
           comHeight_(comHeight),
           stepReflexHeight_(stepReflexHeight),
-          contactFrameNames_(contactFrameNames)
+          forceThreshold_(forceThreshold)
     {
       stepReflexTriggered_.fill(false);
       stepReflexCount_.fill(0);
@@ -46,6 +48,7 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
 
   terrainEstimatorPtr_->update();
   contactForcesEstimatorPtr_->update();
+  odomEstimatorPtr_->update();
   const scalar_t terrainHeight = terrainEstimatorPtr_->getTerrainCenter().z();
 
   TargetTrajectories newTargetTrajectories;
@@ -80,48 +83,68 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
     newTargetTrajectories.stateTrajectory.push_back(state);
     newTargetTrajectories.inputTrajectory.push_back(input);
 
-    // FIXME
-    //constexpr double backwardXThreshold = -5.0; // negative = pushing backward -> frontal impact
-    constexpr double forceThreshold = 10.0;
+    Eigen::Vector3d footForce, baseLinearVel;
 
     for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg)
     {
-      //bool swing  = !getContactFlags(time)[leg];
-      //bool impact = contactForcesEstimatorPtr_->getContactStates()[leg];
 
-      std::string contactName = contactForcesEstimatorPtr_->getContactNames()[leg];
+      const std::string& contactName = contactForcesEstimatorPtr_->getContactNames()[leg];
 
       // Read foot contact force
-      Eigen::Vector3d footForce;
       footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
                    contactForcesEstimatorPtr_->getContactForces()[leg][1],
                    contactForcesEstimatorPtr_->getContactForces()[leg][2];
 
-      // Rotate force into foot frame
-      const auto &footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactFrameNames_[leg])].rotation();
-      const Eigen::Vector3d contactForceFootFrame = footRotation.transpose() * footForce;
+      // Read the base linear velocity
+      baseLinearVel << odomEstimatorPtr_->getBaseLinearVelocity()[0],
+                       odomEstimatorPtr_->getBaseLinearVelocity()[1],
+                       odomEstimatorPtr_->getBaseLinearVelocity()[2];
 
-      double angle = std::atan2(contactForceFootFrame.z(), contactForceFootFrame.x());
+      // Rotate force into foot frame
+      //const auto &footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactName[leg])].rotation();
+      //const Eigen::Vector3d contactForceRotated = footRotation.transpose() * footForce;
+
+      // Rotate force into swing frame taking into account the base velocity
+      // Normalize base linear velocity to get movement direction
+      Eigen::Vector3d direction = baseLinearVel;
+      if (direction.norm() > 1e-3) {
+          direction.normalize();
+      } else {
+          direction = Eigen::Vector3d::UnitX(); // default direction if nearly zero velocity
+      }
+      // Construct swing frame axes (X = movement, Z = up, Y = side)
+      Eigen::Vector3d z_axis(0.0, 0.0, 1.0);
+      Eigen::Vector3d y_axis = z_axis.cross(direction).normalized();
+      Eigen::Vector3d x_axis = y_axis.cross(z_axis).normalized(); // orthogonal correction
+
+      Eigen::Matrix3d swingRotation;
+      swingRotation.col(0) = x_axis;
+      swingRotation.col(1) = y_axis;
+      swingRotation.col(2) = z_axis;
+
+      // Rotate contact force into swing frame
+      Eigen::Vector3d contactForceRotated = swingRotation.transpose() * footForce;
+
+
+      double angle = std::atan2(contactForceRotated.z(), contactForceRotated.x());
       bool forceInsideLimits = false;
       if ((angle < -120.0 * (M_PI / 180.0))||(angle > 140.0 * (M_PI / 180.0)))
         forceInsideLimits = true;
 
-      const double forceNormXZ = std::hypot(contactForceFootFrame.x(), contactForceFootFrame.z());
-      //const double forceNormX = contactForceFootFrame.x()*contactForceFootFrame.x();
-      //const double forceNormZ = contactForceFootFrame.z()*contactForceFootFrame.z();
+      const double forceNormXZ = std::hypot(contactForceRotated.x(), contactForceRotated.z());
 
-      const bool impact = forceInsideLimits && forceNormXZ > forceThreshold;
+      const bool impact = forceInsideLimits && forceNormXZ > forceThreshold_;
 
       if (impact)
       {
-        //std::cout << "TRIGGER reflex for contact "<< contactName << std::endl;
+        //std::cout << "[AdaptivePlannerReferenceManager] TRIGGER reflex for contact "<< contactName << std::endl;
         triggerStepReflex(leg, time);
       }
       else
       {
-        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 1.0 < time)
+        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.5 < time)
         {
-          //std::cout << "RESET reflex for contact "<< contactName << std::endl;
+          //std::cout << "[AdaptivePlannerReferenceManager] RESET reflex for contact "<< contactName << std::endl;
           resetStepReflex(leg);
         }
       }
@@ -165,7 +188,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
       if (stepReflexTriggered_[leg]) {
         maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
-        maxHeights[i] = std::min(maxHeights[i],0.5); // clamp
+        maxHeights[i] = std::min(maxHeights[i],comHeight_/1.5); // clamp
       }
     }
 
@@ -179,7 +202,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 5);  // clamp to 5
+  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 10);  // clamp to 10
   reflexTriggerTime_[leg] = time;
 }
 
