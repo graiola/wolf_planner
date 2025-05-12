@@ -72,6 +72,7 @@ add_library(${PROJECT_NAME}
         src/initialization/LeggedRobotInitializer.cpp
         src/PlannerInterface.cpp
         src/SwingTrajectoryPlanner.cpp
+        src/SwingTrajectoryPlannerXY.cpp
         src/LeggedReferenceManager.cpp
         src/LeggedRobotPreComputation.cpp
         src/LeggedInterface.cpp
