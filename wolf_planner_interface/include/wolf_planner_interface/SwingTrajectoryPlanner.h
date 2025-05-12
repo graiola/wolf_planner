@@ -48,19 +48,19 @@ class SwingTrajectoryPlanner {
 
   SwingTrajectoryPlanner(Config config, size_t numFeet);
 
-  void update(const ModeSchedule& modeSchedule, scalar_t terrainHeight);
+  virtual void update(const ModeSchedule& modeSchedule, scalar_t terrainHeight);
 
-  void update(const ModeSchedule& modeSchedule, const feet_array_t<scalar_array_t>& liftOffHeightSequence,
+  virtual void update(const ModeSchedule& modeSchedule, const feet_array_t<scalar_array_t>& liftOffHeightSequence,
               const feet_array_t<scalar_array_t>& touchDownHeightSequence);
 
-  void update(const ModeSchedule& modeSchedule, const feet_array_t<scalar_array_t>& liftOffHeightSequence,
+  virtual void update(const ModeSchedule& modeSchedule, const feet_array_t<scalar_array_t>& liftOffHeightSequence,
               const feet_array_t<scalar_array_t>& touchDownHeightSequence, const feet_array_t<scalar_array_t>& maxHeightSequence);
 
   scalar_t getZvelocityConstraint(size_t leg, scalar_t time) const;
 
   scalar_t getZpositionConstraint(size_t leg, scalar_t time) const;
 
- private:
+ protected:
   /**
    * Extracts for each leg the contact sequence over the motion phase sequence.
    * @param phaseIDsStock
