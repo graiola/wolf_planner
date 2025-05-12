@@ -19,7 +19,7 @@ AdaptivePlannerRobotInterface::AdaptivePlannerRobotInterface(const std::string &
 }
 
 void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& taskFile, const std::string& /*urdfFile*/, const std::string& referenceFile, bool verbose) {
-  auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlanner>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
+  auto swingTrajectoryPlanner = std::make_unique<SwingTrajectoryPlannerXY>(loadSwingTrajectorySettings(taskFile, "swing_trajectory_config", verbose), 4);
   auto terrainEstimator = std::make_unique<TerrainEstimator>();
   auto contactForcesEstimator = std::make_unique<ContactForcesEstimator>();
   auto odomEstimator = std::make_unique<OdomEstimator>();
@@ -32,7 +32,8 @@ void AdaptivePlannerRobotInterface::setupReferenceManager(const std::string& tas
 
   std::unique_ptr<EndEffectorKinematics<scalar_t>> eeKinematicsPtr = getEeKinematicsPtr({modelSettings_.contactNames3DoF}, "all_feet");
 
-  referenceManagerPtr_ = std::make_shared<AdaptivePlannerReferenceManager>(*pinocchioInterfacePtr_,centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), std::move(swingTrajectoryPlanner),
+  referenceManagerPtr_ = std::make_shared<AdaptivePlannerReferenceManager>(*pinocchioInterfacePtr_,centroidalModelInfo_,loadGaitSchedule(referenceFile, verbose), 
+                                                                           std::move(swingTrajectoryPlanner),
                                                                            std::move(terrainEstimator),
                                                                            std::move(contactForcesEstimator),
                                                                            std::move(odomEstimator),

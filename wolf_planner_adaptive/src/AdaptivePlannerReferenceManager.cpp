@@ -35,9 +35,8 @@ namespace ocs2
           stepReflexHeight_(stepReflexHeight),
           forceThreshold_(forceThreshold)
     {
-      stepReflexTriggered_.fill(false);
-      stepReflexCount_.fill(0);
-      reflexTriggerTime_.fill(0.0);
+      for (auto& reflex : reflexControllers_)
+        reflex.configure(1.0, stepReflexHeight);
     }
 
 void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t &initState,
@@ -125,7 +124,6 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
       // Rotate contact force into swing frame
       Eigen::Vector3d contactForceRotated = swingRotation.transpose() * footForce;
 
-
       double angle = std::atan2(contactForceRotated.z(), contactForceRotated.x());
       bool forceInsideLimits = false;
       if ((angle < -120.0 * (M_PI / 180.0))||(angle > 140.0 * (M_PI / 180.0)))
@@ -135,17 +133,17 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
 
       const bool impact = forceInsideLimits && forceNormXZ > forceThreshold_;
 
-      if (impact)
+      if (impact && !reflexControllers_[leg].isActive())
       {
-        //std::cout << "[AdaptivePlannerReferenceManager] TRIGGER reflex for contact "<< contactName << std::endl;
-        triggerStepReflex(leg, time);
+        std::cout << "[AdaptivePlannerReferenceManager] TRIGGER reflex for contact "<< contactName << std::endl;
+        reflexControllers_[leg].trigger(endEffectorKinematicsPtr_->getPosition(state)[leg]);
       }
       else
       {
-        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.25 < time)
+        if (!reflexControllers_[leg].isActive())
         {
           //std::cout << "[AdaptivePlannerReferenceManager] RESET reflex for contact "<< contactName << std::endl;
-          resetStepReflex(leg);
+          reflexControllers_[leg].reset();
         }
       }
     }
@@ -153,63 +151,59 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
   }
 
   targetTrajectories = newTargetTrajectories;
+
   updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
 }
 
 void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
-                                                                   ModeSchedule& modeSchedule) {
-  feet_array_t<std::vector<bool>> contactFlagStocks;
-  contactFlagStocks.fill(std::vector<bool>(modeSchedule.modeSequence.size()));
+                                                                     ModeSchedule& modeSchedule) {
 
-  for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
-    const auto flags = getContactFlags(modeSchedule.eventTimes[i]);
-    for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
-      contactFlagStocks[leg][i] = flags[leg];
-    }
-  }
 
+  // Prepare swing foot trajectories (XYZ) with reflex displacement
   feet_array_t<scalar_array_t> liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence;
+  feet_array_t<scalar_array_t> liftOffXSequence, touchDownXSequence;
+  feet_array_t<scalar_array_t> liftOffYSequence, touchDownYSequence;
+
+  const auto footPosAll = endEffectorKinematicsPtr_->getPosition(initState);
 
   for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
     scalar_array_t liftOffHeights, touchDownHeights, maxHeights;
-    liftOffHeights.resize(modeSchedule.modeSequence.size());
-    touchDownHeights.resize(modeSchedule.modeSequence.size());
-    maxHeights.resize(modeSchedule.modeSequence.size());
+    scalar_array_t liftOffXs, touchDownXs, liftOffYs, touchDownYs;
 
-    const auto footPos = endEffectorKinematicsPtr_->getPosition(initState)[leg];
-    const scalar_t terrainZ = terrainEstimatorPtr_->getTerrainHeightAt(footPos.x(), footPos.y());
+    reflexControllers_[leg].update(1.0 / 250.0);
+
+    const Eigen::Vector3d baseFoot = footPosAll[leg];
+    const Eigen::Vector3d reflex = reflexControllers_[leg].getDisplacement();
 
     for (size_t i = 0; i < modeSchedule.modeSequence.size(); ++i) {
-      const bool inSwing = !contactFlagStocks[leg][i];
+      liftOffHeights.push_back(baseFoot.z() + reflex.z());
+      touchDownHeights.push_back(baseFoot.z());
+      maxHeights.push_back(std::max(baseFoot.z(), baseFoot.z() + reflex.z()));
 
-      liftOffHeights[i] = inSwing ? terrainZ : 0.0;
-      touchDownHeights[i] = inSwing ? terrainZ : 0.0;
-      maxHeights[i] = std::max(liftOffHeights[i], touchDownHeights[i]);
-
-      if (stepReflexTriggered_[leg]) {
-        maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
-        maxHeights[i] = std::min(maxHeights[i],comHeight_/1.5); // clamp
-      }
+      liftOffXs.push_back(baseFoot.x() + reflex.x());
+      touchDownXs.push_back(baseFoot.x());
+      liftOffYs.push_back(baseFoot.y() + reflex.y());
+      touchDownYs.push_back(baseFoot.y());
     }
 
     liftOffHeightSequence[leg] = liftOffHeights;
     touchDownHeightSequence[leg] = touchDownHeights;
     maxHeightSequence[leg] = maxHeights;
+
+    liftOffXSequence[leg] = liftOffXs;
+    touchDownXSequence[leg] = touchDownXs;
+    liftOffYSequence[leg] = liftOffYs;
+    touchDownYSequence[leg] = touchDownYs;
   }
 
-  swingTrajectoryPtr_->update(modeSchedule, liftOffHeightSequence, touchDownHeightSequence, maxHeightSequence);
-}
-
-void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
-  stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 10);  // clamp to 10
-  reflexTriggerTime_[leg] = time;
-}
-
-void AdaptivePlannerReferenceManager::resetStepReflex(size_t leg) {
-  stepReflexTriggered_[leg] = false;
-  stepReflexCount_[leg] = 0;
-  reflexTriggerTime_[leg] = 0.0;
+  std::dynamic_pointer_cast<SwingTrajectoryPlannerXY>(swingTrajectoryPtr_)->updateXY(modeSchedule,
+                                                                                    liftOffHeightSequence,
+                                                                                    touchDownHeightSequence,
+                                                                                    maxHeightSequence,
+                                                                                    liftOffXSequence,
+                                                                                    touchDownXSequence,
+                                                                                    liftOffYSequence,
+                                                                                    touchDownYSequence);
 }
 
 } // namespace legged_robot
