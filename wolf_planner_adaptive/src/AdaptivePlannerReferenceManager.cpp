@@ -142,7 +142,7 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
       }
       else
       {
-        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.5 < time)
+        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.25 < time)
         {
           //std::cout << "[AdaptivePlannerReferenceManager] RESET reflex for contact "<< contactName << std::endl;
           resetStepReflex(leg);
