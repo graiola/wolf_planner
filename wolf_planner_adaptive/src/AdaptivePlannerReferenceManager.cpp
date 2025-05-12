@@ -154,6 +154,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
       if (stepReflexTriggered_[leg]) {
         maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
+        maxHeights[i] = std::min(maxHeights[i],0.8);
       }
     }
 
