@@ -40,121 +40,133 @@ namespace ocs2
       reflexTriggerTime_.fill(0.0);
     }
 
-void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar_t finalTime, const vector_t &initState,
-                                                        TargetTrajectories &targetTrajectories, ModeSchedule &modeSchedule)
-{
-  const auto timeHorizon = finalTime - initTime;
-  modeSchedule = gaitSchedulePtr_->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
-
-  terrainEstimatorPtr_->update();
-  contactForcesEstimatorPtr_->update();
-  odomEstimatorPtr_->update();
-  const scalar_t terrainHeight = terrainEstimatorPtr_->getTerrainCenter().z();
-
-  TargetTrajectories newTargetTrajectories;
-  size_t nodeNum = targetTrajectories.timeTrajectory.size();
-
-  for (size_t i = 0; i < nodeNum; ++i)
-  {
-    scalar_t time = targetTrajectories.timeTrajectory[i];
-    vector_t state = targetTrajectories.getDesiredState(time);
-    vector_t input = targetTrajectories.getDesiredInput(time);
-
-    // Base pose orientation adjustment
-    vector_t pos = centroidal_model::getBasePose(state, info_).head(3);
-    auto normalVector = terrainEstimatorPtr_->getTerrainNormal();
-    normalVector.normalize();
-    matrix3_t R;
-    scalar_t z = centroidal_model::getBasePose(state, info_)(3);
-    R << cos(z), -sin(z), 0,
-        sin(z), cos(z), 0,
-        0, 0, 1;
-    vector_t v = R.transpose() * normalVector;
-    centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
-    centroidal_model::getBasePose(state, info_)(2) =
-        terrainHeight + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
-
-    // Update kinematics
-    pinocchio::forwardKinematics(pinocchioInterface_.getModel(), pinocchioInterface_.getData(),
-                                  centroidal_model::getGeneralizedCoordinates(state, info_));
-    pinocchio::updateFramePlacements(pinocchioInterface_.getModel(), pinocchioInterface_.getData());
-
-    newTargetTrajectories.timeTrajectory.push_back(time);
-    newTargetTrajectories.stateTrajectory.push_back(state);
-    newTargetTrajectories.inputTrajectory.push_back(input);
-
-    Eigen::Vector3d footForce, baseLinearVel;
-
-    for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg)
-    {
-
-      const std::string& contactName = contactForcesEstimatorPtr_->getContactNames()[leg];
-
-      // Read foot contact force
-      footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
-                   contactForcesEstimatorPtr_->getContactForces()[leg][1],
-                   contactForcesEstimatorPtr_->getContactForces()[leg][2];
-
-      // Read the base linear velocity
-      baseLinearVel << odomEstimatorPtr_->getBaseLinearVelocity()[0],
-                       odomEstimatorPtr_->getBaseLinearVelocity()[1],
-                       odomEstimatorPtr_->getBaseLinearVelocity()[2];
-
-      // Rotate force into foot frame
-      //const auto &footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactName[leg])].rotation();
-      //const Eigen::Vector3d contactForceRotated = footRotation.transpose() * footForce;
-
-      // Rotate force into swing frame taking into account the base velocity
-      // Normalize base linear velocity to get movement direction
-      Eigen::Vector3d direction = baseLinearVel;
-      if (direction.norm() > 1e-3) {
-          direction.normalize();
-      } else {
-          direction = Eigen::Vector3d::UnitX(); // default direction if nearly zero velocity
-      }
-      // Construct swing frame axes (X = movement, Z = up, Y = side)
-      Eigen::Vector3d z_axis(0.0, 0.0, 1.0);
-      Eigen::Vector3d y_axis = z_axis.cross(direction).normalized();
-      Eigen::Vector3d x_axis = y_axis.cross(z_axis).normalized(); // orthogonal correction
-
-      Eigen::Matrix3d swingRotation;
-      swingRotation.col(0) = x_axis;
-      swingRotation.col(1) = y_axis;
-      swingRotation.col(2) = z_axis;
-
-      // Rotate contact force into swing frame
-      Eigen::Vector3d contactForceRotated = swingRotation.transpose() * footForce;
-
-
-      double angle = std::atan2(contactForceRotated.z(), contactForceRotated.x());
-      bool forceInsideLimits = false;
-      if ((angle < -120.0 * (M_PI / 180.0))||(angle > 140.0 * (M_PI / 180.0)))
-        forceInsideLimits = true;
-
-      const double forceNormXZ = std::hypot(contactForceRotated.x(), contactForceRotated.z());
-
-      const bool impact = forceInsideLimits && forceNormXZ > forceThreshold_;
-
-      if (impact)
-      {
-        //std::cout << "[AdaptivePlannerReferenceManager] TRIGGER reflex for contact "<< contactName << std::endl;
-        triggerStepReflex(leg, time);
-      }
-      else
-      {
-        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.25 < time)
-        {
-          //std::cout << "[AdaptivePlannerReferenceManager] RESET reflex for contact "<< contactName << std::endl;
-          resetStepReflex(leg);
+    void AdaptivePlannerReferenceManager::modifyReferences(
+      scalar_t initTime, scalar_t finalTime, const vector_t &initState,
+      TargetTrajectories &targetTrajectories, ModeSchedule &modeSchedule) {
+  
+    const auto timeHorizon = finalTime - initTime;
+    modeSchedule = gaitSchedulePtr_->getModeSchedule(initTime - timeHorizon, finalTime + timeHorizon);
+  
+    terrainEstimatorPtr_->update();
+    contactForcesEstimatorPtr_->update();
+    odomEstimatorPtr_->update();
+    const scalar_t terrainHeight = terrainEstimatorPtr_->getTerrainCenter().z();
+  
+    TargetTrajectories newTargetTrajectories;
+    size_t nodeNum = targetTrajectories.timeTrajectory.size();
+  
+    // Variables to track reflex events
+    std::vector<std::pair<scalar_t, size_t>> reflexEvents;
+  
+    for (size_t i = 0; i < nodeNum; ++i) {
+      scalar_t time = targetTrajectories.timeTrajectory[i];
+      vector_t state = targetTrajectories.getDesiredState(time);
+      vector_t input = targetTrajectories.getDesiredInput(time);
+  
+      // Base pose orientation adjustment
+      vector_t pos = centroidal_model::getBasePose(state, info_).head(3);
+      auto normalVector = terrainEstimatorPtr_->getTerrainNormal();
+      normalVector.normalize();
+      matrix3_t R;
+      scalar_t z = centroidal_model::getBasePose(state, info_)(3);
+      R << cos(z), -sin(z), 0,
+           sin(z),  cos(z), 0,
+               0,      0, 1;
+      vector_t v = R.transpose() * normalVector;
+      centroidal_model::getBasePose(state, info_)(4) = atan(v.x() / v.z());
+      centroidal_model::getBasePose(state, info_)(2) =
+          terrainHeight + comHeight_ / cos(centroidal_model::getBasePose(state, info_)(4));
+  
+      // Update kinematics
+      pinocchio::forwardKinematics(pinocchioInterface_.getModel(), pinocchioInterface_.getData(),
+                                   centroidal_model::getGeneralizedCoordinates(state, info_));
+      pinocchio::updateFramePlacements(pinocchioInterface_.getModel(), pinocchioInterface_.getData());
+  
+      newTargetTrajectories.timeTrajectory.push_back(time);
+      newTargetTrajectories.stateTrajectory.push_back(state);
+      newTargetTrajectories.inputTrajectory.push_back(input);
+  
+      Eigen::Vector3d footForce, baseLinearVel;
+  
+      for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg) {
+        const std::string& contactName = contactForcesEstimatorPtr_->getContactNames()[leg];
+  
+        footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
+                     contactForcesEstimatorPtr_->getContactForces()[leg][1],
+                     contactForcesEstimatorPtr_->getContactForces()[leg][2];
+  
+        baseLinearVel << odomEstimatorPtr_->getBaseLinearVelocity()[0],
+                         odomEstimatorPtr_->getBaseLinearVelocity()[1],
+                         odomEstimatorPtr_->getBaseLinearVelocity()[2];
+  
+        Eigen::Vector3d direction = baseLinearVel;
+        if (direction.norm() > 1e-3) {
+            direction.normalize();
+        } else {
+            direction = Eigen::Vector3d::UnitX();
+        }
+  
+        Eigen::Vector3d z_axis(0.0, 0.0, 1.0);
+        Eigen::Vector3d y_axis = z_axis.cross(direction).normalized();
+        Eigen::Vector3d x_axis = y_axis.cross(z_axis).normalized();
+  
+        Eigen::Matrix3d swingRotation;
+        swingRotation.col(0) = x_axis;
+        swingRotation.col(1) = y_axis;
+        swingRotation.col(2) = z_axis;
+  
+        Eigen::Vector3d contactForceRotated = swingRotation.transpose() * footForce;
+  
+        double angle = std::atan2(contactForceRotated.z(), contactForceRotated.x());
+        bool forceInsideLimits = false;
+        if ((angle < -120.0 * (M_PI / 180.0)) || (angle > 140.0 * (M_PI / 180.0)))
+          forceInsideLimits = true;
+  
+        const double forceNormXZ = std::hypot(contactForceRotated.x(), contactForceRotated.z());
+  
+        const bool impact = forceInsideLimits && forceNormXZ > forceThreshold_;
+  
+        if (impact) {
+          triggerStepReflex(leg, time);
+          reflexEvents.emplace_back(time, leg);
+        } else {
+          if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 0.1 < time) {
+            resetStepReflex(leg);
+          }
         }
       }
     }
+  
+    targetTrajectories = newTargetTrajectories;
+  
+    // Modify mode schedule based on reflex events
+    for (const auto& event : reflexEvents) {
+      scalar_t reflexTime = event.first;
+      size_t leg = event.second;
+  
+      // Find the index where the reflexTime fits into the eventTimes
+      auto it = std::lower_bound(modeSchedule.eventTimes.begin(), modeSchedule.eventTimes.end(), reflexTime);
+      size_t index = std::distance(modeSchedule.eventTimes.begin(), it);
+  
+      if (index > 0 && index <= modeSchedule.modeSequence.size()) {
+        // Retrieve the current mode
+        size_t currentMode = modeSchedule.modeSequence.at(index - 1);
+      
+        // Clear the bit corresponding to the leg to set it to swing phase
+        currentMode &= ~(1UL << leg);
+      
+        // Insert the new event time and mode
+        modeSchedule.eventTimes.insert(it, reflexTime);
+        modeSchedule.modeSequence.insert(modeSchedule.modeSequence.begin() + index, currentMode);
+      }
+      
+    }
 
+    setModeSchedule(modeSchedule);
+
+    updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
   }
-
-  targetTrajectories = newTargetTrajectories;
-  updateSwingTrajectoryPlanner(initTime, initState, modeSchedule);
-}
+  
 
 void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t initTime, const vector_t& initState,
                                                                    ModeSchedule& modeSchedule) {
@@ -202,7 +214,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 10);  // clamp to 10
+  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 5);  // clamp to 5
   reflexTriggerTime_[leg] = time;
 }
 
