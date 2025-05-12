@@ -20,6 +20,84 @@
 namespace ocs2 {
 namespace legged_robot {
 
+  class StepReflexController {
+    public:
+     StepReflexController() = default;
+   
+     void configure(double swingFrequency, double stepHeight, double retractionAngleDeg = 150.0) {
+       retractionAngleRad_ = retractionAngleDeg * M_PI / 180.0;
+       reflexDuration_ = 0.5 / swingFrequency;
+       retractionDuration_ = 0.5 * reflexDuration_;
+       Kd_r_ = 10.0 / reflexDuration_;
+       Kp_r_ = 0.25 * (Kd_r_ * Kd_r_);
+       computeRetractionForce(stepHeight);
+       reset();
+     }
+
+     const bool& isActive() const { return active_; }
+   
+     void trigger(const Eigen::Vector3d& initialPosition) {
+       t_ = 0.0;
+       r0_ = std::sqrt(std::pow(initialPosition.x(), 2) + std::pow(initialPosition.z(), 2));
+       r_ = r0_;
+       r_dot_ = r_ddot_ = 0.0;
+       active_ = true;
+     }
+   
+     void update(double period) {
+       if (!active_) return;
+   
+       if (t_ >= retractionDuration_) {
+         Fr_ = 0.0;
+         active_ = false;
+         return;
+       } else {
+         Fr_ = Fr_max_;
+       }
+   
+       r_ddot_ = -Kp_r_ * r_ - Kd_r_ * r_dot_ + Fr_;
+       r_dot_ += r_ddot_ * period;
+       r_ += r_dot_ * period;
+   
+       double theta = M_PI * t_ / reflexDuration_;
+       displacement_(0) = -r_ * std::cos(theta);
+       displacement_(1) = 0.0;
+       displacement_(2) = r_ * std::sin(theta);
+
+       t_ += period;
+     }
+   
+     const Eigen::Vector3d& getDisplacement() const { return displacement_; }
+   
+     void reset() {
+       active_ = false;
+       displacement_.setZero();
+     }
+   
+    private:
+     void computeRetractionForce(double maxRetraction) {
+       double lambda = 5.0 / reflexDuration_;
+       double t_max = (-retractionDuration_ * lambda * lambda * std::exp(retractionDuration_ * lambda)) /
+                      (lambda * lambda * (1.0 - std::exp(retractionDuration_ * lambda)));
+       double tmp = (1 - (1 + t_max * lambda) * std::exp(-t_max * lambda)) -
+                    (1 - (1 + (t_max - retractionDuration_) * lambda) *
+                             std::exp(-(t_max - retractionDuration_) * lambda));
+       Fr_max_ = maxRetraction * Kp_r_ / tmp;
+     }
+   
+     // Reflex dynamics
+     double reflexDuration_ = 0.0;
+     double retractionDuration_ = 0.0;
+     double Kp_r_ = 0.0, Kd_r_ = 0.0;
+     double r_ = 0.0, r_dot_ = 0.0, r_ddot_ = 0.0, r0_ = 0.0, Fr_ = 0.0, Fr_max_ = 0.0;
+     double t0_ = 0.0;
+     double retractionAngleRad_ = 0.0;
+     double t_;
+   
+     bool active_ = false;
+     Eigen::Vector3d displacement_ = Eigen::Vector3d::Zero();
+   };
+
 /**
  * Manages the ModeSchedule and the TargetTrajectories for switched model.
  */
