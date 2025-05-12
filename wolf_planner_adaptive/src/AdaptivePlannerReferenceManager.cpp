@@ -80,42 +80,53 @@ void AdaptivePlannerReferenceManager::modifyReferences(scalar_t initTime, scalar
     newTargetTrajectories.stateTrajectory.push_back(state);
     newTargetTrajectories.inputTrajectory.push_back(input);
 
+    // FIXME
+    //constexpr double backwardXThreshold = -5.0; // negative = pushing backward -> frontal impact
+    constexpr double forceThreshold = 10.0;
+
     for (size_t leg = 0; leg < info_.numThreeDofContacts; ++leg)
     {
-      if (!getContactFlags(time)[leg])
+      //bool swing  = !getContactFlags(time)[leg];
+      //bool impact = contactForcesEstimatorPtr_->getContactStates()[leg];
+
+      std::string contactName = contactForcesEstimatorPtr_->getContactNames()[leg];
+
+      // Read foot contact force
+      Eigen::Vector3d footForce;
+      footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
+                   contactForcesEstimatorPtr_->getContactForces()[leg][1],
+                   contactForcesEstimatorPtr_->getContactForces()[leg][2];
+
+      // Rotate force into foot frame
+      const auto &footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactFrameNames_[leg])].rotation();
+      const Eigen::Vector3d contactForceFootFrame = footRotation.transpose() * footForce;
+
+      double angle = std::atan2(contactForceFootFrame.z(), contactForceFootFrame.x());
+      bool forceInsideLimits = false;
+      if ((angle < -120.0 * (M_PI / 180.0))||(angle > 140.0 * (M_PI / 180.0)))
+        forceInsideLimits = true;
+
+      const double forceNormXZ = std::hypot(contactForceFootFrame.x(), contactForceFootFrame.z());
+      //const double forceNormX = contactForceFootFrame.x()*contactForceFootFrame.x();
+      //const double forceNormZ = contactForceFootFrame.z()*contactForceFootFrame.z();
+
+      const bool impact = forceInsideLimits && forceNormXZ > forceThreshold;
+
+      if (impact)
       {
-        // Read foot contact force
-        Eigen::Vector3d footForce;
-        footForce << contactForcesEstimatorPtr_->getContactForces()[leg][0],
-            contactForcesEstimatorPtr_->getContactForces()[leg][1],
-            contactForcesEstimatorPtr_->getContactForces()[leg][2];
-
-        // Transform force into swing frame
-        const auto &footRotation = pinocchioInterface_.getData().oMf[pinocchioInterface_.getModel().getFrameId(contactFrameNames_[leg])].rotation();
-        const Eigen::Matrix3d swingFrameRotation = footRotation.transpose();
-        const Eigen::Vector3d contactForceSwingFrame = swingFrameRotation * footForce;
-
-        const double forceNormXZ = std::hypot(contactForceSwingFrame.x(), contactForceSwingFrame.z());
-
-        constexpr double backwardXThreshold = -5.0; // negative = pushing backward
-        constexpr double forceThreshold = 2.5;
-
-        const bool rearOrFrontalImpact = (contactForceSwingFrame.x() < backwardXThreshold) && forceNormXZ > forceThreshold;
-
-        if (rearOrFrontalImpact)
-        {
-          triggerStepReflex(leg, time);
-        }
+        //std::cout << "TRIGGER reflex for contact "<< contactName << std::endl;
+        triggerStepReflex(leg, time);
       }
       else
       {
-        if (getContactFlags(time)[leg]) {
-          if (reflexTriggerTime_[leg] + 0.5 < time) {
-              resetStepReflex(leg);
-          }
-      }
+        if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + 1.0 < time)
+        {
+          //std::cout << "RESET reflex for contact "<< contactName << std::endl;
+          resetStepReflex(leg);
+        }
       }
     }
+
   }
 
   targetTrajectories = newTargetTrajectories;
@@ -154,7 +165,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
       if (stepReflexTriggered_[leg]) {
         maxHeights[i] += stepReflexCount_[leg] * stepReflexHeight_;
-        maxHeights[i] = std::min(maxHeights[i],0.8);
+        maxHeights[i] = std::min(maxHeights[i],0.5); // clamp
       }
     }
 
@@ -168,7 +179,7 @@ void AdaptivePlannerReferenceManager::updateSwingTrajectoryPlanner(scalar_t init
 
 void AdaptivePlannerReferenceManager::triggerStepReflex(size_t leg, scalar_t time) {
   stepReflexTriggered_[leg] = true;
-  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 10);  // clamp to 10
+  stepReflexCount_[leg] = std::min(stepReflexCount_[leg] + 1, 5);  // clamp to 5
   reflexTriggerTime_[leg] = time;
 }
 
