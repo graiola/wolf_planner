@@ -22,6 +22,7 @@ namespace legged_robot {
 
 /**
  * Manages the ModeSchedule and the TargetTrajectories for switched model.
+ * Implements reflex-based step height adaptation with smoothing.
  */
 class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
  public:
@@ -40,9 +41,7 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
   ~AdaptivePlannerReferenceManager() override = default;
 
   const std::shared_ptr<TerrainEstimator>& getTerrainEstimator() { return terrainEstimatorPtr_; }
-
   const std::shared_ptr<ContactForcesEstimator>& getContactForcesEstimator() { return contactForcesEstimatorPtr_; }
-
   const std::shared_ptr<OdomEstimator>& getOdomEstimator() { return odomEstimatorPtr_; }
 
  protected:
@@ -53,8 +52,13 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
                                     ModeSchedule& modeSchedule);
 
   void triggerStepReflex(size_t leg, scalar_t time);
-
   void resetStepReflex(size_t leg);
+
+  /** Adjust base pose height and orientation to match terrain */
+  void adjustBasePoseToTerrain(vector_t& state, scalar_t terrainHeight) const;
+
+  /** Detects step reflex triggers and populates reflexEvents */
+  void detectReflexes(scalar_t time, std::vector<std::pair<scalar_t, size_t>>& reflexEvents);
 
   // Members
   PinocchioInterface pinocchioInterface_;
@@ -62,13 +66,14 @@ class AdaptivePlannerReferenceManager : public LeggedReferenceManager {
   std::shared_ptr<ContactForcesEstimator> contactForcesEstimatorPtr_;
   std::shared_ptr<OdomEstimator> odomEstimatorPtr_;
   std::unique_ptr<EndEffectorKinematics<scalar_t>> endEffectorKinematicsPtr_;
-  scalar_t comHeight_;
-  scalar_t forceThreshold_;
 
-  double stepReflexHeight_;                 // fixed extra height to add (e.g. 0.05 m for 5 cm)
-  std::array<bool, 4> stepReflexTriggered_; // whether reflex triggered in current swing for each foot
-  std::array<int, 4> stepReflexCount_;      // how many times reflex triggered in the current swing
-  std::array<double, 4> reflexTriggerTime_; // time when reflex was triggered (for shaping the offset)
+  scalar_t comHeight_;        // Nominal center of mass height
+  scalar_t forceThreshold_;   // Force magnitude threshold for triggering reflex
+  scalar_t stepReflexHeight_; // Height increment per reflex trigger
+
+  std::array<bool, 4> stepReflexTriggered_;  // Whether reflex is currently active per leg
+  std::array<int, 4> stepReflexCount_;       // Reflex height multiplier (with decay) per leg
+  std::array<double, 4> reflexTriggerTime_;  // Time of last reflex trigger per leg
 };
 
 }  // namespace legged_robot
