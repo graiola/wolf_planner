@@ -1,32 +1,3 @@
-/******************************************************************************
-Copyright (c) 2020, Farbod Farshidian. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
- * Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
- * Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
- * Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-******************************************************************************/
-
 #include <pinocchio/fwd.hpp>
 
 #include <pinocchio/algorithm/frames.hpp>
@@ -37,63 +8,82 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_core/misc/Numerics.h>
 
 #include "wolf_planner_adaptive/AdaptivePlannerPreComputation.h"
+#include "wolf_planner_interface/SwingTrajectoryPlannerXY.h"
 
 namespace ocs2 {
 namespace legged_robot {
 
-/******************************************************************************************************/
-/******************************************************************************************************/
-/******************************************************************************************************/
-AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner, const TerrainEstimator& terrainEstimator,
-                                                     ModelSettings settings)
-    : LeggedRobotPreComputation(pinocchioInterface,info,swingTrajectoryPlanner,settings),
-      terrainEstimatorPtr_(&terrainEstimator)
-{
+AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(
+    PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
+    const SwingTrajectoryPlanner& swingTrajectoryPlanner,
+    const TerrainEstimator& terrainEstimator, ModelSettings settings)
+    : LeggedRobotPreComputation(pinocchioInterface, info, swingTrajectoryPlanner, settings),
+      terrainEstimatorPtr_(&terrainEstimator) {
   frictionConeConConfigs_.resize(info_.numThreeDofContacts);
+  eeXYVelConConfigs_.resize(info_.numThreeDofContacts);
 }
 
-/******************************************************************************************************/
-/******************************************************************************************************/
-/******************************************************************************************************/
 AdaptivePlannerPreComputation::AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& rhs)
-    : LeggedRobotPreComputation(rhs),
-      terrainEstimatorPtr_(rhs.terrainEstimatorPtr_)
-{
+    : LeggedRobotPreComputation(rhs), terrainEstimatorPtr_(rhs.terrainEstimatorPtr_) {
   frictionConeConConfigs_.resize(rhs.frictionConeConConfigs_.size());
+  eeXYVelConConfigs_.resize(rhs.eeXYVelConConfigs_.size());
 }
 
-/******************************************************************************************************/
-/******************************************************************************************************/
-/******************************************************************************************************/
 void AdaptivePlannerPreComputation::request(RequestSet request, scalar_t t, const vector_t& x, const vector_t& u) {
   if (!request.containsAny(Request::Cost + Request::Constraint + Request::SoftConstraint)) {
     return;
   }
 
-  // lambda to set config for normal velocity constraints
+  auto swingPlannerXY = dynamic_cast<const SwingTrajectoryPlannerXY*>(swingTrajectoryPlannerPtr_);
+  if (!swingPlannerXY) {
+    throw std::runtime_error("[AdaptivePlannerPreComputation] Swing planner must be SwingTrajectoryPlannerXY.");
+  }
+
+  // Z-direction constraint lambda
   auto eeNormalVelConConfig = [&](size_t footIndex) {
     EndEffectorLinearConstraint::Config config;
-    config.b = (vector_t(1) << -swingTrajectoryPlannerPtr_->getZvelocityConstraint(footIndex, t)).finished();
+    config.b = (vector_t(1) << -swingPlannerXY->getZvelocityConstraint(footIndex, t)).finished();
     config.Av = (matrix_t(1, 3) << terrainEstimatorPtr_->getTerrainNormal().transpose()).finished();
     if (!numerics::almost_eq(settings_.positionErrorGain, 0.0)) {
-      config.b(0) -= settings_.positionErrorGain * swingTrajectoryPlannerPtr_->getZpositionConstraint(footIndex, t);
+      config.b(0) -= settings_.positionErrorGain * swingPlannerXY->getZpositionConstraint(footIndex, t);
       config.Ax = settings_.positionErrorGain * (matrix_t(1, 3) << terrainEstimatorPtr_->getTerrainNormal()).finished();
     }
     return config;
   };
 
-  // lambda to set config for friction cone constraints
+  // XY-direction constraint lambda
+  auto eeXYVelConConfig = [&](size_t footIndex) {
+    EndEffectorLinearConstraint::Config config;
+    Eigen::Vector2d xyVel = swingPlannerXY->getXYvelocityConstraint(footIndex, t);
+    config.b = -xyVel;
+
+    // Tangent vectors on the plane
+    Eigen::Vector3d normal = terrainEstimatorPtr_->getTerrainNormal();
+    Eigen::Matrix<double, 2, 3> tangentBasis;
+    tangentBasis.row(0) = Eigen::Vector3d::UnitX() - normal.dot(Eigen::Vector3d::UnitX()) * normal;
+    tangentBasis.row(1) = Eigen::Vector3d::UnitY() - normal.dot(Eigen::Vector3d::UnitY()) * normal;
+    config.Av = tangentBasis;
+
+    if (!numerics::almost_eq(settings_.positionErrorGain, 0.0)) {
+      Eigen::Vector2d xyPos = swingPlannerXY->getXYpositionConstraint(footIndex, t);
+      config.b -= settings_.positionErrorGain * xyPos;
+      config.Ax = settings_.positionErrorGain * tangentBasis;
+    }
+
+    return config;
+  };
+
+  // Friction cone constraint lambda
   auto frictionConeConConfig = [&](size_t footIndex) {
     FrictionConeConstraint::Config config;
-    config.terrainNormal << terrainEstimatorPtr_->getTerrainNormal();
-    // TODO missing other params
+    config.terrainNormal = terrainEstimatorPtr_->getTerrainNormal();
     return config;
   };
 
   if (request.contains(Request::Constraint)) {
     for (size_t i = 0; i < info_.numThreeDofContacts; i++) {
       eeNormalVelConConfigs_[i] = eeNormalVelConConfig(i);
+      eeXYVelConConfigs_[i] = eeXYVelConConfig(i);
       frictionConeConConfigs_[i] = frictionConeConConfig(i);
     }
   }

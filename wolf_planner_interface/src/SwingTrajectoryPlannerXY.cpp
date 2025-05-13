@@ -1,5 +1,4 @@
 #include "wolf_planner_interface/SwingTrajectoryPlannerXY.h"
-
 #include <ocs2_core/misc/Lookup.h>
 
 namespace ocs2 {
@@ -62,7 +61,6 @@ void SwingTrajectoryPlannerXY::updateXY(
         const scalar_t tStart = eventTimes[startIdx];
         const scalar_t tEnd = eventTimes[finalIdx];
         const scalar_t tMid = 0.5 * (tStart + tEnd);
-        const scalar_t scaling = swingTrajectoryScaling(tStart, tEnd, config_.swingTimeScale);
 
         // X trajectory
         const scalar_t liftOffX = liftOffXSequence[j][p];
@@ -92,39 +90,48 @@ void SwingTrajectoryPlannerXY::updateXY(
         const scalar_t stanceX = liftOffXSequence[j][p];
         const scalar_t stanceY = liftOffYSequence[j][p];
 
-        CubicSpline::Node node{0.0, stanceX, 0.0};
-        feetXTrajectories_[j].emplace_back(CubicSpline(node, node));
+        CubicSpline::Node nodeX{0.0, stanceX, 0.0};
+        feetXTrajectories_[j].emplace_back(CubicSpline(nodeX, nodeX));
 
-        node = CubicSpline::Node{0.0, stanceY, 0.0};
-        feetYTrajectories_[j].emplace_back(CubicSpline(node, node));
+        CubicSpline::Node nodeY{0.0, stanceY, 0.0};
+        feetYTrajectories_[j].emplace_back(CubicSpline(nodeY, nodeY));
       }
     }
-
     feetHeightTrajectoriesEvents_[j] = eventTimes;
   }
 }
 
 scalar_t SwingTrajectoryPlannerXY::getXpositionConstraint(size_t leg, scalar_t time) const {
-  const auto& events = feetHeightTrajectoriesEvents_[leg];
-  const auto index = lookup::findIndexInTimeArray(events, time);
-
-  const scalar_t midTime = 0.5 * (events[index] + events[index + 1]);
-  if (time <= midTime) {
-    return feetXTrajectories_[leg][2 * index].position(time);
-  } else {
-    return feetXTrajectories_[leg][2 * index + 1].position(time);
-  }
+  return getXYpositionConstraint(leg, time)(0);
 }
 
 scalar_t SwingTrajectoryPlannerXY::getYpositionConstraint(size_t leg, scalar_t time) const {
-  const auto& events = feetHeightTrajectoriesEvents_[leg];
-  const auto index = lookup::findIndexInTimeArray(events, time);
+  return getXYpositionConstraint(leg, time)(1);
+}
 
-  const scalar_t midTime = 0.5 * (events[index] + events[index + 1]);
+Eigen::Vector2d SwingTrajectoryPlannerXY::getXYpositionConstraint(size_t leg, scalar_t time) const {
+  size_t index = lookup::findIndexInTimeArray(feetHeightTrajectoriesEvents_[leg], time);
+  scalar_t midTime = 0.5 * (feetHeightTrajectoriesEvents_[leg][index] + feetHeightTrajectoriesEvents_[leg][index + 1]);
+
   if (time <= midTime) {
-    return feetYTrajectories_[leg][2 * index].position(time);
+    return {feetXTrajectories_[leg][2 * index].position(time),
+            feetYTrajectories_[leg][2 * index].position(time)};
   } else {
-    return feetYTrajectories_[leg][2 * index + 1].position(time);
+    return {feetXTrajectories_[leg][2 * index + 1].position(time),
+            feetYTrajectories_[leg][2 * index + 1].position(time)};
+  }
+}
+
+Eigen::Vector2d SwingTrajectoryPlannerXY::getXYvelocityConstraint(size_t leg, scalar_t time) const {
+  size_t index = lookup::findIndexInTimeArray(feetHeightTrajectoriesEvents_[leg], time);
+  scalar_t midTime = 0.5 * (feetHeightTrajectoriesEvents_[leg][index] + feetHeightTrajectoriesEvents_[leg][index + 1]);
+
+  if (time <= midTime) {
+    return {feetXTrajectories_[leg][2 * index].velocity(time),
+            feetYTrajectories_[leg][2 * index].velocity(time)};
+  } else {
+    return {feetXTrajectories_[leg][2 * index + 1].velocity(time),
+            feetYTrajectories_[leg][2 * index + 1].velocity(time)};
   }
 }
 

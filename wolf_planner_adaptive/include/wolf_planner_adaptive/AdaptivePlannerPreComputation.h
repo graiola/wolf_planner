@@ -8,7 +8,6 @@
 #include "wolf_planner_interface/SwingTrajectoryPlanner.h"
 
 #include "wolf_planner_adaptive/TerrainEstimator.h"
-
 #include "wolf_planner_adaptive/constraint/FrictionConeConstraint.h"
 
 namespace ocs2 {
@@ -33,10 +32,10 @@ class AdaptivePlannerPreComputation : public LeggedRobotPreComputation {
   AdaptivePlannerPreComputation(const AdaptivePlannerPreComputation& other);
 
  protected:
-
   const TerrainEstimator* terrainEstimatorPtr_;
 
   std::vector<FrictionConeConstraint::Config> frictionConeConConfigs_;
+  std::vector<EndEffectorLinearConstraint::Config> eeXYVelConConfigs_;
 };
 
 }  // namespace legged_robot

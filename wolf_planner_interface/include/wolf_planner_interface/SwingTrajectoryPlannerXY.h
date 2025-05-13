@@ -47,6 +47,22 @@ class SwingTrajectoryPlannerXY : public SwingTrajectoryPlanner {
    */
   scalar_t getYpositionConstraint(size_t leg, scalar_t time) const;
 
+  /**
+   * Evaluate the XY-position constraint at a specific time.
+   */
+  Eigen::Vector2d getXYpositionConstraint(size_t leg, scalar_t time) const;
+
+  /**
+   * Evaluate the XY-velocity constraint at a specific time.
+   */
+  Eigen::Vector2d getXYvelocityConstraint(size_t leg, scalar_t time) const;
+
+  const std::vector<SplineCpg>& getZSplineCpgs(size_t leg) const { return feetHeightTrajectories_[leg]; }
+  const std::vector<CubicSpline>& getXSplines(size_t leg) const { return feetXTrajectories_[leg]; }
+  const std::vector<CubicSpline>& getYSplines(size_t leg) const { return feetYTrajectories_[leg]; }
+  const scalar_array_t& getEventTimes(size_t leg) const { return feetHeightTrajectoriesEvents_[leg]; }
+  size_t getNumFeet() const { return numFeet_; }
+
  private:
   // Each leg's X/Y swing trajectory is split into 2 segments per swing phase (lift-off to mid, mid to touch-down)
   feet_array_t<std::vector<CubicSpline>> feetXTrajectories_;
