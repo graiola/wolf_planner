@@ -71,6 +71,7 @@ void PlannerInterface::setupMrt()
         leggedInterface_->mpcSettings().mpcDesiredFrequency_);
       } catch (const std::exception& e) {
         threadRunning_ = false;
+        plannerRunning_ = false;
         ROS_ERROR_STREAM("[PlannerInterface] MPC error: " << e.what());
       }
     }
@@ -131,6 +132,7 @@ bool PlannerInterface::updatePolicy(SystemObservation &observation)
   {
     ROS_ERROR_STREAM("[PlannerInterface] Safety check failed, stopping the planner.");
     threadRunning_ = false;
+    plannerRunning_ = false;
     return false;
   }
 
