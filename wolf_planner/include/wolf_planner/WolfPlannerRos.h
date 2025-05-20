@@ -9,6 +9,7 @@
 #include <wolf_msgs/Postural.h>
 #include <wolf_msgs/ControllerState.h>
 #include <wolf_msgs/TerrainEstimation.h>
+#include <wolf_msgs/String.h>
 
 // ROS
 #include <ros/ros.h>
@@ -71,6 +72,14 @@ class WolfPlannerRos
   void controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg);
 
   std::atomic_bool controllerRunning_{false};
+
+ private:
+
+  void setControlMode(const std::string& robotName, const std::string& controlMode, const int& sleepTime);
+
+  bool autostart_;
+
+  std::string robotName_;
 
 };
 

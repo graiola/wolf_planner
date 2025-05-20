@@ -6,6 +6,7 @@
     <arg name="rviz_gui"      default=""/>
     <arg name="planner_type"  default=""/>
     <arg name="launch_rt_gui" default=""/>
+    <arg name="autostart"     default="" />
 
     <!-- Use this node to generate the URDFs -->
     <!-- <node pkg="wolf_description_utils" type="create_urdf_model.sh" name="create_urdf_model" output="screen"
@@ -15,6 +16,7 @@
     <param name="wolf_planner/robotName"       value="$(arg robot_name)"/>
     <param name="wolf_planner/robotModel"      value="$(arg robot_model)"/>
     <param name="wolf_planner/plannerType"     value="$(arg planner_type)"/>
+    <param name="wolf_planner/autostart"       value="$(arg autostart)"/>
     <param name="wolf_planner/urdfFile"        value="$(find wolf_planner)/config/robots/$(arg robot_model)/$(arg robot_model).urdf"/>
     <param name="wolf_planner/taskFile"        value="$(find wolf_planner)/config/robots/$(arg robot_model)/task.info"/>
     <param name="wolf_planner/referenceFile"   value="$(find wolf_planner)/config/robots/$(arg robot_model)/reference.info"/>

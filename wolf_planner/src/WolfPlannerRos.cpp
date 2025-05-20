@@ -2,6 +2,9 @@
 
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>
 
+#include <thread>
+#include <chrono>
+
 namespace wolf_planner
 {
 
@@ -11,35 +14,35 @@ bool WolfPlannerRos::init()
   std::string urdfFile;
   std::string taskFile;
   std::string referenceFile;
-  std::string robotName;
   std::string robotModel;
   std::string topicPrefix = "wolf_planner";
   std::string plannerType;
   std::vector<std::string> robotFootNames;
   std::string robotBaseName;
 
-  nodeHandle.getParam(topicPrefix+"/robotName",   robotName);
+  nodeHandle.getParam(topicPrefix+"/robotName",   robotName_);
   nodeHandle.getParam(topicPrefix+"/robotModel",  robotModel);
   nodeHandle.getParam(topicPrefix+"/plannerType", plannerType);
   nodeHandle.getParam(topicPrefix+"/urdfFile", urdfFile);
   nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
   nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
+  nodeHandle.param<bool>(topicPrefix+"/autostart", autostart_, false);
   bool verbose = true;
   loadData::loadCppDataType(taskFile, "wolf_planner_interface.verbose", verbose);
 
   // Wait for the controller to start
   ROS_INFO("[WolfPlannerRos] waiting for WoLF controller to start...");
-  while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_foot_names") && ros::ok())
+  while (!nodeHandle.hasParam("/"+robotName_+"/wolf_controller/robot_foot_names") && ros::ok())
     ros::Rate(1).sleep();
-  nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_foot_names", robotFootNames);
+  nodeHandle.getParam("/"+robotName_+"/wolf_controller/robot_foot_names", robotFootNames);
   if(robotFootNames.empty())
   {
     ROS_ERROR("[WolfPlannerRos] robot foot names is empty!");
     return false;
   }
-  while (!nodeHandle.hasParam("/"+robotName+"/wolf_controller/robot_base_name") && ros::ok())
+  while (!nodeHandle.hasParam("/"+robotName_+"/wolf_controller/robot_base_name") && ros::ok())
     ros::Rate(1).sleep();
-  nodeHandle.getParam("/"+robotName+"/wolf_controller/robot_base_name", robotBaseName);
+  nodeHandle.getParam("/"+robotName_+"/wolf_controller/robot_base_name", robotBaseName);
   if(robotBaseName.empty())
   {
     ROS_ERROR("[WolfPlannerRos] robot base name is empty!");
@@ -75,7 +78,7 @@ bool WolfPlannerRos::init()
   }
 
   // Set some variables
-  planner_->setRobotName(robotName);
+  planner_->setRobotName(robotName_);
   planner_->setTopicPrefix(topicPrefix);
   planner_->setRobotBaseName(robotBaseName);
 
@@ -89,7 +92,7 @@ bool WolfPlannerRos::init()
 
   ROS_INFO_STREAM("[WolfPlannerRos] Planner type is: "<< plannerType);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot model is: "<< robotModel);
-  ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName);
+  ROS_INFO_STREAM("[WolfPlannerRos] Robot name is: "<< robotName_);
   ROS_INFO_STREAM("[WolfPlannerRos] Robot base name is: "<< robotBaseName);
   auto jointNames = planner_->getJointNames();
   for(unsigned int i=0;i<jointNames.size();i++)
@@ -106,25 +109,25 @@ bool WolfPlannerRos::init()
   observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
 
   // MPC publishers (FIXME hardcoded, export to a config file)
-  mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/lf_foot_wrench", 1);
-  mpcFootPublisher_lf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/lf_foot",   1);
+  mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName_+"/wolf_controller/reference/lf_foot_wrench", 1);
+  mpcFootPublisher_lf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName_+"/wolf_controller/reference/lf_foot",   1);
 
-  mpcWrenchPublisher_lh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/lh_foot_wrench", 1);
-  mpcFootPublisher_lh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/lh_foot",   1);
+  mpcWrenchPublisher_lh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName_+"/wolf_controller/reference/lh_foot_wrench", 1);
+  mpcFootPublisher_lh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName_+"/wolf_controller/reference/lh_foot",   1);
 
-  mpcWrenchPublisher_rf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/rf_foot_wrench", 1);
-  mpcFootPublisher_rf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/rf_foot",   1);
+  mpcWrenchPublisher_rf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName_+"/wolf_controller/reference/rf_foot_wrench", 1);
+  mpcFootPublisher_rf_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName_+"/wolf_controller/reference/rf_foot",   1);
 
-  mpcWrenchPublisher_rh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName+"/wolf_controller/reference/rh_foot_wrench", 1);
-  mpcFootPublisher_rh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/rh_foot",   1);
+  mpcWrenchPublisher_rh_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName_+"/wolf_controller/reference/rh_foot_wrench", 1);
+  mpcFootPublisher_rh_    = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName_+"/wolf_controller/reference/rh_foot",   1);
 
-  mpcBasePublisher_       = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName+"/wolf_controller/reference/waist",     1);
+  mpcBasePublisher_       = nodeHandle.advertise<wolf_msgs::Cartesian>("/"+robotName_+"/wolf_controller/reference/waist",     1);
 
-  mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> ("/"+robotName+"/wolf_controller/reference/postural",  1);
+  mpcPosturalPublisher_   = nodeHandle.advertise<wolf_msgs::Postural> ("/"+robotName_+"/wolf_controller/reference/postural",  1);
 
   // MPC subscribers (FIXME hardcoded, export to a config file)
-  mpcObservation_         = nodeHandle.subscribe("/"+robotName+"/wolf_controller/mpc_observation",   1, &WolfPlannerRos::observationCallback, this);
-  controllerState_        = nodeHandle.subscribe("/"+robotName+"/wolf_controller/controller_state",  1, &WolfPlannerRos::controllerStateCallback, this);
+  mpcObservation_         = nodeHandle.subscribe("/"+robotName_+"/wolf_controller/mpc_observation",   1, &WolfPlannerRos::observationCallback, this);
+  controllerState_        = nodeHandle.subscribe("/"+robotName_+"/wolf_controller/controller_state",  1, &WolfPlannerRos::controllerStateCallback, this);
 
   return true;
 }
@@ -244,6 +247,8 @@ void WolfPlannerRos::observationCallback(const ocs2_msgs::mpc_observationConstPt
   if(controllerRunning_ && !planner_->isRunning())
   {
     planner_->starting(observation_);
+    if(autostart_)
+      setControlMode(robotName_,"EXT",5); // Make wolf_controller ready to accept external references from the planner
   }
   else if (!controllerRunning_ && planner_->isRunning())
     planner_->stopping();
@@ -251,6 +256,11 @@ void WolfPlannerRos::observationCallback(const ocs2_msgs::mpc_observationConstPt
   // Update the current state of the system
   if(planner_->isRunning())
     updatePolicyAndPublish();
+  else
+  {
+    if(controllerRunning_)
+      setControlMode(robotName_,"WPG",0); // Make wolf_controller works with the walking pattern generator
+  }
 }
 
 void WolfPlannerRos::controllerStateCallback(const wolf_msgs::ControllerStateConstPtr& msg)
@@ -259,6 +269,26 @@ void WolfPlannerRos::controllerStateCallback(const wolf_msgs::ControllerStateCon
     controllerRunning_ = true;
   else
     controllerRunning_ = false;
+}
+
+void WolfPlannerRos::setControlMode(const std::string& robotName, const std::string& controlMode, const int& sleepTime)
+{
+  std::thread([robotName, controlMode, sleepTime]()
+  {
+    std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
+
+    wolf_msgs::String srv;
+    srv.request.data = controlMode;
+
+    if (ros::service::call(robotName+"/wolf_controller/set_control_mode", srv))
+    {
+      ROS_INFO_STREAM("[WolfPlannerRos] Set controller mode to " << controlMode);
+    }
+    else
+    {
+      ROS_ERROR_STREAM("[WolfPlannerRos] Failed to set controller mode to " << controlMode);
+    }
+  }).detach();
 }
 
 } // namespace wolf_planner

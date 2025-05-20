@@ -7,6 +7,7 @@
     <arg name="rviz_gui"             default="true"       doc="launch planner visualization"/>
     <arg name="planner_type"         default="default"    doc="planner type: [default, adaptive, perceptive]"/>
     <arg name="launch_rt_gui"        default="true"       doc="true interact with the planner through rt_gui, false interact via terminal console"/>
+    <arg name="autostart"            default="true"       doc="launch the planner as soon as the robot stands up"/>
 
     <!-- Controller arguments -->
     <arg name="launch_controller"    default="true"  doc="launch controller"/>
@@ -28,6 +29,7 @@
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
              <arg name="planner_type"    value="$(arg planner_type)" />
              <arg name="launch_rt_gui"   value="$(arg launch_rt_gui)" />
+             <arg name="autostart"       value="$(arg autostart)" />
          </include>
     </group>
 
@@ -38,6 +40,7 @@
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
              <arg name="planner_type"    value="$(arg planner_type)" />
              <arg name="launch_rt_gui"   value="$(arg launch_rt_gui)" />
+             <arg name="autostart"       value="$(arg autostart)" />
          </include>
     </group>
 
