@@ -51,24 +51,34 @@ link_directories(
 )
 
 # Target trajectories publish node
-add_executable(wolf_target_node src/TargetTrajectoriesPublisher.cpp)
-add_dependencies(wolf_target_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_target_node
+add_executable(wolf_planner_target_node src/TargetTrajectoriesPublisher.cpp)
+add_dependencies(wolf_planner_target_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_planner_target_node
     ${catkin_LIBRARIES}
     ${ocs2_legged_robot_LIBRARIES}
     ${ocs2_legged_robot_ros_LIBRARIES}
     ${ocs2_self_collision_visualization_LIBRARIES})
-target_compile_options(wolf_target_node PRIVATE ${OCS2_CXX_FLAGS})
+target_compile_options(wolf_planner_target_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # Gait command node
-add_executable(wolf_gait_node src/GaitCommandNode.cpp)
-add_dependencies(wolf_gait_node ${catkin_EXPORTED_TARGETS})
-target_link_libraries(wolf_gait_node
+add_executable(wolf_planner_gait_node src/GaitCommandNode.cpp)
+add_dependencies(wolf_planner_gait_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_planner_gait_node
     ${catkin_LIBRARIES}
     ${ocs2_legged_robot_LIBRARIES}
     ${ocs2_legged_robot_ros_LIBRARIES}
     ${ocs2_self_collision_visualization_LIBRARIES})
-target_compile_options(wolf_gait_node PRIVATE ${OCS2_CXX_FLAGS})
+target_compile_options(wolf_planner_gait_node PRIVATE ${OCS2_CXX_FLAGS})
+
+# RT Gui command node
+add_executable(wolf_planner_rt_gui_node src/RtGuiGaitPublisher.cpp src/RtGuiCommandNode.cpp)
+add_dependencies(wolf_planner_rt_gui_node ${catkin_EXPORTED_TARGETS})
+target_link_libraries(wolf_planner_rt_gui_node
+    ${catkin_LIBRARIES}
+    ${ocs2_legged_robot_LIBRARIES}
+    ${ocs2_legged_robot_ros_LIBRARIES}
+    ${ocs2_self_collision_visualization_LIBRARIES})
+target_compile_options(wolf_planner_rt_gui_node PRIVATE ${OCS2_CXX_FLAGS})
 
 # MPC library
 add_library(wolf_planner src/WolfPlannerRos.cpp)
@@ -91,7 +101,7 @@ target_link_libraries(wolf_planner_node wolf_planner)
 #############
 
 # Mark executables and/or libraries for installation
-install(TARGETS wolf_planner wolf_planner_node wolf_target_node wolf_gait_node
+install(TARGETS wolf_planner wolf_planner_node wolf_planner_target_node wolf_planner_gait_node wolf_planner_rt_gui_node
     ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
     RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

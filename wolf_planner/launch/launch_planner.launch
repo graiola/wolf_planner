@@ -6,6 +6,7 @@
     <arg name="robot_model"          default="spot"       doc="robot model: [a1, aliengo, spot, go1]"/>
     <arg name="rviz_gui"             default="true"       doc="launch planner visualization"/>
     <arg name="planner_type"         default="default"    doc="planner type: [default, adaptive, perceptive]"/>
+    <arg name="launch_rt_gui"        default="true"       doc="true interact with the planner through rt_gui, false interact via terminal console"/>
 
     <!-- Controller arguments -->
     <arg name="launch_controller"    default="true"  doc="launch controller"/>
@@ -26,6 +27,7 @@
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
              <arg name="planner_type"    value="$(arg planner_type)" />
+             <arg name="launch_rt_gui"   value="$(arg launch_rt_gui)" />
          </include>
     </group>
 
@@ -35,6 +37,7 @@
              <arg name="robot_model"     value="$(arg robot_model)"/>
              <arg name="rviz_gui"        value="$(arg rviz_gui)" />
              <arg name="planner_type"    value="$(arg planner_type)" />
+             <arg name="launch_rt_gui"   value="$(arg launch_rt_gui)" />
          </include>
     </group>
 
