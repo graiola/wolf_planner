@@ -153,7 +153,7 @@ void AdaptivePlannerReferenceManager::detectReflexes(scalar_t time, std::vector<
     bool impact = forceInsideLimits && forceNormXZ > forceThreshold_;
 
     if (impact) {
-      std::cout << "[AdaptivePlannerReferenceManager] Impact detected for " << contactName << std::endl;
+      //std::cout << "[AdaptivePlannerReferenceManager] Impact detected for " << contactName << std::endl;
       triggerStepReflex(leg, time);
       reflexEvents.emplace_back(time, leg);
     } else if (stepReflexTriggered_[leg] && reflexTriggerTime_[leg] + kResetHysteresys < time) {
