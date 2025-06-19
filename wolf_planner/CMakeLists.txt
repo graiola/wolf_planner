@@ -11,6 +11,7 @@ find_package(catkin REQUIRED
         wolf_msgs
         wolf_planner_interface
         wolf_controller_utils
+        rt_gui_ros
         )
 
 find_package(pinocchio REQUIRED)

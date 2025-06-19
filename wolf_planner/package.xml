@@ -16,6 +16,7 @@
     <depend>wolf_controller_utils</depend>
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
+    <depend>rt_gui_ros</depend>
 
     <export>
     </export>
