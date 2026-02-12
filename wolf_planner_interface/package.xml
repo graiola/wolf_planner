@@ -6,7 +6,7 @@
     <description>Legged interface base on OCS2</description>
     <maintainer email="gennaro.raiola@gmail.com">Gennaro Raiola</maintainer>
 
-    <license>BSD</license>
+    <license>BSD-3-Clause</license>
     <author email="gennaro.raiola@gmail.com">Gennaro Raiola</author>
 
     <buildtool_depend>catkin</buildtool_depend>

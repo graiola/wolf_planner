@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner/WolfPlannerRos.h"
 
 #include <ocs2_ros_interfaces/common/RosMsgConversions.h>

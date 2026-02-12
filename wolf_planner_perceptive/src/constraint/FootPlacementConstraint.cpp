@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner_perceptive/constraint/FootPlacementConstraint.h"
 #include "wolf_planner_perceptive/PerceptivePlannerPreComputation.h"
 #include "wolf_planner_perceptive/PerceptivePlannerReferenceManager.h"

@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner_perceptive/constraint/FootCollisionConstraint.h"
 
 namespace ocs2 {

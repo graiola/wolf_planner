@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner_adaptive/synchronized_module/OdomReceiver.h"
 
 namespace wolf_planner {

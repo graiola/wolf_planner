@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include <ros/ros.h>
 
 #include <ocs2_self_collision_visualization/GeometryInterfaceVisualization.h>

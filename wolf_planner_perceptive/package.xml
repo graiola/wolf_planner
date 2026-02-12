@@ -5,7 +5,7 @@
     <description>Perceptive planner based on OCS2</description>
     <maintainer email="gennaro.raiola@gmail.com">ToDo</maintainer>
 
-    <license>BSD</license>
+    <license>BSD-3-Clause</license>
     <author email="gennaro.raiola@gmail.com">ToDo</author>
 
     <buildtool_depend>catkin</buildtool_depend>

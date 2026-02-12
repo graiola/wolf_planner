@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner/RtGuiGaitPublisher.h"
 
 #include <rt_gui_ros/rt_gui_client.h>

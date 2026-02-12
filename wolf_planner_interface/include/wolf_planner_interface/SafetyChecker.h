@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 
 namespace wolf_planner

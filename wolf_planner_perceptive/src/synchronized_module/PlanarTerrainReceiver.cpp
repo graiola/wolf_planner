@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #include "wolf_planner_perceptive/synchronized_module/PlanarTerrainReceiver.h"
 
 #include <convex_plane_decomposition_ros/MessageConversion.h>

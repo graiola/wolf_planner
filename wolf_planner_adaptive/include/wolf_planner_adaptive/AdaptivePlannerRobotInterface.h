@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright (c) Gennaro Raiola
+ */
+
 #pragma once
 
 #include "wolf_planner_interface/LeggedInterface.h"
