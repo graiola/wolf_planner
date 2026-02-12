@@ -35,7 +35,7 @@ namespace legged_robot {
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-ZeroVelocityConstraintCppAd::ZeroVelocityConstraintCppAd(const SwitchedModelReferenceManager& referenceManager,
+ZeroVelocityConstraintCppAd::ZeroVelocityConstraintCppAd(const LeggedReferenceManager& referenceManager,
                                                          const EndEffectorKinematics<scalar_t>& endEffectorKinematics,
                                                          size_t contactPointIndex, EndEffectorLinearConstraint::Config config)
     : StateInputConstraint(ConstraintOrder::Linear),

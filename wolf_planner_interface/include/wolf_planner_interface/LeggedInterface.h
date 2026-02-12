@@ -15,7 +15,7 @@
 #include <ocs2_self_collision/PinocchioGeometryInterface.h>
 #include <ocs2_sqp/SqpSettings.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace wolf_planner {
 using namespace ocs2;
@@ -45,7 +45,7 @@ class LeggedInterface : public RobotInterface {
   PinocchioInterface& getPinocchioInterface() { return *pinocchioInterfacePtr_; }
   const CentroidalModelInfo& getCentroidalModelInfo() const { return centroidalModelInfo_; }
   PinocchioGeometryInterface& getGeometryInterface() { return *geometryInterfacePtr_; }
-  std::shared_ptr<SwitchedModelReferenceManager> getSwitchedModelReferenceManagerPtr() const { return referenceManagerPtr_; }
+  std::shared_ptr<LeggedReferenceManager> getLeggedReferenceManagerPtr() const { return referenceManagerPtr_; }
 
   const Initializer& getInitializer() const override { return *initializerPtr_; }
   std::shared_ptr<ReferenceManagerInterface> getReferenceManagerPtr() const override { return referenceManagerPtr_; }
@@ -85,7 +85,7 @@ class LeggedInterface : public RobotInterface {
   std::unique_ptr<PinocchioGeometryInterface> geometryInterfacePtr_;
 
   std::shared_ptr<OptimalControlProblem> problemPtr_;
-  std::shared_ptr<SwitchedModelReferenceManager> referenceManagerPtr_;
+  std::shared_ptr<LeggedReferenceManager> referenceManagerPtr_;
 
   rollout::Settings rolloutSettings_;
   std::unique_ptr<RolloutBase> rolloutPtr_;

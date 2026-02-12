@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_core/constraint/StateInputConstraint.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
 
 namespace ocs2 {
@@ -52,7 +52,7 @@ class ZeroVelocityConstraintCppAd final : public StateInputConstraint {
    * @param [in] contactPointIndex : The 3 DoF contact index.
    * @param [in] config: The constraint coefficients
    */
-  ZeroVelocityConstraintCppAd(const SwitchedModelReferenceManager& referenceManager,
+  ZeroVelocityConstraintCppAd(const LeggedReferenceManager& referenceManager,
                               const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t contactPointIndex,
                               EndEffectorLinearConstraint::Config config = EndEffectorLinearConstraint::Config());
 
@@ -68,7 +68,7 @@ class ZeroVelocityConstraintCppAd final : public StateInputConstraint {
  private:
   ZeroVelocityConstraintCppAd(const ZeroVelocityConstraintCppAd& rhs);
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   std::unique_ptr<EndEffectorLinearConstraint> eeLinearConstraintPtr_;
   const size_t contactPointIndex_;
 };

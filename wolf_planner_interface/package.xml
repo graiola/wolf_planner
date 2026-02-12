@@ -1,17 +1,27 @@
-<?xml version="1.0"?>
-<package format="2">
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
     <name>wolf_planner_interface</name>
     <version>0.0.1</version>
     <description>Legged interface base on OCS2</description>
-    <maintainer email="todo@gmail.com">ToDo</maintainer>
+    <maintainer email="gennaro.raiola@gmail.com">Gennaro Raiola</maintainer>
 
     <license>BSD</license>
-    <author email="todo@gmail.com">ToDo</author>
+    <author email="gennaro.raiola@gmail.com">Gennaro Raiola</author>
 
     <buildtool_depend>catkin</buildtool_depend>
+
     <depend>roscpp</depend>
+    <depend>pluginlib</depend>
     <depend>wolf_msgs</depend>
+    <depend>wolf_controller_utils</depend>
+
     <depend>pinocchio</depend>
     <depend>hpp-fcl</depend>
+
+    <depend>ocs2_legged_robot</depend>
+    <depend>ocs2_legged_robot_ros</depend>
+    <depend>ocs2_self_collision</depend>
+    <depend>ocs2_self_collision_visualization</depend>
 
 </package>

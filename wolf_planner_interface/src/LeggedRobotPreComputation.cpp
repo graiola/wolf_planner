@@ -38,23 +38,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "wolf_planner_interface/LeggedRobotPreComputation.h"
 
+
 namespace ocs2 {
 namespace legged_robot {
 
 /******************************************************************************************************/
 /******************************************************************************************************/
 /******************************************************************************************************/
-LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchioInterface, CentroidalModelInfo info,
-                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner, const TerrainEstimator& terrainEstimator,
+LeggedRobotPreComputation::LeggedRobotPreComputation(PinocchioInterface pinocchioInterface,
+                                                     CentroidalModelInfo info,
+                                                     const SwingTrajectoryPlanner& swingTrajectoryPlanner,
                                                      ModelSettings settings)
     : pinocchioInterface_(std::move(pinocchioInterface)),
       info_(std::move(info)),
       swingTrajectoryPlannerPtr_(&swingTrajectoryPlanner),
-      terrainEstimatorPtr_(&terrainEstimator),
       mappingPtr_(new CentroidalModelPinocchioMapping(info_)),
       settings_(std::move(settings)) {
   eeNormalVelConConfigs_.resize(info_.numThreeDofContacts);
-  frictionConeConConfigs_.resize(info_.numThreeDofContacts);
   mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
@@ -65,11 +65,9 @@ LeggedRobotPreComputation::LeggedRobotPreComputation(const LeggedRobotPreComputa
     : pinocchioInterface_(rhs.pinocchioInterface_),
       info_(rhs.info_),
       swingTrajectoryPlannerPtr_(rhs.swingTrajectoryPlannerPtr_),
-      terrainEstimatorPtr_(rhs.terrainEstimatorPtr_),
       mappingPtr_(rhs.mappingPtr_->clone()),
       settings_(rhs.settings_) {
   eeNormalVelConConfigs_.resize(rhs.eeNormalVelConConfigs_.size());
-  frictionConeConConfigs_.resize(rhs.frictionConeConConfigs_.size());
   mappingPtr_->setPinocchioInterface(pinocchioInterface_);
 }
 
@@ -88,23 +86,14 @@ void LeggedRobotPreComputation::request(RequestSet request, scalar_t t, const ve
     config.Av = (matrix_t(1, 3) << 0.0, 0.0, 1.0).finished();
     if (!numerics::almost_eq(settings_.positionErrorGain, 0.0)) {
       config.b(0) -= settings_.positionErrorGain * swingTrajectoryPlannerPtr_->getZpositionConstraint(footIndex, t);
-      config.Ax = (matrix_t(1, 3) << 0.0, 0.0, settings_.positionErrorGain).finished();
+      config.Ax = settings_.positionErrorGain * (matrix_t(1, 3) << 0.0, 0.0, 1.0).finished();
     }
-    return config;
-  };
-
-  // lambda to set config for friction cone constraints
-  auto frictionConeConConfig = [&](size_t footIndex) {
-    FrictionConeConstraint::Config config;
-    config.terrainNormal << terrainEstimatorPtr_->getTerrainNormal();
-    // TODO missing other params
     return config;
   };
 
   if (request.contains(Request::Constraint)) {
     for (size_t i = 0; i < info_.numThreeDofContacts; i++) {
       eeNormalVelConConfigs_[i] = eeNormalVelConConfig(i);
-      frictionConeConConfigs_[i] = frictionConeConConfig(i);
     }
   }
 

@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ocs2_core/cost/QuadraticStateInputCost.h>
 #include <ocs2_legged_robot/common/utils.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 
 namespace ocs2 {
 namespace legged_robot {
@@ -45,7 +45,7 @@ namespace legged_robot {
 class LeggedRobotStateInputQuadraticCost final : public QuadraticStateInputCost {
  public:
   LeggedRobotStateInputQuadraticCost(matrix_t Q, matrix_t R, CentroidalModelInfo info,
-                                     const SwitchedModelReferenceManager& referenceManager)
+                                     const LeggedReferenceManager& referenceManager)
       : QuadraticStateInputCost(std::move(Q), std::move(R)), info_(std::move(info)), referenceManagerPtr_(&referenceManager) {}
 
   ~LeggedRobotStateInputQuadraticCost() override = default;
@@ -63,7 +63,7 @@ class LeggedRobotStateInputQuadraticCost final : public QuadraticStateInputCost 
   }
 
   const CentroidalModelInfo info_;
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
 };
 
 /**
@@ -71,7 +71,7 @@ class LeggedRobotStateInputQuadraticCost final : public QuadraticStateInputCost 
  */
 class LeggedRobotStateQuadraticCost final : public QuadraticStateCost {
  public:
-  LeggedRobotStateQuadraticCost(matrix_t Q, CentroidalModelInfo info, const SwitchedModelReferenceManager& referenceManager)
+  LeggedRobotStateQuadraticCost(matrix_t Q, CentroidalModelInfo info, const LeggedReferenceManager& referenceManager)
       : QuadraticStateCost(std::move(Q)), info_(std::move(info)), referenceManagerPtr_(&referenceManager) {}
 
   ~LeggedRobotStateQuadraticCost() override = default;
@@ -87,7 +87,7 @@ class LeggedRobotStateQuadraticCost final : public QuadraticStateCost {
   }
 
   const CentroidalModelInfo info_;
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
 };
 
 }  // namespace legged_robot

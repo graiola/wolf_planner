@@ -9,7 +9,7 @@ using namespace legged_robot;
 int main(int argc, char* argv[])
 {
   // Initialize ros node
-  ros::init(argc, argv, "wolf_gait_node");
+  ros::init(argc, argv, "wolf_planner_gait_node");
   ros::NodeHandle nodeHandle;
   // Get node parameters
   std::string gaitCommandFile;

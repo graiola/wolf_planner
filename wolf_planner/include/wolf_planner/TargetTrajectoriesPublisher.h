@@ -8,7 +8,7 @@
 #include <ocs2_mpc/SystemObservation.h>
 #include <ocs2_ros_interfaces/command/TargetTrajectoriesRosPublisher.h>
 
-#define WORLD_FRAME_NAME "world"
+#define WORLD_FRAME_NAME "odom"
 
 namespace wolf_planner
 {
@@ -94,7 +94,7 @@ class TargetTrajectoriesPublisher final
       targetTrajectoriesPublisher_->publishTargetTrajectories(trajectories);
     };
 
-    goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1, goalCallback);
+    goalSub_ = nh.subscribe<geometry_msgs::PoseStamped>("/"+robotName+"/wolf_planner/goal", 1, goalCallback);
     cmdVelSub_ = nh.subscribe<geometry_msgs::Twist>("/"+robotName+"/wolf_planner/twist", 1, cmdVelCallback);
   }
 

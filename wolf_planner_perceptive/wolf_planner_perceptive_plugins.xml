@@ -1,0 +1,5 @@
+<library path="lib/libwolf_planner_perceptive">
+  <class type="wolf_planner::PerceptivePlanner" base_class_type="wolf_planner::PlannerInterface">
+    <description>Perceptive planner plugin for wolf_planner.</description>
+  </class>
+</library>

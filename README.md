@@ -24,7 +24,7 @@ git clone https://github.com/graiola/ocs2_robotic_assets.git
 Compile only the necesary ocs2 packages:
 
 ```
-catkin build ocs2_legged_robot_ros ocs2_self_collision_visualization -DCMAKE_BUILD_TYPE=Release
+catkin build ocs2_sphere_approximation ocs2_legged_robot_ros ocs2_self_collision_visualization -DCMAKE_BUILD_TYPE=Release
 ```
 For the wolf dependencies please refer to [wolf-setup](https://github.com/graiola/wolf-setup).
 

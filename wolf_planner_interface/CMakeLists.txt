@@ -3,10 +3,11 @@ project(wolf_planner_interface)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(catkin REQUIRED
-        COMPONENTS
+find_package(catkin REQUIRED COMPONENTS
         roscpp
+        pluginlib
         wolf_msgs
+        wolf_controller_utils
         )
 
 find_package(Boost REQUIRED COMPONENTS
@@ -19,19 +20,27 @@ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(pinocchio REQUIRED)
 find_package(hpp-fcl REQUIRED)
 find_package(ocs2_legged_robot REQUIRED)
+find_package(ocs2_legged_robot_ros REQUIRED)
 find_package(ocs2_self_collision REQUIRED)
+find_package(ocs2_self_collision_visualization REQUIRED)
 
 catkin_package(
         INCLUDE_DIRS
-        include
+            include
         LIBRARIES
-        ${PROJECT_NAME}
+            ${PROJECT_NAME}
         CATKIN_DEPENDS
-        roscpp
-        wolf_msgs
+            roscpp
+            pluginlib
+            wolf_msgs
+            wolf_controller_utils
         DEPENDS
-        pinocchio
-        hpp-fcl
+            pinocchio
+            hpp-fcl
+            ocs2_legged_robot
+            ocs2_legged_robot_ros
+            ocs2_self_collision
+            ocs2_self_collision_visualization
 )
 
 ###########
@@ -45,7 +54,9 @@ include_directories(
         ${pinocchio_INCLUDE_DIRS}
         ${hpp-fcl_INCLUDE_DIRS}
         ${ocs2_legged_robot_INCLUDE_DIRS}
+        ${ocs2_legged_robot_ros_INCLUDE_DIRS}
         ${ocs2_self_collision_INCLUDE_DIRS}
+        ${ocs2_self_collision_visualization_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -59,20 +70,20 @@ add_library(${PROJECT_NAME}
         src/constraint/NormalVelocityConstraintCppAd.cpp
         src/constraint/ZeroVelocityConstraintCppAd.cpp
         src/initialization/LeggedRobotInitializer.cpp
-        src/synchronizer/TerrainEstimationReceiver.cpp
-        src/TerrainEstimator.cpp
+        src/PlannerInterface.cpp
         src/SwingTrajectoryPlanner.cpp
-        src/SwitchedModelReferenceManager.cpp
+        src/LeggedReferenceManager.cpp
         src/LeggedRobotPreComputation.cpp
         src/LeggedInterface.cpp
         )
-
 target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         ${hpp-fcl_LIBRARIES}
         ${ocs2_legged_robot_LIBRARIES}
+        ${ocs2_legged_robot_ros_LIBRARIES}
         ${ocs2_self_collision_LIBRARIES}
+        ${ocs2_self_collision_visualization_LIBRARIES}
         )
 target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
 

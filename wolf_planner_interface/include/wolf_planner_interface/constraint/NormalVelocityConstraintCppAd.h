@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <ocs2_core/constraint/StateInputConstraint.h>
 
-#include "wolf_planner_interface/SwitchedModelReferenceManager.h"
+#include "wolf_planner_interface/LeggedReferenceManager.h"
 #include "wolf_planner_interface/constraint/EndEffectorLinearConstraint.h"
 
 namespace ocs2 {
@@ -51,7 +51,7 @@ class NormalVelocityConstraintCppAd final : public StateInputConstraint {
    * @param [in] endEffectorKinematics: The kinematic interface to the target end-effector.
    * @param [in] contactPointIndex : The 3 DoF contact index.
    */
-  NormalVelocityConstraintCppAd(const SwitchedModelReferenceManager& referenceManager,
+  NormalVelocityConstraintCppAd(const LeggedReferenceManager& referenceManager,
                                 const EndEffectorKinematics<scalar_t>& endEffectorKinematics, size_t contactPointIndex);
 
   ~NormalVelocityConstraintCppAd() override = default;
@@ -66,7 +66,7 @@ class NormalVelocityConstraintCppAd final : public StateInputConstraint {
  private:
   NormalVelocityConstraintCppAd(const NormalVelocityConstraintCppAd& rhs);
 
-  const SwitchedModelReferenceManager* referenceManagerPtr_;
+  const LeggedReferenceManager* referenceManagerPtr_;
   std::unique_ptr<EndEffectorLinearConstraint> eeLinearConstraintPtr_;
   const size_t contactPointIndex_;
 };

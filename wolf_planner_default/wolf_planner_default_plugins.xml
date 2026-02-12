@@ -1,0 +1,5 @@
+<library path="lib/libwolf_planner_default">
+  <class type="wolf_planner::DefaultPlanner" base_class_type="wolf_planner::PlannerInterface">
+    <description>Default planner plugin for wolf_planner.</description>
+  </class>
+</library>
