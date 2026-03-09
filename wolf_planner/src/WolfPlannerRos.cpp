@@ -4,8 +4,7 @@
  */
 
 #include "wolf_planner/WolfPlannerRos.h"
-
-#include <ocs2_ros_interfaces/common/RosMsgConversions.h>
+#include "wolf_planner/MpcObservationConversions.h"
 
 #include <thread>
 #include <chrono>
@@ -111,7 +110,7 @@ bool WolfPlannerRos::init()
   observation_.mode = ModeNumber::STANCE;
 
   // Observation used by the target node
-  observationPublisher_ = nodeHandle.advertise<ocs2_msgs::mpc_observation>(topicPrefix + "/mpc_observation", 1);
+  observationPublisher_ = nodeHandle.advertise<wolf_msgs::MpcObservation>(topicPrefix + "/mpc_observation", 1);
 
   // MPC publishers (FIXME hardcoded, export to a config file)
   mpcWrenchPublisher_lf_  = nodeHandle.advertise<wolf_msgs::Wrench>   ("/"+robotName_+"/wolf_controller/reference/lf_foot_wrench", 1);
@@ -234,13 +233,13 @@ void WolfPlannerRos::updatePolicyAndPublish()
   mpcPosturalPublisher_.publish(posturalMsg_);
 
   // Publish the observation. Only needed for the command interface
-  observationPublisher_.publish(ros_msg_conversions::createObservationMsg(observation_));
+  observationPublisher_.publish(mpc_observation_conversions::createMessage(observation_));
 
   // Visualization
   planner_->updateVisualization(observation_);
 }
 
-void WolfPlannerRos::observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg)
+void WolfPlannerRos::observationCallback(const wolf_msgs::MpcObservationConstPtr& msg)
 {
    // Create the observation from the ROS message
    observation_.time = msg->time;

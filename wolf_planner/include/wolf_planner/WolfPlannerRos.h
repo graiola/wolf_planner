@@ -5,14 +5,12 @@
 
 #pragma once
 
-// OCS2
-#include <ocs2_msgs/mpc_observation.h>
-
 // WoLF msgs
 #include <wolf_msgs/Wrench.h>
 #include <wolf_msgs/Cartesian.h>
 #include <wolf_msgs/Postural.h>
 #include <wolf_msgs/ControllerState.h>
+#include <wolf_msgs/MpcObservation.h>
 #include <wolf_msgs/TerrainEstimation.h>
 #include <wolf_msgs/String.h>
 
@@ -70,7 +68,7 @@ class WolfPlannerRos
 
   // Observation Input
   ros::Subscriber mpcObservation_;
-  void observationCallback(const ocs2_msgs::mpc_observationConstPtr& msg);
+  void observationCallback(const wolf_msgs::MpcObservationConstPtr& msg);
 
   // Controller state
   ros::Subscriber controllerState_;

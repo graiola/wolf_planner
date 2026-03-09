@@ -10,7 +10,6 @@
 
 // OCS2
 #include <ocs2_mpc/MPC_MRT_Interface.h>
-#include <ocs2_msgs/mpc_observation.h>
 #include <ocs2_core/thread_support/ExecuteAndSleep.h>
 #include <ocs2_core/thread_support/SetThreadPriority.h>
 #include <ocs2_pinocchio_interface/PinocchioInterface.h>

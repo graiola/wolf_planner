@@ -12,6 +12,9 @@
 
 #include <ocs2_mpc/SystemObservation.h>
 #include <ocs2_ros_interfaces/command/TargetTrajectoriesRosPublisher.h>
+#include <wolf_msgs/MpcObservation.h>
+
+#include "wolf_planner/MpcObservationConversions.h"
 
 #define WORLD_FRAME_NAME "odom"
 
@@ -39,11 +42,11 @@ class TargetTrajectoriesPublisher final
     targetTrajectoriesPublisher_.reset(new TargetTrajectoriesRosPublisher(nh, topicPrefix_));
 
     // observation subscriber
-    auto observationCallback = [this](const ocs2_msgs::mpc_observation::ConstPtr& msg) {
+    auto observationCallback = [this](const wolf_msgs::MpcObservation::ConstPtr& msg) {
       std::lock_guard<std::mutex> lock(latestObservationMutex_);
-      latestObservation_ = ros_msg_conversions::readObservationMsg(*msg);
+      latestObservation_ = mpc_observation_conversions::readMessage(*msg);
     };
-    observationSub_ = nh.subscribe<ocs2_msgs::mpc_observation>(topicPrefix_ + "/mpc_observation", 1, observationCallback);
+    observationSub_ = nh.subscribe<wolf_msgs::MpcObservation>(topicPrefix_ + "/mpc_observation", 1, observationCallback);
 
     // goal subscriber
     auto goalCallback = [this](const geometry_msgs::PoseStamped::ConstPtr& msg) {
