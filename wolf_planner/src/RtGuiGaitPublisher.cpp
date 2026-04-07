@@ -37,7 +37,7 @@ RtGuiGaitPublisher::RtGuiGaitPublisher(ros::NodeHandle& nh, const std::string& g
   modeSequenceTemplatePublisher_ = nh.advertise<ocs2_msgs::mode_schedule>(robotName + "_mpc_mode_schedule", 1, true);
 
   // Setup GUI
-  rt_gui::RtGuiClient::getIstance().init("wolf_rviz","wolf_planner_gui");
+  rt_gui::RtGuiClient::getIstance().init("/wolf_rviz","wolf_planner_gui");
   rt_gui::RtGuiClient::getIstance().addList("gait", "select", gaitList_, &selectedGait_);
 
   ROS_INFO_STREAM(robotName + "_mpc_mode_schedule GUI node is ready.");

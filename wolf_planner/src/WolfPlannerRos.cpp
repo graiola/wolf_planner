@@ -283,14 +283,15 @@ void WolfPlannerRos::setControlMode(const std::string& robotName, const std::str
 
     wolf_msgs::String srv;
     srv.request.data = controlMode;
+    const std::string service_name = "/" + robotName + "/wolf_controller/set_control_mode";
 
-    if (ros::service::call(robotName+"/wolf_controller/set_control_mode", srv))
+    if (ros::service::call(service_name, srv))
     {
       ROS_INFO_STREAM("[WolfPlannerRos] Set controller mode to " << controlMode);
     }
     else
     {
-      ROS_ERROR_STREAM("[WolfPlannerRos] Failed to set controller mode to " << controlMode);
+      ROS_ERROR_STREAM("[WolfPlannerRos] Failed to set controller mode to " << controlMode << " via " << service_name);
     }
   }).detach();
 }
