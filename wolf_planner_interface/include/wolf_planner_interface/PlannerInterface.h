@@ -74,6 +74,8 @@ public:
 
   void setTopicPrefix(const std::string& topicPrefix) { topicPrefix_ = topicPrefix; }
 
+  void setFramePrefix(const std::string& framePrefix) { framePrefix_ = framePrefix; }
+
   void setRobotName(const std::string& robotName) { robotName_ = robotName; }
 
   void setRobotBaseName(const std::string& robotBaseName) { robotBaseName_ = robotBaseName; }
@@ -99,6 +101,8 @@ protected:
   ros::NodeHandle nodeHandle_;
 
   std::string topicPrefix_;
+
+  std::string framePrefix_;
 
   std::string robotName_;
 

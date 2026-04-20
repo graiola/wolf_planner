@@ -84,6 +84,7 @@ bool WolfPlannerRos::init()
   // Set some variables
   planner_->setRobotName(robotName_);
   planner_->setTopicPrefix(topicPrefix);
+  planner_->setFramePrefix(robotName_.empty() ? topicPrefix : robotName_ + "/" + topicPrefix);
   planner_->setRobotBaseName(robotBaseName);
 
   if(!planner_->setup(nodeHandle,taskFile,urdfFile,referenceFile,verbose))

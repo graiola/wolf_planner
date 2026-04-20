@@ -10,13 +10,14 @@ int main(int argc, char* argv[]) {
   ros::NodeHandle nh;
 
   // Get node parameters
-  std::string gaitCommandFile;
+  std::string gaitCommandFile, robotName;
   const std::string topicPrefix = "wolf_planner";
   nh.getParam(topicPrefix+"/gaitCommandFile", gaitCommandFile);
+  nh.getParam(topicPrefix+"/robotName",       robotName);
   std::cerr << "Loading gait file: " << gaitCommandFile << std::endl;
 
   try {
-    wolf::RtGuiGaitPublisher guiNode(nh, gaitCommandFile, topicPrefix);
+    wolf::RtGuiGaitPublisher guiNode(nh, gaitCommandFile, robotName);
     guiNode.run();
   } catch (const std::exception& e) {
     ROS_FATAL_STREAM("Exception caught: " << e.what());

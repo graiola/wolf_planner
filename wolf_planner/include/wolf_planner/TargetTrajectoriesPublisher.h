@@ -29,12 +29,14 @@ class TargetTrajectoriesPublisher final
   using CmdToTargetTrajectories = std::function<TargetTrajectories(const vector_t& cmd, const SystemObservation& observation)>;
 
   TargetTrajectoriesPublisher(::ros::NodeHandle& nh, const std::string& topicPrefix, const std::string& robotName,
+                              const std::string& framePrefix,
                               CmdToTargetTrajectories goalToTargetTrajectories,
                               CmdToTargetTrajectories cmdVelToTargetTrajectories)
       : goalToTargetTrajectories_(std::move(goalToTargetTrajectories)),
         cmdVelToTargetTrajectories_(std::move(cmdVelToTargetTrajectories)),
         topicPrefix_(topicPrefix),
         robotName_(robotName),
+        framePrefix_(framePrefix.empty() ? topicPrefix : framePrefix),
         tf2_(buffer_),
         resetVelDone_(false)
   {
@@ -55,7 +57,7 @@ class TargetTrajectoriesPublisher final
       }
       geometry_msgs::PoseStamped pose = *msg;
       try {
-        buffer_.transform(pose, pose, topicPrefix_+"/"+WORLD_FRAME_NAME, ros::Duration(0.2)); // FIXME hardcoded frame name
+        buffer_.transform(pose, pose, framePrefix_ + "/" + WORLD_FRAME_NAME, ros::Duration(0.2));
       } catch (tf2::TransformException& ex) {
         ROS_WARN("Failure %s\n", ex.what());
         return;
@@ -120,6 +122,7 @@ class TargetTrajectoriesPublisher final
 
   std::string topicPrefix_;
   std::string robotName_;
+  std::string framePrefix_;
 
   bool resetVelDone_;
 };

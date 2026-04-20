@@ -20,10 +20,12 @@ namespace ocs2 {
 namespace legged_robot {
 
 SphereVisualization::SphereVisualization(PinocchioInterface pinocchioInterface, CentroidalModelInfo centroidalModelInfo,
-                                         const PinocchioSphereInterface& sphereInterface, ros::NodeHandle& nh, scalar_t maxUpdateFrequency)
+                                         const PinocchioSphereInterface& sphereInterface, ros::NodeHandle& nh,
+                                         const std::string& frameId, scalar_t maxUpdateFrequency)
     : pinocchioInterface_(std::move(pinocchioInterface)),
       centroidalModelInfo_(std::move(centroidalModelInfo)),
       sphereInterface_(sphereInterface),
+      frameId_(frameId),
       markerPublisher_(nh.advertise<visualization_msgs::MarkerArray>("sphere_markers", 1)),
       lastTime_(std::numeric_limits<scalar_t>::lowest()),
       minPublishTimeDifference_(1.0 / maxUpdateFrequency) {}
@@ -46,7 +48,7 @@ void SphereVisualization::update(const SystemObservation& observation) {
     for (int i = 0; i < numSpheres.size(); ++i) {
       visualization_msgs::Marker marker;
       marker.id = i;
-      marker.header.frame_id = "odom";
+      marker.header.frame_id = frameId_;
       marker.type = visualization_msgs::Marker::SPHERE_LIST;
       marker.color = getColor(Color::red, 0.5);
       marker.pose.orientation = ros_msg_helpers::getOrientationMsg({1, 0, 0, 0});

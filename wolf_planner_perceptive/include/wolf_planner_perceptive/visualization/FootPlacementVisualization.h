@@ -21,7 +21,7 @@ namespace legged_robot {
 class FootPlacementVisualization {
  public:
   FootPlacementVisualization(const ConvexRegionSelector& convexRegionSelector, size_t numFoot, ros::NodeHandle& nh,
-                             scalar_t maxUpdateFrequency = 20.0);
+                             const std::string& frameId = "odom", scalar_t maxUpdateFrequency = 20.0);
 
   void update(const SystemObservation& observation);
 
@@ -37,6 +37,7 @@ class FootPlacementVisualization {
   const ConvexRegionSelector& convexRegionSelector_;
 
   size_t numFoot_;
+  std::string frameId_;
   ros::Publisher markerPublisher_;
   scalar_t lastTime_;
   scalar_t minPublishTimeDifference_;

@@ -14,7 +14,7 @@ namespace wolf {
 
 RtGuiGaitPublisher::RtGuiGaitPublisher(ros::NodeHandle& nh, const std::string& gaitFile, const std::string& robotName, double rateHz)
     : loopRateHz_(rateHz) {
-  ROS_INFO_STREAM(robotName + "_mpc_mode_schedule node is setting up ...");
+  ROS_INFO_STREAM("wolf_planner_mpc_mode_schedule node is setting up ...");
 
   // Load gait list from file
   bool verbose = true;
@@ -34,13 +34,19 @@ RtGuiGaitPublisher::RtGuiGaitPublisher(ros::NodeHandle& nh, const std::string& g
   lastGait_ = selectedGait_;
 
   // Setup publisher
-  modeSequenceTemplatePublisher_ = nh.advertise<ocs2_msgs::mode_schedule>(robotName + "_mpc_mode_schedule", 1, true);
+  modeSequenceTemplatePublisher_ = nh.advertise<ocs2_msgs::mode_schedule>("wolf_planner_mpc_mode_schedule", 1, true);
 
   // Setup GUI
-  rt_gui::RtGuiClient::getIstance().init("/wolf_rviz","wolf_planner_gui");
-  rt_gui::RtGuiClient::getIstance().addList("gait", "select", gaitList_, &selectedGait_);
+  std::string rt_gui_group = "";
+  if(robotName.empty())
+    rt_gui_group = "gait";
+  else
+    rt_gui_group = "gait/"+robotName;
 
-  ROS_INFO_STREAM(robotName + "_mpc_mode_schedule GUI node is ready.");
+  rt_gui::RtGuiClient::getIstance().init("/wolf_rviz","/wolf_planner_gui");
+  rt_gui::RtGuiClient::getIstance().addList(rt_gui_group, "select", gaitList_, &selectedGait_);
+
+  ROS_INFO_STREAM("wolf_planner_mpc_mode_schedule GUI node is ready.");
 }
 
 void RtGuiGaitPublisher::run() {

@@ -15,9 +15,10 @@ namespace ocs2 {
 namespace legged_robot {
 
 FootPlacementVisualization::FootPlacementVisualization(const ConvexRegionSelector& convexRegionSelector, size_t numFoot,
-                                                       ros::NodeHandle& nh, scalar_t maxUpdateFrequency)
+                                                       ros::NodeHandle& nh, const std::string& frameId, scalar_t maxUpdateFrequency)
     : convexRegionSelector_(convexRegionSelector),
       numFoot_(numFoot),
+      frameId_(frameId),
       markerPublisher_(nh.advertise<visualization_msgs::MarkerArray>("foot_placement", 1)),
       lastTime_(std::numeric_limits<scalar_t>::lowest()),
       minPublishTimeDifference_(1.0 / maxUpdateFrequency) {}
@@ -28,7 +29,7 @@ void FootPlacementVisualization::update(const SystemObservation& observation) {
 
     std_msgs::Header header;
     //    header.stamp.fromNSec(planarTerrainPtr->gridMap.getTimestamp());
-    header.frame_id = "odom";
+    header.frame_id = frameId_;
 
     visualization_msgs::MarkerArray makerArray;
 

@@ -63,26 +63,29 @@ void PerceptivePlanner::setupSynchronizedModules()
 
 void PerceptivePlanner::setupVisualization()
 {
+  const auto visualizationFramePrefix = framePrefix_.empty() ? topicPrefix_ : framePrefix_;
   ros::NodeHandle visualizationNodeHandle(topicPrefix_);
 
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, topicPrefix_);
+                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, visualizationFramePrefix);
 
-  robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
+  robotVisualizer_->frameId_ =  visualizationFramePrefix + "/" + WORLD_FRAME_NAME;
   robotVisualizer_->baseName_ = robotBaseName_;
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, topicPrefix_);
+                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, visualizationFramePrefix);
   // Foot placement visualizer
   footPlacementVisualization_ = std::make_shared<FootPlacementVisualization>(
        *dynamic_cast<PerceptivePlannerReferenceManager&>(*leggedInterface_->getReferenceManagerPtr()).getConvexRegionSelectorPtr(),
-       leggedInterface_->getCentroidalModelInfo().numThreeDofContacts, visualizationNodeHandle);
+       leggedInterface_->getCentroidalModelInfo().numThreeDofContacts, visualizationNodeHandle,
+       visualizationFramePrefix + "/" + WORLD_FRAME_NAME);
 
    // Sphere visualizer
    sphereVisualization_ = std::make_shared<SphereVisualization>(
        leggedInterface_->getPinocchioInterface(), leggedInterface_->getCentroidalModelInfo(),
-       *dynamic_cast<PerceptivePlannerRobotInterface&>(*leggedInterface_).getPinocchioSphereInterfacePtr(), visualizationNodeHandle);
+       *dynamic_cast<PerceptivePlannerRobotInterface&>(*leggedInterface_).getPinocchioSphereInterfacePtr(), visualizationNodeHandle,
+       visualizationFramePrefix + "/" + WORLD_FRAME_NAME);
 }
 
 void PerceptivePlanner::updateVisualization(const SystemObservation& observation)

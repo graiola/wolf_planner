@@ -100,10 +100,12 @@ int main(int argc, char** argv) {
   std::string robotName;
   std::string robotModel;
   std::string topicPrefix = "wolf_planner";
+  std::string framePrefix;
   nodeHandle.getParam(topicPrefix+"/robotName", robotName);
   nodeHandle.getParam(topicPrefix+"/robotModel", robotModel);
   nodeHandle.getParam(topicPrefix+"/referenceFile", referenceFile);
   nodeHandle.getParam(topicPrefix+"/taskFile", taskFile);
+  framePrefix = robotName.empty() ? topicPrefix : robotName + "/" + topicPrefix;
 
   loadData::loadCppDataType(referenceFile, "comHeight", COM_HEIGHT);
   loadData::loadEigenMatrix(referenceFile, "defaultJointState", DEFAULT_JOINT_STATE);
@@ -111,7 +113,8 @@ int main(int argc, char** argv) {
   loadData::loadCppDataType(referenceFile, "targetDisplacementVelocity", TARGET_DISPLACEMENT_VELOCITY);
   loadData::loadCppDataType(taskFile, "mpc.timeHorizon", TIME_TO_TARGET);
 
-  TargetTrajectoriesPublisher targetPoseCommand(nodeHandle, topicPrefix, robotName, &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
+  TargetTrajectoriesPublisher targetPoseCommand(nodeHandle, topicPrefix, robotName, framePrefix,
+                                                &goalToTargetTrajectories, &cmdVelToTargetTrajectories);
 
   ros::spin();
   // Successful exit

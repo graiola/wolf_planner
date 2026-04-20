@@ -54,16 +54,17 @@ void DefaultPlanner::setupSynchronizedModules()
 
 void DefaultPlanner::setupVisualization()
 {
+  const auto visualizationFramePrefix = framePrefix_.empty() ? topicPrefix_ : framePrefix_;
   ros::NodeHandle visualizationNodeHandle(topicPrefix_);
   robotVisualizer_ = std::make_shared<LeggedRobotVisualizer>(leggedInterface_->getPinocchioInterface(),
-                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, topicPrefix_);
+                                                      leggedInterface_->getCentroidalModelInfo(), *eeKinematics_, visualizationNodeHandle, visualizationFramePrefix);
 
-  robotVisualizer_->frameId_ =  topicPrefix_+"/"+WORLD_FRAME_NAME;
+  robotVisualizer_->frameId_ =  visualizationFramePrefix + "/" + WORLD_FRAME_NAME;
   robotVisualizer_->baseName_ = robotBaseName_;
 
   // Self collision visualizer
   selfCollisionVisualization_ = std::make_shared<LeggedSelfCollisionVisualization>(leggedInterface_->getPinocchioInterface(),
-                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, topicPrefix_);
+                                                                                   leggedInterface_->getGeometryInterface(), *pinocchioMapping_, visualizationNodeHandle, visualizationFramePrefix);
 }
 
 void DefaultPlanner::updateVisualization(const SystemObservation &observation)
