@@ -28,7 +28,7 @@ using namespace legged_robot;
 
 class LeggedInterface : public RobotInterface {
  public:
-  LeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+  LeggedInterface(const std::string& robotName, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                   bool useHardFrictionConeConstraint = true);
 
   ~LeggedInterface() override = default;

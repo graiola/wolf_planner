@@ -16,7 +16,7 @@ using namespace legged_robot;
 
 class PerceptivePlannerRobotInterface : public LeggedInterface {
  public:
-  PerceptivePlannerRobotInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+  PerceptivePlannerRobotInterface(const std::string& robotName, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                   bool useHardFrictionConeConstraint = true);
 
   ~PerceptivePlannerRobotInterface() override = default;

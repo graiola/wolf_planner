@@ -19,8 +19,8 @@
 
 namespace wolf_planner {
 
-PerceptivePlannerRobotInterface::PerceptivePlannerRobotInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool useHardFrictionConeConstraint)
-  : LeggedInterface(taskFile,urdfFile,referenceFile,useHardFrictionConeConstraint)
+PerceptivePlannerRobotInterface::PerceptivePlannerRobotInterface(const std::string& robotName, const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool useHardFrictionConeConstraint)
+  : LeggedInterface(robotName, taskFile,urdfFile,referenceFile,useHardFrictionConeConstraint)
 {
 }
 

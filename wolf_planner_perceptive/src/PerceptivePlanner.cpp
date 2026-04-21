@@ -31,7 +31,7 @@ PerceptivePlanner::~PerceptivePlanner()
 void PerceptivePlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
-  leggedInterface_ = std::make_shared<PerceptivePlannerRobotInterface>(taskFile, urdfFile, referenceFile, verbose);
+  leggedInterface_ = std::make_shared<PerceptivePlannerRobotInterface>(robotName_, taskFile, urdfFile, referenceFile, verbose);
 
   // Optimal control problem
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);

@@ -36,7 +36,7 @@
 #include <boost/filesystem/path.hpp>
 
 namespace wolf_planner {
-LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+LeggedInterface::LeggedInterface(const std::string& robotName, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                                  bool useHardFrictionConeConstraint)
     : useHardFrictionConeConstraint_(useHardFrictionConeConstraint) {
   // check that task file exists
@@ -77,6 +77,10 @@ LeggedInterface::LeggedInterface(const std::string& taskFile, const std::string&
   sqpSettings_ = sqp::loadSettings(taskFile, "sqp", verbose);
   ipmSettings_ = ipm::loadSettings(taskFile, "ipm", verbose);
   rolloutSettings_ = rollout::loadSettings(taskFile, "rollout", verbose);
+
+  // Create a robotName specific folder
+  if(!robotName.empty())
+    modelSettings_.modelFolderCppAd = modelSettings_.modelFolderCppAd +"_"+ robotName;
 }
 
 /******************************************************************************************************/

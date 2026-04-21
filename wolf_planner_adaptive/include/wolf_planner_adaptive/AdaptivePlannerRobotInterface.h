@@ -13,7 +13,7 @@ using namespace legged_robot;
 
 class AdaptivePlannerRobotInterface : public LeggedInterface {
  public:
-  AdaptivePlannerRobotInterface(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
+  AdaptivePlannerRobotInterface(const std::string& robotName, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile,
                   bool useHardFrictionConeConstraint = true);
 
   ~AdaptivePlannerRobotInterface() override = default;

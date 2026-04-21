@@ -31,7 +31,7 @@ AdaptivePlanner::~AdaptivePlanner()
 void AdaptivePlanner::setupLeggedInterface(const std::string &taskFile, const std::string &urdfFile, const std::string &referenceFile, bool verbose)
 {
   // Legged interface
-  leggedInterface_ = std::make_shared<AdaptivePlannerRobotInterface>(taskFile, urdfFile, referenceFile, verbose);
+  leggedInterface_ = std::make_shared<AdaptivePlannerRobotInterface>(robotName_, taskFile, urdfFile, referenceFile, verbose);
 
   // Optimal control problem
   leggedInterface_->setupOptimalControlProblem(taskFile, urdfFile, referenceFile, verbose);
